@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "prepare": "husky",
-    "lint": "eslint",
-    "lint:fix": "eslint --fix",
+    "lint": "pnpm -r lint",
+    "lint:fix": "pnpm -r lint:fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "type-check": "pnpm -r type-check"
