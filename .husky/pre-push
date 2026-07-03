@@ -1,0 +1,31 @@
+#!/usr/bin/env sh
+
+set -e
+
+echo "🚀 Running pre-push validation..."
+
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+if ! echo "$BRANCH" | grep -Eq "^(main|dev-V[0-9]+|(feature|fix|hotfix|docs|experiment|improve)/[a-z0-9-]+)$"; then
+    echo "❌ Invalid branch name: $BRANCH"
+    echo ""
+    echo "Expected:"
+    echo "  main"
+    echo "  dev-V1"
+    echo "  feature/auth"
+    echo "  fix/login"
+    echo "  docs/api"
+    exit 1
+fi
+
+echo "🔍 Linting workspace..."
+pnpm lint
+
+echo "🔎 Type checking..."
+pnpm type-check
+
+echo "🏗️ Building workspace..."
+pnpm build
+
+echo ""
+echo "✅ Pre-push validation passed."

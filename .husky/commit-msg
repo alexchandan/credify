@@ -1,0 +1,95 @@
+#!/usr/bin/env sh
+
+COMMIT_MSG=$(cat "$1")
+SUBJECT=$(printf "%s" "$COMMIT_MSG" | head -n1)
+
+# ------------------------------------------------------------------
+# Configuration
+# ------------------------------------------------------------------
+
+TYPES="feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert"
+MAX_LENGTH=100
+
+# ------------------------------------------------------------------
+# Validation
+# ------------------------------------------------------------------
+
+# Format:
+# type(scope)!: subject
+# Examples:
+#   feat: add authentication
+#   fix(api): resolve token validation
+#   refactor(user-profile)!: remove legacy endpoints
+
+if ! printf "%s" "$SUBJECT" | grep -Eq "^($TYPES)(\([a-z0-9-]+\))?!?: .+$"; then
+    echo "❌ Invalid commit message."
+    echo
+    echo "Expected format:"
+    echo "  <type>(optional-scope): <description>"
+    echo
+    echo "Valid types:"
+    echo "  feat, fix, docs, style, refactor, perf,"
+    echo "  test, build, ci, chore, revert"
+    echo
+    echo "Examples:"
+    echo "  feat: add authentication"
+    echo "  fix(api): resolve token validation"
+    echo "  refactor(user-profile): simplify state management"
+    echo "  feat(auth)!: remove legacy login flow"
+    exit 1
+fi
+
+# ------------------------------------------------------------------
+# Subject length
+# ------------------------------------------------------------------
+
+if [ ${#SUBJECT} -gt "$MAX_LENGTH" ]; then
+    echo "❌ Commit subject is too long."
+    echo "Current length : ${#SUBJECT}"
+    echo "Maximum length : $MAX_LENGTH"
+    exit 1
+fi
+
+# ------------------------------------------------------------------
+# Subject must not end with '.'
+# ------------------------------------------------------------------
+
+if printf "%s" "$SUBJECT" | grep -Eq "\.$"; then
+    echo "❌ Commit subject must not end with a period."
+    exit 1
+fi
+
+# ------------------------------------------------------------------
+# Commit type must be lowercase
+# ------------------------------------------------------------------
+
+if printf "%s" "$SUBJECT" | grep -Eq "^[A-Z]"; then
+    echo "❌ Commit type must be lowercase."
+    echo
+    echo "Bad : FEAT: add login"
+    echo "Good: feat: add login"
+    exit 1
+fi
+
+# ------------------------------------------------------------------
+# Subject should start with lowercase (recommended)
+# ------------------------------------------------------------------
+
+DESCRIPTION=$(printf "%s" "$SUBJECT" | sed -E 's/^[^:]+: //')
+
+FIRST_CHAR=$(printf "%s" "$DESCRIPTION" | cut -c1)
+
+if printf "%s" "$FIRST_CHAR" | grep -Eq "[A-Z]"; then
+    echo "❌ Commit description should start with a lowercase letter."
+    echo
+    echo "Bad : feat: Add login"
+    echo "Good: feat: add login"
+    exit 1
+fi
+
+# ------------------------------------------------------------------
+# Success
+# ------------------------------------------------------------------
+
+echo "✅ Commit message looks good."
+exit 0

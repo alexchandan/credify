@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+
+set -e
+
+echo "🚀 Running pre-commit checks..."
+
+echo "📝 Linting & formatting staged files..."
+pnpm lint-staged || {
+  echo ""
+  echo "❌ Pre-commit aborted."
+  echo "Please fix the linting/formatting issues above and try again."
+  exit 1
+}
+
+echo "🔍 Type checking workspace..."
+pnpm type-check || {
+  echo ""
+  echo "❌ Pre-commit aborted."
+  echo "Please fix the TypeScript errors above and try again."
+  exit 1
+}
+
+echo ""
+echo "✅ All pre-commit checks passed."
