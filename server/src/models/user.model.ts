@@ -1,0 +1,119 @@
+import mongoose, { Schema } from "mongoose";
+import type { Document, Model } from "mongoose";
+import bcrypt from "bcryptjs";
+
+export enum UserRole {
+  CANDIDATE = "candidate",
+  RECRUITER = "recruiter",
+  ADMIN = "admin",
+}
+
+export interface IUser extends Document {
+  email: string;
+  passwordHash: string;
+  role: UserRole;
+  isVerified: boolean;
+  tokenVersion: number;
+  emailVerificationTokenHash?: string;
+  emailVerificationTokenExpiry?: Date;
+  passwordResetTokenHash?: string;
+  passwordResetTokenExpiry?: Date;
+  deletedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+
+  comparePassword(password: string): Promise<boolean>;
+}
+
+type IUserModel = Model<IUser>;
+
+const userSchema = new Schema<IUser, IUserModel>(
+  {
+    email: {
+      type: String,
+      required: [true, "Email is required"],
+      unique: [true, "Email must be unique"],
+      trim: true,
+      minlength: [3, "Email must be at least 3 characters long"],
+      maxlength: [50, "Email must be at most 50 characters long"],
+      lowercase: true,
+      match: [
+        /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        "Email must be a valid email address",
+      ],
+    },
+
+    passwordHash: {
+      type: String,
+      required: [true, "Password is required"],
+      minlength: [6, "Password must be at least 6 characters long"],
+      maxlength: [15, "Password must be at most 15 characters long"],
+      select: false, // Exclude passwordHash from query results by default
+    },
+
+    role: {
+      type: String,
+      enum: Object.values(UserRole),
+      default: UserRole.CANDIDATE,
+      required: [true, "Role is required"],
+    },
+
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+
+    tokenVersion: {
+      type: Number,
+      default: 0, // Increment this to invalidate all existing tokens for the user
+    },
+
+    emailVerificationTokenHash: {
+      type: String,
+      select: false,
+    },
+
+    emailVerificationTokenExpiry: {
+      type: Date,
+      select: false,
+    },
+
+    passwordResetTokenHash: {
+      type: String,
+      select: false,
+    },
+
+    passwordResetTokenExpiry: {
+      type: Date,
+      select: false,
+    },
+
+    deletedAt: {
+      type: Date,
+      default: null,
+    },
+  },
+  {
+    timestamps: true,
+  },
+);
+
+// ---- Indexes ----
+userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ deletedAt: 1 });
+
+// ---- Hash the password automatically when it is modified ----
+userSchema.pre("save", async function () {
+  if (!this.isModified("passwordHash")) return;
+  const salt = await bcrypt.genSalt(12);
+  this.passwordHash = await bcrypt.hash(this.passwordHash, salt);
+});
+
+// ---- Instance method to compare password ----
+userSchema.methods.comparePassword = async function (
+  password: string,
+): Promise<boolean> {
+  return bcrypt.compare(password, this.passwordHash);
+};
+
+export const User = mongoose.model<IUser, IUserModel>("User", userSchema);
