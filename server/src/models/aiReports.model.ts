@@ -75,10 +75,13 @@ aiReportSchema.index({ status: 1 }); // worker/ops queries — "find all stuck p
 aiReportSchema.pre("validate", function (this: IAIReport) {
   const requiresJob = this.type === AIReportType.CANDIDATE_MATCH;
   if (requiresJob && !this.jobId) {
-    throw new Error("jobId is required for CANDIDATE_MATCH reports");
+    this.invalidate("jobId", "jobId is required for CANDIDATE_MATCH reports");
   }
   if (!requiresJob && this.jobId) {
-    throw new Error(`jobId must not be set for report type "${this.type}"`);
+    this.invalidate(
+      "jobId",
+      `jobId must not be set for report type "${this.type}"`,
+    );
   }
 });
 
