@@ -23,7 +23,7 @@ export interface IExperience {
   title: string;
   startDate: Date;
   endDate?: Date;
-  iscurrent: boolean;
+  isCurrent: boolean;
   description?: string;
 }
 
@@ -92,7 +92,7 @@ const experienceSchema = new mongoose.Schema<IExperience>(
     title: { type: String, required: true, trim: true },
     startDate: { type: Date, required: true },
     endDate: { type: Date },
-    iscurrent: { type: Boolean, default: false },
+    isCurrent: { type: Boolean, default: false },
     description: { type: String, trim: true, maxlength: 2000 },
   },
   { _id: false },

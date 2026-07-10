@@ -32,7 +32,6 @@ const userSchema = new Schema<IUser, IUserModel>(
     email: {
       type: String,
       required: [true, "Email is required"],
-      unique: [true, "Email must be unique"],
       trim: true,
       minlength: [3, "Email must be at least 3 characters long"],
       maxlength: [50, "Email must be at most 50 characters long"],

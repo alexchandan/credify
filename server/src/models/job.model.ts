@@ -96,7 +96,7 @@ const jobSchema = new mongoose.Schema<IJob, IJobModel>(
     employmentType: {
       type: String,
       enum: Object.values(EmploymentType),
-      requiredPaths: true,
+      required: true,
     },
 
     experienceLevel: {

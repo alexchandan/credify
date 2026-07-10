@@ -38,7 +38,6 @@ export const companySchema = new mongoose.Schema<ICompany, ICompanyModel>(
     slug: {
       type: String,
       required: [true, "Company slug is required"],
-      unique: [true, "Company slug must be unique"],
       lowercase: true,
       trim: true,
     },
