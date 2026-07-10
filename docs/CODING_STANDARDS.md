@@ -1,3 +1,5 @@
+<!-- use markdown preview extension or tools for better experience-->
+
 # Coding Standards & Definition of Done
 
 ## Code Style
