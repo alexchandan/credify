@@ -32,6 +32,7 @@ interface LoginResult {
   };
 }
 
+// ---- Register function ----
 export async function register(
   input: RegisterInput,
 ): Promise<{ userId: string }> {
@@ -89,6 +90,7 @@ export async function register(
   return { userId: createdUserId! };
 }
 
+// ---- Login function ----
 export async function login(input: LoginInput): Promise<LoginResult> {
   const user = await User.findOne({
     email: input.email,
@@ -139,10 +141,12 @@ export async function login(input: LoginInput): Promise<LoginResult> {
   };
 }
 
+// ---- Logout From Everywhere ----
 export async function logoutEverywhere(userId: string): Promise<void> {
   await User.updateOne({ _id: userId }, { $inc: { tokenVersion: 1 } });
 }
 
+// ---- Logic for email varification through link ----
 export async function verifyEmail(rawToken: string): Promise<void> {
   const tokenHash = hashToken(rawToken);
 
@@ -163,4 +167,31 @@ export async function verifyEmail(rawToken: string): Promise<void> {
   user.emailVerificationTokenHash = undefined;
   user.emailVerificationTokenExpiry = undefined;
   await user.save();
+}
+
+// ---- Password reset through link send on email ----
+// added to src/modules/auth/auth.service.ts
+
+export async function forgotPassword(email: string): Promise<void> {
+  const user = await User.findOne({ email, deletedAt: null });
+
+  // Deliberately silent if no match — the controller returns the same
+  // generic success response either way, so this endpoint can never be
+  // used to enumerate which emails have accounts.
+  if (!user) {
+    return;
+  }
+
+  const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000; // 1 hour — shorter than email verification, since a leaked reset link is more sensitive
+
+  const rawResetToken = generateRawToken();
+  user.passwordResetTokenHash = hashToken(rawResetToken);
+  user.passwordResetTokenExpiry = new Date(Date.now() + PASSWORD_RESET_TTL_MS);
+  await user.save();
+
+  // TODO(Phase 4): replace with a queued email send once the email service exists.
+  logger.info(
+    { email, rawResetToken },
+    "Password reset token generated (stub — no email service yet)",
+  );
 }
