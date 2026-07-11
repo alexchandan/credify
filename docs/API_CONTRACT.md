@@ -56,14 +56,14 @@ Codes follow the pattern `DOMAIN_REASON`. Add new codes here as new modules are 
 
 ### AUTH
 
-| Code                       | Meaning                                                      |
-| -------------------------- | ------------------------------------------------------------ |
-| `AUTH_INVALID_CREDENTIALS` | Wrong email or password                                      |
-| `AUTH_EMAIL_NOT_VERIFIED`  | Login blocked pending email verification                     |
-| `AUTH_TOKEN_EXPIRED`       | Access or refresh token expired                              |
-| `AUTH_TOKEN_INVALID`       | Token malformed, tampered, or token version mismatch         |
-| `AUTH_UNAUTHORIZED`        | No valid token provided                                      |
-| `AUTH_FORBIDDEN`           | Authenticated, but role/permission doesn't allow this action |
+| Code                       | Meaning                                                                                                                    |
+| -------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `AUTH_INVALID_CREDENTIALS` | Wrong email or password                                                                                                    |
+| `AUTH_EMAIL_NOT_VERIFIED`  | Login blocked pending email verification                                                                                   |
+| `AUTH_TOKEN_EXPIRED`       | Access or refresh token expired                                                                                            |
+| `AUTH_TOKEN_INVALID`       | Token malformed, tampered, token version mismatch, or an invalid/expired verification/reset token                          |
+| `AUTH_UNAUTHORIZED`        | No valid token provided                                                                                                    |
+| `AUTH_FORBIDDEN`           | Authenticated, but role/permission doesn't allow this action (also used by the policies/ layer for resource-level denials) |
 
 ### VALIDATION
 
@@ -73,10 +73,10 @@ Codes follow the pattern `DOMAIN_REASON`. Add new codes here as new modules are 
 
 ### USER
 
-| Code                  | Meaning                  |
-| --------------------- | ------------------------ |
-| `USER_404`            | User not found           |
-| `USER_ALREADY_EXISTS` | Email already registered |
+| Code                  | Meaning                                                  |
+| --------------------- | -------------------------------------------------------- |
+| `USER_404`            | User not found                                           |
+| `USER_ALREADY_EXISTS` | Email already registered (used by `POST /auth/register`) |
 
 ### CANDIDATE
 
@@ -119,3 +119,37 @@ Codes follow the pattern `DOMAIN_REASON`. Add new codes here as new modules are 
 ## Rule for Adding New Codes
 
 Before introducing a new error code, check this table first. Reuse an existing code if the situation matches — the taxonomy loses value if every endpoint invents its own one-off code.
+
+## Live Endpoints
+
+### `POST /api/v1/auth/register`
+
+Rate-limited (`authRateLimiter`). Body validated against `registerSchema`. Creates a `User` + `CandidateProfile`/`RecruiterProfile` in one transaction. Returns `201` with `{ userId }` — no tokens issued; the account must be verified before login.
+
+### `POST /api/v1/auth/login`
+
+Rate-limited. Sets the refresh token as an httpOnly cookie (path-scoped to `/api/v1/auth`). Returns `{ accessToken, user }` in the body.
+
+### `POST /api/v1/auth/refresh`
+
+No body — reads the refresh token from the cookie. Rotates both tokens. See DECISIONS.md ADR-014 for the known limitation on single-use reuse detection.
+
+### `POST /api/v1/auth/logout`
+
+Clears the refresh cookie. Stateless — no DB write.
+
+### `POST /api/v1/auth/logout-everywhere`
+
+Requires `authenticate`. Bumps `User.tokenVersion`, invalidating every outstanding refresh token.
+
+### `POST /api/v1/auth/verify-email`
+
+Body: `{ token }` (the raw link-based token, not OTP — see ADR-013).
+
+### `POST /api/v1/auth/forgot-password`
+
+Rate-limited. Body: `{ email }`. Always returns the same generic success message regardless of whether the email exists — enumeration-safe by design.
+
+### `POST /api/v1/auth/reset-password`
+
+Body: `{ token, newPassword }`. Also bumps `tokenVersion`, ending every existing session.

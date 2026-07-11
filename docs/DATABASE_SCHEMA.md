@@ -19,16 +19,16 @@ MongoDB via Mongoose. This doc is the source of truth for collection shapes, rel
 
 Identity only — no profile data.
 
-| Field                                                     | Type                                    | Notes                                                         |
-| --------------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------- |
-| `email`                                                   | string                                  | unique, lowercase, indexed                                    |
-| `passwordHash`                                            | string                                  | `select: false` — never returned by default                   |
-| `role`                                                    | enum: `candidate`, `recruiter`, `admin` |                                                               |
-| `isVerified`                                              | boolean                                 | default `false`                                               |
-| `tokenVersion`                                            | number                                  | bumped to invalidate all refresh tokens ("logout everywhere") |
-| `emailVerificationTokenHash` / `emailVerificationExpires` | string / Date                           | hashed at rest, never store raw tokens                        |
-| `passwordResetTokenHash` / `passwordResetExpires`         | string / Date                           | hashed at rest                                                |
-| `deletedAt`                                               | Date \| null                            | soft delete                                                   |
+| Field                                                         | Type                                    | Notes                                                         |
+| ------------------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------- |
+| `email`                                                       | string                                  | unique, lowercase, indexed                                    |
+| `passwordHash`                                                | string                                  | `select: false` — never returned by default                   |
+| `role`                                                        | enum: `candidate`, `recruiter`, `admin` |                                                               |
+| `isVerified`                                                  | boolean                                 | default `false`                                               |
+| `tokenVersion`                                                | number                                  | bumped to invalidate all refresh tokens ("logout everywhere") |
+| `emailVerificationTokenHash` / `emailVerificationTokenExpiry` | string / Date                           | hashed at rest, never store raw tokens                        |
+| `passwordResetTokenHash` / `passwordResetTokenExpiry`         | string / Date                           | hashed at rest                                                |
+| `deletedAt`                                                   | Date \| null                            | soft delete                                                   |
 
 **Indexes:** `email` (unique), `deletedAt`
 
@@ -51,7 +51,7 @@ Identity only — no profile data.
 | `experience`     | IExperience[]                                                        | **embedded**, `_id: false`                          |
 | `projects`       | IProject[]                                                           | **embedded**, `_id: false`                          |
 | `certifications` | ICertification[]                                                     | **embedded**, `_id: false`                          |
-| `socialLinks`    | object                                                               | **embedded** — linkedin, github, portfolio, twitter |
+| `socialLinks`    | object                                                               | **embedded** — linkedIn, github, portfolio, twitter |
 | `deletedAt`      | Date \| null                                                         | soft delete                                         |
 
 **Indexes:** `userId` (unique), `skills` (multikey), `location`, `availability`, `deletedAt`

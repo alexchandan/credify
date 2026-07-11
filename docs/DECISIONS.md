@@ -145,3 +145,55 @@ Format: **Decision → Why → Alternatives considered → Status**
 **Why:** Designing the shape now, while the rest of the schema and its patterns (polymorphic refs, denormalized counters, transaction-backed writes) are fresh, produces a more consistent result than improvising it later under the time pressure of "just get the AI feature working." This does not violate the "AI features built last" sequencing rule — no AI code is being written yet, only the data shape it will eventually use.
 
 **Status:** Adopted.
+
+---
+
+## ADR-013: Email verification and password reset use link-based tokens, not OTP
+
+**Decision:** `register()` and `forgotPassword()` generate a 32-byte random raw token, store only its SHA-256 hash on the `User` document, and the raw token is delivered via a link (`?token=<raw>`) rather than a typed numeric code.
+
+**Why:** A 32-byte random token has no brute-forceable structure, so a fast deterministic hash (SHA-256) is sufficient for lookup — no rate limiting or short expiry is strictly required for security, unlike a 6-digit OTP which needs both. This matches Credify's standard web signup flow; OTP was considered but is a better fit for phone-first or mobile-heavy products, which isn't this project's shape.
+
+**Status:** Adopted. Email verification tokens expire in 24h, reset tokens in 1h (shorter, since a leaked reset link is more sensitive).
+
+---
+
+## ADR-014: Refresh token rotation does not include single-use reuse detection
+
+**Decision:** `refreshTokens()` issues a new access + refresh token pair on every call and validates the old one via `tokenVersion`, but does **not** blacklist the specific refresh token that was just used.
+
+**Why:** True single-use rotation (where presenting an already-used refresh token revokes the entire session as a theft signal) requires persisting every issued token or its ID somewhere queryable — this doesn't exist yet. What's built today correctly implements "logout everywhere" (via `tokenVersion`), which was the explicit requirement from the original auth-flow design — but it's a real, acknowledged gap versus best-practice refresh rotation.
+
+**Status:** Adopted as an interim implementation. **Follow-up:** revisit once Redis is introduced in Phase 4 — a short-TTL store of valid/used refresh token IDs would close this gap.
+
+---
+
+## ADR-015: The `policies/` layer queries the database fresh on every check — no caching
+
+**Decision:** `canManageJob`, `canViewApplication`, etc. all re-fetch the actor's current `RecruiterProfile`/`CandidateProfile` on every call, rather than trusting anything cached in the JWT.
+
+**Why:** Per ADR-004, a recruiter's `companyId` can change after a job was created. Caching company membership in the JWT (which lives for up to 30 days via the refresh token) would mean a recruiter who left a company could retain edit access to that company's jobs for the life of their token. Always querying fresh trades a small amount of DB load per protected write for permissions that are never stale.
+
+**Status:** Adopted. **Open follow-up:** if this becomes a throughput bottleneck, a short-TTL Redis cache on `RecruiterProfile.companyId` (invalidated on company change) is the natural fix — not reintroducing it into the JWT.
+
+---
+
+## ADR-016: `express-mongo-sanitize` was replaced with a custom middleware
+
+**Decision:** The `express-mongo-sanitize` npm package was removed and replaced with an equivalent hand-written `mongoSanitize()` middleware (`src/middlewares/mongoSanitize.ts`).
+
+**Why:** `express-mongo-sanitize@2.2.0` is incompatible with Express 5 — it reassigns `req.query = <cleaned object>`, but Express 5 made `req.query` a read-only getter with no setter, so this throws `TypeError: Cannot set property query...` on **every single request**, regardless of whether the request even has a query string. This was discovered via direct boot-testing (`curl` against a running instance), not just a type-check — the project type-checked cleanly while being completely non-functional at runtime. No updated version of the package exists to fix this as of this writing.
+
+The replacement performs the same operator-stripping logic (`$`-prefixed keys, dotted paths) but only ever **mutates** `req.body`/`req.query`/`req.params` in place — deleting/rewriting keys on the existing object — never reassigning the top-level property. In-place mutation of `req.query`'s contents remains legal under Express 5; only replacing the reference itself is blocked.
+
+**Status:** Adopted. **Lesson for the project going forward:** a clean `tsc` compile does not guarantee a working server — dependencies with runtime assumptions about the framework version need an actual boot + request test, not just a type-check, especially after a major framework version bump (this project is on Express 5, which most third-party Express middleware in the wild still targets Express 4 for).
+
+---
+
+## ADR-017: `User.email` and `Company.slug` had duplicate index definitions
+
+**Decision:** Removed the redundant explicit `schema.index({ email: 1 }, { unique: true })` / `schema.index({ slug: 1 }, { unique: true })` calls.
+
+**Why:** Both fields already declare `unique: true` directly in their field definition, which itself creates a unique index. Adding a second, separate `.index()` call for the same field creates a genuine duplicate index in MongoDB — caught via a Mongoose startup warning during boot-testing, not by `tsc`.
+
+**Status:** Fixed. **Pattern to watch for going forward:** whenever a field already has `unique: true` set inline, don't add a second explicit `schema.index()` for the same field unless it's part of a genuinely different compound index.

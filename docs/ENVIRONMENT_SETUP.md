@@ -5,28 +5,23 @@
 ## Prerequisites
 
 - Node.js 20+
-- npm 10+
+- pnpm 9+ (the project uses a pnpm workspace, not npm — `npm install` at the root will not work correctly)
 - A MongoDB Atlas account (free M0 tier is fine for development)
 - Git
 
-## 1. Clone and install
+## 1. Cloggne and install
 
 ```bash
 git clone <repo-url> credify
 cd credify
+pnpm install   # installs client, server, and any shared workspace packages together
 ```
 
-If using workspaces (recommended — see root `package.json`):
+To work on a single package specifically:
 
 ```bash
-npm install   # installs backend, frontend, and packages/shared dependencies together
-```
-
-Otherwise, install each separately:
-
-```bash
-cd backend && npm install
-cd ../frontend && npm install
+pnpm --filter server add <package>
+pnpm --filter server remove <package>
 ```
 
 ## 2. Set up MongoDB Atlas
@@ -39,10 +34,10 @@ cd ../frontend && npm install
 
 ## 3. Configure environment variables
 
-### Backend
+### Server
 
 ```bash
-cd backend
+cd server
 cp .env.example .env
 ```
 
@@ -65,10 +60,10 @@ node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 
 Run it twice — access and refresh secrets must be different values.
 
-### Frontend
+### Client
 
 ```bash
-cd frontend
+cd client
 cp .env.example .env.local
 ```
 
@@ -80,35 +75,47 @@ NEXT_PUBLIC_API_BASE_URL=http://localhost:5000/api/v1
 
 ## 4. Run the project
 
-Backend:
+Server:
 
 ```bash
-cd backend
-npm run dev
+cd server
+pnpm dev
 ```
 
 Visit `http://localhost:5000/health` — should return `{ "success": true, "data": { "status": "ok", ... } }`.
 
-Frontend:
+Client:
 
 ```bash
-cd frontend
-npm run dev
+cd client
+pnpm dev
 ```
 
 Visit `http://localhost:3000`.
 
 ## 5. Verify the database connection
 
-If the backend logs `Connected to MongoDB` on startup and `/health` responds, the connection is working. If it hangs or errors:
+If the server logs `Connected to MongoDB` on startup and `/health` responds, the connection is working. If it hangs or errors:
 
 - Double-check the Network Access IP allowlist in Atlas.
 - Confirm the password in `MONGODB_URI` doesn't contain unescaped special characters (URL-encode them if it does).
 
+## 6. Seed test data (optional, recommended for local development)
+
+```bash
+cd server
+pnpm seed          # adds to existing data
+pnpm seed -- --fresh   # wipes seed-relevant collections first
+```
+
+Generates ~30 companies, ~60–90 recruiters, 200 candidates, 150 jobs, 500 applications. All seeded users share the password printed at the end of the run.
+
 ## Common Issues
 
-| Symptom                                                               | Likely cause                                                                           |
-| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| Server exits immediately with "Missing required environment variable" | One of `MONGODB_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` is missing from `.env` |
-| CORS error in browser console                                         | `CLIENT_ORIGIN` in backend `.env` doesn't match the frontend's actual URL/port         |
-| Mongo connection times out                                            | IP not allowlisted in Atlas Network Access                                             |
+| Symptom                                                                                                   | Likely cause                                                                                                                                                                                                                                |
+| --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Server exits immediately with "Missing required environment variable"                                     | One of `MONGODB_URI`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET` is missing from `.env`                                                                                                                                                      |
+| CORS error in browser console                                                                             | `CLIENT_ORIGIN` in server `.env` doesn't match the client's actual URL/port                                                                                                                                                                 |
+| Mongo connection times out                                                                                | IP not allowlisted in Atlas Network Access                                                                                                                                                                                                  |
+| `TypeError: Cannot set property query of #<IncomingMessage> which has only a getter` on any/every request | A dependency (previously `express-mongo-sanitize`) is trying to reassign `req.query` directly, which Express 5 blocks. See DECISIONS.md ADR-016 — the project now uses a custom `mongoSanitize()` middleware that mutates in place instead. |
+| `tsc` passes but the server crashes at runtime                                                            | A clean type-check does not guarantee correct runtime behavior — always boot the server and hit it with a real request after any dependency change. See CODING_STANDARDS.md's Verification Rule.                                            |
