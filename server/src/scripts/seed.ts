@@ -1,5 +1,3 @@
-// src/scripts/seed.ts
-//
 // Populates the database with realistic, interrelated test data:
 // ~30 companies, ~60-90 recruiters, ~200 candidates, ~150 jobs, ~500 applications.
 //
@@ -477,6 +475,7 @@ async function main(): Promise<void> {
   logger.info(`Done. All seeded users share the password: ${DEMO_PASSWORD}`);
 
   await mongoose.disconnect();
+  logger.info("Seeding complete and MongoDB disconnected successfully");
   process.exit(0);
 }
 

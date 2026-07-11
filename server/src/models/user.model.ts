@@ -14,10 +14,10 @@ export interface IUser extends Document {
   role: UserRole;
   isVerified: boolean;
   tokenVersion: number;
-  emailVerificationTokenHash?: string;
-  emailVerificationTokenExpiry?: Date;
-  passwordResetTokenHash?: string;
-  passwordResetTokenExpiry?: Date;
+  emailVerificationTokenHash?: string | undefined;
+  emailVerificationTokenExpiry?: Date | undefined;
+  passwordResetTokenHash?: string | undefined;
+  passwordResetTokenExpiry?: Date | undefined;
   deletedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
