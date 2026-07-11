@@ -13,6 +13,7 @@ import { requestId } from "./middlewares/requestId.js";
 import { globalRateLimiter } from "./middlewares/rateLimiter.js";
 import { notFoundHandler, errorHandler } from "./middlewares/errorHandler.js";
 import { sendSuccess } from "./utils/apiResponse.js";
+import { authRouter } from "./modules/auth/auth.routes.js";
 
 export const app: Express = express();
 
@@ -77,6 +78,7 @@ app.get("/api/v1", (req: Request, res: Response) => {
     message: "Credify API v1",
   });
 });
+app.use("/api/v1/auth", authRouter);
 
 // Error Handling (Must Be Last)
 app.use(notFoundHandler);
