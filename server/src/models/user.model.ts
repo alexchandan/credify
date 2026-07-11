@@ -45,8 +45,7 @@ const userSchema = new Schema<IUser, IUserModel>(
     passwordHash: {
       type: String,
       required: [true, "Password is required"],
-      minlength: [6, "Password must be at least 6 characters long"],
-      maxlength: [15, "Password must be at most 15 characters long"],
+      minlength: [8, "Password must be at least 8 characters long"],
       select: false, // Exclude passwordHash from query results by default
     },
 
@@ -98,7 +97,10 @@ const userSchema = new Schema<IUser, IUserModel>(
 );
 
 // ---- Indexes ----
-userSchema.index({ email: 1 }, { unique: true });
+userSchema.index(
+  { email: 1 },
+  { unique: true, partialFilterExpression: { deletedAt: null } },
+);
 userSchema.index({ deletedAt: 1 });
 
 // ---- Hash the password automatically when it is modified ----
