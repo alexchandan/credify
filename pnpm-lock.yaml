@@ -283,9 +283,6 @@ importers:
       express:
         specifier: ^5.2.1
         version: 5.2.1
-      express-mongo-sanitize:
-        specifier: ^2.2.0
-        version: 2.2.0
       helmet:
         specifier: ^8.2.0
         version: 8.2.0
@@ -1822,10 +1819,6 @@ packages:
 
   eventemitter3@5.0.4:
     resolution: {integrity: sha512-mlsTRyGaPBjPedk6Bvw+aqbsXDtoAyAzm5MO7JgU+yVRyMQ5O8bD4Kcci7BS85f93veegeCPkL8R4GLClnjLFw==}
-
-  express-mongo-sanitize@2.2.0:
-    resolution: {integrity: sha512-PZBs5nwhD6ek9ZuP+W2xmpvcrHwXZxD5GdieX2dsjPbAbH4azOkrHbycBud2QRU+YQF1CT+pki/lZGedHgo/dQ==}
-    engines: {node: '>=10'}
 
   express-rate-limit@8.5.2:
     resolution: {integrity: sha512-5Kb34ipNX694DH48vN9irak1Qx30nb0PLYHXfJgw4YEjiC3ZEmZJhwOp+VfiCYwFzvFTdB9QkArYS5kXa2cx2A==}
@@ -4765,8 +4758,6 @@ snapshots:
   etag@1.8.1: {}
 
   eventemitter3@5.0.4: {}
-
-  express-mongo-sanitize@2.2.0: {}
 
   express-rate-limit@8.5.2(express@5.2.1):
     dependencies:

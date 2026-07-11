@@ -5,7 +5,7 @@ import type { Request, Response } from "express";
 import helmet from "helmet";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import mongoSanitize from "express-mongo-sanitize";
+import { mongoSanitize } from "./middlewares/mongoSanitize.js";
 import { pinoHttp } from "pino-http";
 import { env } from "./config/env.js";
 import { logger } from "./utils/logger.js";
