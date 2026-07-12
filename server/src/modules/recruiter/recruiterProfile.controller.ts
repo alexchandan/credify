@@ -19,3 +19,8 @@ export async function updateMyProfile(
   );
   sendSuccess(res, { data: profile, message: "Profile updated" });
 }
+
+export async function leaveCompany(req: Request, res: Response): Promise<void> {
+  const profile = await recruiterProfileService.leaveCompany(req.user!.userId);
+  sendSuccess(res, { data: profile, message: "You have left the company" });
+}

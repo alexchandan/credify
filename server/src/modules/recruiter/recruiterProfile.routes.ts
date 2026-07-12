@@ -24,4 +24,11 @@ router.patch(
   catchAsync(recruiterProfileController.updateMyProfile),
 );
 
+router.post(
+  "/me/leave-company",
+  authenticate,
+  authorize(UserRole.RECRUITER),
+  catchAsync(recruiterProfileController.leaveCompany),
+);
+
 export { router as recruiterRouter };
