@@ -19,6 +19,7 @@ import { companyRouter } from "./modules/company/company.routes.js";
 import { recruiterRouter } from "./modules/recruiter/recruiterProfile.routes.js";
 import { jobRouter } from "./modules/job/job.routes.js";
 import { applicationRouter } from "./modules/application/application.routes.js";
+import { searchRouter } from "./modules/search/search.routes.js";
 
 export const app: Express = express();
 
@@ -91,6 +92,7 @@ app.use("/api/v1/companies", companyRouter);
 app.use("/api/v1/recruiters", recruiterRouter);
 app.use("api/v1/jobs", jobRouter);
 app.use("api/v1/applications", applicationRouter);
+app.use("api/v1/search", searchRouter);
 
 // Error Handling (Must Be Last)
 app.use(notFoundHandler);
