@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
+import multer from "multer";
 import { AppError } from "../utils/AppError.js";
 import { sendError } from "../utils/apiResponse.js";
 import { logger } from "../utils/logger.js";
@@ -51,6 +52,25 @@ export function errorHandler(
       code: "DUPLICATE_ENTRY",
       message: "A record with this value already exists",
       details: Object.keys(err.keyValue || {}),
+    });
+  }
+
+  // Multer generates its own errors (e.g. exceeding the size limit) that
+  // we didn't throw ourselves — these are genuine user-facing 400s
+  // (a bad upload), not server bugs, so they get the same clean
+  // translation as Mongoose validation errors above.
+  if (err instanceof multer.MulterError) {
+    const message =
+      err.code === "LIMIT_FILE_SIZE"
+        ? "File is too large"
+        : err.code === "LIMIT_UNEXPECTED_FILE"
+          ? "Unexpected file field"
+          : "Invalid file upload";
+    return sendError(res, {
+      statusCode: 400,
+      code: "INVALID_FILE_UPLOAD",
+      message,
+      details: [err.code],
     });
   }
 

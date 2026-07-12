@@ -1,9 +1,9 @@
-// src/modules/candidate/candidateProfile.routes.ts
 import { Router } from "express";
 import { catchAsync } from "../../utils/catchAsync.js";
 import { validate } from "../../middlewares/validate.js";
 import { authenticate } from "../../middlewares/authenticate.js";
 import { authorize } from "../../middlewares/authorize.js";
+import { resumeUpload } from "../../middlewares/upload.js";
 import { UserRole } from "../../models/user.model.js";
 import * as candidateProfileController from "./candidateProfile.controller.js";
 import { updateCandidateProfileSchema } from "./candidateProfile.validation.js";
@@ -23,6 +23,14 @@ router.patch(
   authorize(UserRole.CANDIDATE),
   validate(updateCandidateProfileSchema),
   catchAsync(candidateProfileController.updateMyProfile),
+);
+
+router.post(
+  "/me/resume",
+  authenticate,
+  authorize(UserRole.CANDIDATE),
+  resumeUpload,
+  catchAsync(candidateProfileController.uploadResume),
 );
 
 // Recruiter/admin-facing read of a specific candidate.

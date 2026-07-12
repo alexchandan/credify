@@ -15,6 +15,7 @@ export interface ICompany extends Document {
   description?: string;
   industry?: string;
   logoUrl?: string;
+  logoPublicId?: string; // Cloudinary public_id for the current logo
   websiteUrl?: string;
   size?: CompanySize;
   createdBy: mongoose.Types.ObjectId;
@@ -61,6 +62,11 @@ export const companySchema = new mongoose.Schema<ICompany, ICompanyModel>(
       trim: true,
     },
 
+    logoPublicId: {
+      type: String,
+      trim: true,
+    },
+
     websiteUrl: {
       type: String,
       trim: true,
@@ -88,6 +94,10 @@ export const companySchema = new mongoose.Schema<ICompany, ICompanyModel>(
 );
 
 // ---- Indexes ----
+// Partial index: uniqueness is only enforced among non-deleted companies.
+// Without this, a soft-deleted company's slug stays permanently reserved
+// forever — the whole point of soft-delete is that deletion shouldn't have
+// permanent side effects like this.
 companySchema.index(
   { slug: 1 },
   { unique: true, partialFilterExpression: { deletedAt: null } },

@@ -1,8 +1,6 @@
 import dotenv from "dotenv";
 
-dotenv.config({
-  path: ".env.local",
-});
+dotenv.config();
 
 interface Env {
   nodeEnv: string;
@@ -13,6 +11,11 @@ interface Env {
     accessSecret: string;
     refreshSecret: string;
   };
+  cloudinary: {
+    cloudName: string;
+    apiKey: string;
+    apiSecret: string;
+  };
 }
 
 // Fail fast: if a required env var is missing, crash on boot rather than
@@ -21,6 +24,9 @@ const required = [
   "MONGODB_URI",
   "JWT_ACCESS_SECRET",
   "JWT_REFRESH_SECRET",
+  "CLOUDINARY_CLOUD_NAME",
+  "CLOUDINARY_API_KEY",
+  "CLOUDINARY_API_SECRET",
 ] as const;
 
 for (const key of required) {
@@ -40,5 +46,10 @@ export const env: Env = {
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET as string,
     refreshSecret: process.env.JWT_REFRESH_SECRET as string,
+  },
+  cloudinary: {
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME as string,
+    apiKey: process.env.CLOUDINARY_API_KEY as string,
+    apiSecret: process.env.CLOUDINARY_API_SECRET as string,
   },
 };

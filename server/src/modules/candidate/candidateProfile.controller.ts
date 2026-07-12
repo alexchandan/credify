@@ -1,6 +1,6 @@
-// src/modules/candidate/candidateProfile.controller.ts
 import type { Request, Response } from "express";
 import { sendSuccess } from "../../utils/apiResponse.js";
+import { AppError } from "../../utils/AppError.js";
 import * as candidateProfileService from "./candidateProfile.service.js";
 import type { UpdateCandidateProfileInput } from "./candidateProfile.validation.js";
 
@@ -29,4 +29,15 @@ export async function getCandidateById(
     req.params.id as string,
   );
   sendSuccess(res, { data: profile });
+}
+
+export async function uploadResume(req: Request, res: Response): Promise<void> {
+  if (!req.file) {
+    throw new AppError(400, "VALIDATION_ERROR", "No resume file provided");
+  }
+  const profile = await candidateProfileService.uploadResume(
+    req.user!.userId,
+    req.file.buffer,
+  );
+  sendSuccess(res, { data: profile, message: "Resume uploaded" });
 }

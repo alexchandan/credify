@@ -8,6 +8,8 @@ import { AppError } from "../../utils/AppError.js";
 import { slugify } from "../../utils/slugify.js";
 import { stripUndefined } from "../../utils/stripUndefined.js";
 import { isDuplicateKeyErrorOnField } from "../../utils/mongoErrors.js";
+import { storageService } from "../../utils/storageService.js";
+import { logger } from "../../utils/logger.js";
 import { assertAllowed } from "../../policies/policyResult.js";
 import { canManageCompany } from "../../policies/companyPolicy.js";
 import type {
@@ -137,8 +139,66 @@ export async function updateCompany(
 
   assertAllowed(await canManageCompany(actorUserId, company));
 
+  // DELIBERATE: `slug` is never regenerated here, even when `name` changes.
+  // It's excluded from updateCompanySchema entirely (name/description/etc.
+  // are updatable, slug is not), so this isn't something that could
+  // accidentally happen either way.
+  //
+  // Why: the slug is embedded in public, SEO-indexed URLs
+  // (/companies/<slug>) and job postings link back to it. If a rename
+  // silently regenerated the slug, every external link, bookmark, and
+  // indexed search result pointing at this company would break the
+  // moment someone fixed a typo in their company name. Same pattern as
+  // GitHub (repo renames don't break old URLs) or Slack (workspace
+  // renames keep the URL). It would also reopen the exact TOCTOU race
+  // condition just fixed for slug creation, but on every rename instead
+  // of just once.
+  //
+  // If a deliberate slug change is ever needed, it should be its own
+  // explicit action (e.g. PATCH /companies/:id/slug) — not an automatic
+  // side effect of renaming — so the tradeoff (old links breaking) is a
+  // choice the company owner makes on purpose, not a surprise.
   Object.assign(company, stripUndefined(input));
   await company.save();
+
+  return company;
+}
+
+/**
+ * Uploads a new company logo, replacing the old one. Same
+ * upload-then-delete-old ordering as CandidateProfile.uploadResume — a
+ * failed new upload shouldn't cost the company its existing logo.
+ */
+export async function uploadLogo(
+  actorUserId: string,
+  companyId: string,
+  fileBuffer: Buffer,
+): Promise<ICompany> {
+  const company = await getCompanyById(companyId);
+
+  assertAllowed(await canManageCompany(actorUserId, company));
+
+  const previousPublicId = company.logoPublicId;
+
+  const result = await storageService.upload(fileBuffer, {
+    folder: "credify/logos",
+    resourceType: "image",
+  });
+
+  company.logoUrl = result.url;
+  company.logoPublicId = result.publicId;
+  await company.save();
+
+  if (previousPublicId) {
+    try {
+      await storageService.delete(previousPublicId, "image");
+    } catch (err) {
+      logger.warn(
+        { err, previousPublicId },
+        "Failed to delete previous company logo from storage",
+      );
+    }
+  }
 
   return company;
 }

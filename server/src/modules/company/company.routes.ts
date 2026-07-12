@@ -3,6 +3,7 @@ import { catchAsync } from "../../utils/catchAsync.js";
 import { validate } from "../../middlewares/validate.js";
 import { authenticate } from "../../middlewares/authenticate.js";
 import { authorize } from "../../middlewares/authorize.js";
+import { logoUpload } from "../../middlewares/upload.js";
 import { UserRole } from "../../models/user.model.js";
 import * as companyController from "./company.controller.js";
 import {
@@ -30,6 +31,14 @@ router.patch(
   authorize(UserRole.RECRUITER),
   validate(updateCompanySchema),
   catchAsync(companyController.updateCompany),
+);
+
+router.post(
+  "/:id/logo",
+  authenticate,
+  authorize(UserRole.RECRUITER),
+  logoUpload,
+  catchAsync(companyController.uploadLogo),
 );
 
 export { router as companyRouter };

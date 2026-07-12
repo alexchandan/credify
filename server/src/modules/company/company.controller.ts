@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { sendSuccess } from "../../utils/apiResponse.js";
+import { AppError } from "../../utils/AppError.js";
 import * as companyService from "./company.service.js";
 import type {
   CreateCompanyInput,
@@ -38,4 +39,16 @@ export async function updateCompany(
     input,
   );
   sendSuccess(res, { data: company, message: "Company updated" });
+}
+
+export async function uploadLogo(req: Request, res: Response): Promise<void> {
+  if (!req.file) {
+    throw new AppError(400, "VALIDATION_ERROR", "No logo file provided");
+  }
+  const company = await companyService.uploadLogo(
+    req.user!.userId,
+    req.params.id as string,
+    req.file.buffer,
+  );
+  sendSuccess(res, { data: company, message: "Logo uploaded" });
 }
