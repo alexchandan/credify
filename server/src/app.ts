@@ -15,6 +15,8 @@ import { notFoundHandler, errorHandler } from "./middlewares/errorHandler.js";
 import { sendSuccess } from "./utils/apiResponse.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
 import { candidateRouter } from "./modules/candidate/candidateProfile.routes.js";
+import { companyRouter } from "./modules/company/company.routes.js";
+import { recruiterRouter } from "./modules/recruiter/recruiterProfile.routes.js";
 
 export const app: Express = express();
 
@@ -83,6 +85,8 @@ app.get("/api/v1", (req: Request, res: Response) => {
 // ---- Routes ----
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/candidate", candidateRouter);
+app.use("/api/v1/companies", companyRouter);
+app.use("/api/v1/recruiters", recruiterRouter);
 
 // Error Handling (Must Be Last)
 app.use(notFoundHandler);
