@@ -1,23 +1,10 @@
-// src/middlewares/errorHandler.ts
 import type { Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
 import { AppError } from "../utils/AppError.js";
 import { sendError } from "../utils/apiResponse.js";
 import { logger } from "../utils/logger.js";
 import { env } from "../config/env.js";
-
-interface MongoDuplicateKeyError extends Error {
-  code: number;
-  keyValue?: Record<string, unknown>;
-}
-
-function isDuplicateKeyError(err: unknown): err is MongoDuplicateKeyError {
-  return (
-    typeof err === "object" &&
-    err !== null &&
-    (err as { code?: number }).code === 11000
-  );
-}
+import { isDuplicateKeyError } from "../utils/mongoErrors.js";
 
 /**
  * This must be the LAST middleware registered in app.ts.
