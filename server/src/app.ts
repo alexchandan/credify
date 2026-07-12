@@ -14,6 +14,7 @@ import { globalRateLimiter } from "./middlewares/rateLimiter.js";
 import { notFoundHandler, errorHandler } from "./middlewares/errorHandler.js";
 import { sendSuccess } from "./utils/apiResponse.js";
 import { authRouter } from "./modules/auth/auth.routes.js";
+import { candidateRouter } from "./modules/candidate/candidateProfile.routes.js";
 
 export const app: Express = express();
 
@@ -78,7 +79,10 @@ app.get("/api/v1", (req: Request, res: Response) => {
     message: "Credify API v1",
   });
 });
+
+// ---- Routes ----
 app.use("/api/v1/auth", authRouter);
+app.use("/api/v1/candidate", candidateRouter);
 
 // Error Handling (Must Be Last)
 app.use(notFoundHandler);
