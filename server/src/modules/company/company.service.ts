@@ -25,7 +25,7 @@ import type {
  * clean 409 without ever starting a transaction.
  */
 async function ensureUniqueSlug(baseSlug: string): Promise<string> {
-  const existing = await Company.findOne({ slug: baseSlug });
+  const existing = await Company.findOne({ slug: baseSlug, deletedAt: null });
   if (existing) {
     throw new AppError(
       409,

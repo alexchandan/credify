@@ -64,7 +64,7 @@ const recruiterProfileSchema = new mongoose.Schema<IRecruiterProfile>(
 recruiterProfileSchema.index({ companyId: 1 }); // list all recruiters for this company
 recruiterProfileSchema.index({ deletedAt: 1 });
 
-// ---- Guard: companyRole should never be set without a comapnyId ----
+// ---- Guard: companyRole should never be set without a companyId ----
 recruiterProfileSchema.pre("validate", function (this: IRecruiterProfile) {
   if (this.companyRole && !this.companyId) {
     this.invalidate(
@@ -76,7 +76,7 @@ recruiterProfileSchema.pre("validate", function (this: IRecruiterProfile) {
   if (this.companyId && !this.companyRole) {
     this.invalidate(
       "companyRole",
-      "companyRole is required when comapnyId is provided",
+      "companyRole is required when companyId is provided",
     );
   }
 });

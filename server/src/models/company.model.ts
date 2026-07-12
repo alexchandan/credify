@@ -88,7 +88,10 @@ export const companySchema = new mongoose.Schema<ICompany, ICompanyModel>(
 );
 
 // ---- Indexes ----
-companySchema.index({ slug: 1 }, { unique: true });
+companySchema.index(
+  { slug: 1 },
+  { unique: true, partialFilterExpression: { deletedAt: null } },
+);
 companySchema.index({ name: "text" }); // support text search on company name
 companySchema.index({ deletedAt: 1 });
 
