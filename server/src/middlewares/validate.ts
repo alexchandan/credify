@@ -7,7 +7,8 @@ type ValidationSource = "body" | "query" | "params";
 /**
  * Validates req[source] against a Zod schema and REPLACES req[source] with
  * the parsed result — controllers can trust the shape is already correct
- * and don't need to re-validate or re-check anything.
+ * (including any Zod defaults/coercion applied) and don't need to
+ * re-validate or re-check anything.
  *
  * Usage: router.post('/register', validate(registerSchema), catchAsync(authController.register));
  */
@@ -24,7 +25,16 @@ export function validate(schema: ZodType, source: ValidationSource = "body") {
       );
     }
 
-    req[source] = result.data;
+    if (source === "query") {
+      const target = req.query as Record<string, unknown>;
+      for (const key of Object.keys(target)) {
+        delete target[key];
+      }
+      Object.assign(target, result.data);
+    } else {
+      req[source] = result.data;
+    }
+
     next();
   };
 }
