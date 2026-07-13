@@ -23,6 +23,7 @@ import { searchRouter } from "./modules/search/search.routes.js";
 import { savedCandidateRouter } from "./modules/savedCandidate/savedCandidate.routes.js";
 import { notificationRouter } from "./modules/notification/notification.routes.js";
 import { dashboardRouter } from "./modules/dashboard/dashboard.routes.js";
+import { adminRouter } from "./modules/admin/admin.routes.js";
 
 export const app: Express = express();
 
@@ -99,6 +100,7 @@ app.use("api/v1/search", searchRouter);
 app.use("api/v1/savedCandidate", savedCandidateRouter);
 app.use("api/v1/notification", notificationRouter);
 app.use("api/v1/dashboard", dashboardRouter);
+app.use("api/v1/admin", adminRouter);
 
 // Error Handling (Must Be Last)
 app.use(notFoundHandler);

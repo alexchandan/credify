@@ -6,6 +6,7 @@ export enum ActivityAction {
   USER_MODERATED = "user_moderated",
   COMPANY_CREATED = "company_created",
   COMPANY_UPDATED = "company_updated",
+  COMPANY_DELETED = "company_deleted",
   JOB_PUBLISHED = "job_published",
   JOB_CLOSED = "job_closed",
   JOB_DELETED = "job_deleted",
