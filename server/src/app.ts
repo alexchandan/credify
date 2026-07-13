@@ -94,13 +94,13 @@ app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/candidates", candidateRouter);
 app.use("/api/v1/companies", companyRouter);
 app.use("/api/v1/recruiters", recruiterRouter);
-app.use("api/v1/jobs", jobRouter);
-app.use("api/v1/applications", applicationRouter);
-app.use("api/v1/search", searchRouter);
-app.use("api/v1/savedCandidate", savedCandidateRouter);
-app.use("api/v1/notification", notificationRouter);
-app.use("api/v1/dashboard", dashboardRouter);
-app.use("api/v1/admin", adminRouter);
+app.use("/api/v1/jobs", jobRouter);
+app.use("/api/v1/applications", applicationRouter);
+app.use("/api/v1/search", searchRouter);
+app.use("/api/v1/savedCandidate", savedCandidateRouter);
+app.use("/api/v1/notification", notificationRouter);
+app.use("/api/v1/dashboard", dashboardRouter);
+app.use("/api/v1/admin", adminRouter);
 
 // Error Handling (Must Be Last)
 app.use(notFoundHandler);
