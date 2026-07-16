@@ -1,3 +1,4 @@
+// src/modules/job/job.routes.ts
 import { Router } from "express";
 import { catchAsync } from "../../utils/catchAsync.js";
 import { validate } from "../../middlewares/validate.js";
@@ -10,6 +11,7 @@ import {
   createJobSchema,
   updateJobSchema,
   jobListQuerySchema,
+  myJobsListQuerySchema,
 } from "./job.validation.js";
 
 const router: Router = Router();
@@ -27,6 +29,16 @@ router.get(
   "/",
   validate(jobListQuerySchema, "query"),
   catchAsync(jobController.listJobs),
+);
+
+// MUST come before "/:id" — otherwise Express would match "mine" as a
+// job ID and route it to getJobById instead.
+router.get(
+  "/mine",
+  authenticate,
+  authorize(UserRole.RECRUITER),
+  validate(myJobsListQuerySchema, "query"),
+  catchAsync(jobController.getMyCompanyJobs),
 );
 
 // Public for published/closed jobs; drafts require optionalAuthenticate

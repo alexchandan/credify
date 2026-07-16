@@ -277,3 +277,31 @@ export async function resetPassword(
   user.tokenVersion += 1; // password changed — invalidate every existing session
   await user.save();
 }
+
+interface MeResult {
+  id: string;
+  email: string;
+  role: UserRole;
+  isVerified: boolean;
+}
+
+/**
+ * Added specifically to support frontend session restoration: after a
+ * silent POST /auth/refresh on page load, the frontend has a valid access
+ * token but no idea WHO the user is (refresh only ever returns a new
+ * token, never identity) — there was no lightweight "who am I" endpoint
+ * anywhere in the API. This fills that gap.
+ */
+export async function getMe(userId: string): Promise<MeResult> {
+  const user = await User.findOne({ _id: userId, deletedAt: null });
+  if (!user) {
+    throw new AppError(404, "USER_404", "User not found");
+  }
+
+  return {
+    id: user._id.toString(),
+    email: user.email,
+    role: user.role,
+    isVerified: user.isVerified,
+  };
+}

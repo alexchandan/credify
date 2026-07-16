@@ -1,5 +1,10 @@
+// src/modules/job/job.validation.ts
 import { z } from "zod";
-import { EmploymentType, ExperienceLevel } from "../../models/job.model.js";
+import {
+  EmploymentType,
+  ExperienceLevel,
+  JobStatus,
+} from "../../models/job.model.js";
 
 const salaryRangeSchema = z
   .object({
@@ -64,3 +69,17 @@ export const jobListQuerySchema = z.object({
 });
 
 export type JobListQuery = z.infer<typeof jobListQuerySchema>;
+
+// For GET /jobs/mine — a recruiter viewing their OWN company's jobs needs
+// to see every status (draft/published/closed), not just published ones.
+// No companyId field here at all — it's always derived from the
+// authenticated recruiter's own profile, never client-supplied.
+export const myJobsListQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+  status: z
+    .enum(Object.values(JobStatus) as [JobStatus, ...JobStatus[]])
+    .optional(),
+});
+
+export type MyJobsListQuery = z.infer<typeof myJobsListQuerySchema>;

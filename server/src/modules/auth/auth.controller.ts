@@ -102,3 +102,8 @@ export async function resetPassword(
     message: "Password reset successful. Please log in again.",
   });
 }
+
+export async function getMe(req: Request, res: Response): Promise<void> {
+  const me = await authService.getMe(req.user!.userId);
+  sendSuccess(res, { data: me });
+}

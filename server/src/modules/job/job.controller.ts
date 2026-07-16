@@ -1,3 +1,4 @@
+// src/modules/job/job.controller.ts
 import type { Request, Response } from "express";
 import { sendSuccess } from "../../utils/apiResponse.js";
 import * as jobService from "./job.service.js";
@@ -5,6 +6,7 @@ import type {
   CreateJobInput,
   UpdateJobInput,
   JobListQuery,
+  MyJobsListQuery,
 } from "./job.validation.js";
 
 export async function createJob(req: Request, res: Response): Promise<void> {
@@ -68,4 +70,21 @@ export async function closeJob(req: Request, res: Response): Promise<void> {
 export async function deleteJob(req: Request, res: Response): Promise<void> {
   await jobService.deleteJob(req.user!.userId, req.params.id as string);
   sendSuccess(res, { data: null, message: "Job deleted" });
+}
+
+export async function getMyCompanyJobs(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const query = req.query as unknown as MyJobsListQuery;
+  const result = await jobService.getMyCompanyJobs(req.user!.userId, query);
+  sendSuccess(res, {
+    data: result.jobs,
+    meta: {
+      page: result.page,
+      limit: result.limit,
+      totalCount: result.totalCount,
+      totalPages: result.totalPages,
+    },
+  });
 }
