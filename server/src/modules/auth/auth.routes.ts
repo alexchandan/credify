@@ -10,6 +10,7 @@ import {
   verifyEmailSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
+  resendVerificationSchema,
 } from "./auth.validation.js";
 
 const router: Router = Router();
@@ -44,6 +45,13 @@ router.post(
 );
 
 router.post(
+  "/resend-verification",
+  authRateLimiter, // same abuse-prevention reasoning as forgot-password — can spam an inbox otherwise
+  validate(resendVerificationSchema),
+  catchAsync(authController.resendVerification),
+);
+
+router.post(
   "/forgot-password",
   authRateLimiter,
   validate(forgotPasswordSchema),
@@ -54,7 +62,5 @@ router.post(
   validate(resetPasswordSchema),
   catchAsync(authController.resetPassword),
 );
-
-router.get("/me", authenticate, catchAsync(authController.getMe));
 
 export { router as authRouter };

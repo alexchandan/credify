@@ -50,7 +50,15 @@ export const forgotPasswordSchema = z.object({
   }),
 });
 
+export const resendVerificationSchema = z.object({
+  email: z.email({
+    error: "Invalid email address",
+  }),
+});
+
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+
+export type ResendVerificationInput = z.infer<typeof resendVerificationSchema>;
 
 export const resetPasswordSchema = z.object({
   token: z.string().min(1, { error: "Reset token is required" }),

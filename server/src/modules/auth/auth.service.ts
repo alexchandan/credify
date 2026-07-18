@@ -278,30 +278,31 @@ export async function resetPassword(
   await user.save();
 }
 
-interface MeResult {
-  id: string;
-  email: string;
-  role: UserRole;
-  isVerified: boolean;
-}
-
 /**
- * Added specifically to support frontend session restoration: after a
- * silent POST /auth/refresh on page load, the frontend has a valid access
- * token but no idea WHO the user is (refresh only ever returns a new
- * token, never identity) — there was no lightweight "who am I" endpoint
- * anywhere in the API. This fills that gap.
+ * Added to support the "Resend link" action on the post-registration
+ * verification-waiting screen — no such endpoint existed before.
+ * Enumeration-safe on the SAME principle as forgotPassword(): whether the
+ * account doesn't exist, is already verified, or is genuinely pending,
+ * the caller always gets the identical generic response. Only the truly
+ * pending case actually generates and stores a new token.
  */
-export async function getMe(userId: string): Promise<MeResult> {
-  const user = await User.findOne({ _id: userId, deletedAt: null });
-  if (!user) {
-    throw new AppError(404, "USER_404", "User not found");
+export async function resendVerificationEmail(email: string): Promise<void> {
+  const user = await User.findOne({ email, deletedAt: null });
+
+  if (!user || user.isVerified) {
+    return;
   }
 
-  return {
-    id: user._id.toString(),
-    email: user.email,
-    role: user.role,
-    isVerified: user.isVerified,
-  };
+  const rawVerificationToken = generateRawToken();
+  user.emailVerificationTokenHash = hashToken(rawVerificationToken);
+  user.emailVerificationTokenExpiry = new Date(
+    Date.now() + EMAIL_VERIFICATION_TTL_MS,
+  );
+  await user.save();
+
+  // TODO(Phase 4): replace with a queued email send once the email service exists.
+  logger.info(
+    { email, rawVerificationToken },
+    "Verification email resent (stub — no email service yet)",
+  );
 }

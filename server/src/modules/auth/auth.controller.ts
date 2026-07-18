@@ -12,6 +12,7 @@ import type {
   VerifyEmailInput,
   ForgotPasswordInput,
   ResetPasswordInput,
+  ResendVerificationInput,
 } from "./auth.validation.js";
 
 export async function register(req: Request, res: Response): Promise<void> {
@@ -103,7 +104,17 @@ export async function resetPassword(
   });
 }
 
-export async function getMe(req: Request, res: Response): Promise<void> {
-  const me = await authService.getMe(req.user!.userId);
-  sendSuccess(res, { data: me });
+export async function resendVerification(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const { email } = req.body as ResendVerificationInput;
+  await authService.resendVerificationEmail(email);
+  // Same enumeration-safe generic response regardless of what actually
+  // happened server-side — see authService.resendVerificationEmail().
+  sendSuccess(res, {
+    data: null,
+    message:
+      "If this account is pending verification, a new link has been sent.",
+  });
 }
