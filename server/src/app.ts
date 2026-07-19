@@ -27,6 +27,11 @@ import { adminRouter } from "./modules/admin/admin.routes.js";
 
 export const app: Express = express();
 
+// it'll get client's real ip instead of proxy's ip
+if (env.nodeEnv === "production") {
+  app.set("trust proxy", 1);
+}
+
 // Request Setup (Order Matters)
 app.use(requestId);
 
