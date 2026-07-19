@@ -5,12 +5,13 @@ import { CandidateProfile } from "../../models/candidateProfile.model.js";
 import { RecruiterProfile } from "../../models/recruiterProfile.model.js";
 import { AppError } from "../../utils/AppError.js";
 import { generateRawToken, hashToken } from "../../utils/hashToken.js";
+import { env } from "../../config/env.js";
+import { emailService, sendEmailSafely } from "../../utils/emailService.js";
 import {
   signAccessToken,
   signRefreshToken,
   verifyRefreshToken,
 } from "../../utils/tokenUtils.js";
-import { logger } from "../../utils/logger.js";
 
 const EMAIL_VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -85,10 +86,13 @@ export async function register(
     await session.endSession();
   }
 
-  // TODO(Phase 4): replace with a queued email send once the email service exists.
-  logger.info(
-    { email: input.email, rawVerificationToken },
-    "Email verification token generated (stub — no email service yet)",
+  // Sent after the transaction commits — email delivery is not a DB
+  // operation and shouldn't share the transaction's scope/session.
+  // sendEmailSafely ensures a flaky provider never fails registration
+  // itself; the account still exists and can be verified via resend.
+  const verificationUrl = `${env.clientOrigins[0]}/verify-email?token=${rawVerificationToken}`;
+  await sendEmailSafely(() =>
+    emailService.sendVerificationEmail(input.email, verificationUrl),
   );
 
   return { userId: createdUserId! };
@@ -125,7 +129,7 @@ export async function login(input: LoginInput): Promise<LoginResult> {
     throw new AppError(
       403,
       "AUTH_EMAIL_NOT_VERIFIED",
-      "Please verify your email from mailbox before logging in",
+      "Please verify your email before logging in",
     );
   }
 
@@ -244,10 +248,9 @@ export async function forgotPassword(email: string): Promise<void> {
   user.passwordResetTokenExpiry = new Date(Date.now() + PASSWORD_RESET_TTL_MS);
   await user.save();
 
-  // TODO(Phase 4): replace with a queued email send once the email service exists.
-  logger.info(
-    { email, rawResetToken },
-    "Password reset token generated (stub — no email service yet)",
+  const resetUrl = `${env.clientOrigins[0]}/reset-password?token=${rawResetToken}`;
+  await sendEmailSafely(() =>
+    emailService.sendPasswordResetEmail(email, resetUrl),
   );
 }
 
@@ -288,7 +291,6 @@ export async function resetPassword(
  */
 export async function resendVerificationEmail(email: string): Promise<void> {
   const user = await User.findOne({ email, deletedAt: null });
-
   if (!user || user.isVerified) {
     return;
   }
@@ -300,9 +302,9 @@ export async function resendVerificationEmail(email: string): Promise<void> {
   );
   await user.save();
 
-  // TODO(Phase 4): replace with a queued email send once the email service exists.
-  logger.info(
-    { email, rawVerificationToken },
-    "Verification email resent (stub — no email service yet)",
+  const verificationUrl = `${env.clientOrigins[0]}/verify-email?token=${rawVerificationToken}`;
+  await sendEmailSafely(() =>
+    emailService.sendVerificationEmail(email, verificationUrl),
   );
+  console.log(`email sent to ${email} `);
 }

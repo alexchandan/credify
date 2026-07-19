@@ -2,11 +2,10 @@
 
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import Link from "next/link";
 import { Mail } from "lucide-react";
 
 const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5000/api/v1";
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/api/v1";
 
 function webmailUrlFor(email: string): string {
   const domain = email.split("@")[1]?.toLowerCase() ?? "";
@@ -100,20 +99,6 @@ function CheckEmailInner() {
 export default function CheckEmailPage() {
   return (
     <div className="flex min-h-screen flex-col bg-gradient-to-b from-slate-50 to-white">
-      <header className="border-b border-slate-200 bg-white/80 px-6 py-4 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <Link href="/" className="text-lg font-bold text-slate-900">
-            Credify
-          </Link>
-          <Link
-            href="/register"
-            className="text-sm font-medium text-slate-600 hover:text-slate-900"
-          >
-            Register
-          </Link>
-        </div>
-      </header>
-
       <div className="mx-auto flex w-full max-w-md flex-1 items-center px-6 py-12">
         <Suspense
           fallback={
