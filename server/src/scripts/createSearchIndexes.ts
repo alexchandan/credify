@@ -98,7 +98,13 @@ async function main(): Promise<void> {
   process.exit(0);
 }
 
-main().catch((err) => {
-  logger.error({ err }, "Search index setup failed");
-  process.exit(1);
-});
+// Guarded so importing this module for its constants (as search.service.ts
+// does) doesn't also trigger the script — only running it directly (`pnpm
+// search:setup`) should connect, create indexes, and exit the process.
+const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+if (isMainModule) {
+  main().catch((err) => {
+    logger.error({ err }, "Search index setup failed");
+    process.exit(1);
+  });
+}

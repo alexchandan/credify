@@ -60,7 +60,7 @@ export async function register(
         passwordHash: input.password, // hashed by User's pre('save') hook
         role: input.role,
         emailVerificationTokenHash: hashToken(rawVerificationToken),
-        emailVerificationExpires: new Date(
+        emailVerificationTokenExpiry: new Date(
           Date.now() + EMAIL_VERIFICATION_TTL_MS,
         ),
       });
@@ -125,7 +125,7 @@ export async function login(input: LoginInput): Promise<LoginResult> {
     throw new AppError(
       403,
       "AUTH_EMAIL_NOT_VERIFIED",
-      "Please verify your email before logging in",
+      "Please verify your email from mailbox before logging in",
     );
   }
 

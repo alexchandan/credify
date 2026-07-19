@@ -20,7 +20,6 @@ export default function RegisterPage() {
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFieldErrors({});
@@ -34,7 +33,6 @@ export default function RegisterPage() {
         body: JSON.stringify({ email, password, fullName, role }),
       });
       const json = await res.json();
-
       if (!json.success) {
         if (
           json.error?.code === "VALIDATION_ERROR" &&

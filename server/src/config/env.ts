@@ -1,6 +1,8 @@
 import dotenv from "dotenv";
 
+// give precedence to .env if both persent
 dotenv.config({ path: ".env.local" });
+dotenv.config({ path: ".env" });
 
 interface Env {
   nodeEnv: string;

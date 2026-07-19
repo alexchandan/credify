@@ -9,6 +9,7 @@
     "build": "tsc --noEmit",
     "dev": "tsx watch src/server.ts",
     "seed": "tsx src/scripts/seed.ts",
+    "search:setup": "tsx src/scripts/createSearchIndexes.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "type-check": "tsc --noEmit"
