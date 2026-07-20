@@ -2,15 +2,16 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
-import CheckEmailPage from "../check-email/page";
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5000/api/v1";
+import { useAuth } from "@/context/AuthContext";
+import { parseFieldErrors, getErrorMessage } from "@/lib/formErrors";
 
 type Role = "candidate" | "recruiter";
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const { register } = useAuth();
   const [role, setRole] = useState<Role>("candidate");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -19,7 +20,7 @@ export default function RegisterPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFieldErrors({});
@@ -27,42 +28,23 @@ export default function RegisterPage() {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch(`${API_BASE}/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, fullName, role }),
-      });
-      const json = await res.json();
-      if (!json.success) {
-        if (
-          json.error?.code === "VALIDATION_ERROR" &&
-          Array.isArray(json.error.details)
-        ) {
-          const parsed: Record<string, string> = {};
-          for (const detail of json.error.details as string[]) {
-            const idx = detail.indexOf(":");
-            if (idx === -1) continue;
-            parsed[detail.slice(0, idx).trim()] = detail.slice(idx + 1).trim();
-          }
-          setFieldErrors(parsed);
-        } else {
-          setGeneralError(
-            json.error?.message ?? "Something went wrong. Please try again.",
-          );
-        }
-        return;
+      // Uses the real AuthContext now, same as Login.
+      await register({ email, password, fullName, role });
+      // Navigate for real, instead of rendering <CheckEmailPage /> inline —
+      // that page reads the email via useSearchParams(), which only works
+      // when the URL actually changes, not when the component is just
+      // rendered in place without navigation.
+      router.push(`/check-email?email=${encodeURIComponent(email)}`);
+    } catch (err) {
+      const fields = parseFieldErrors(err);
+      if (Object.keys(fields).length > 0) {
+        setFieldErrors(fields);
+      } else {
+        setGeneralError(getErrorMessage(err));
       }
-
-      setSubmitted(true);
-    } catch {
-      setGeneralError("Could not reach the server. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
-  }
-
-  if (submitted) {
-    return <CheckEmailPage />;
   }
 
   return (

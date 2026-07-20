@@ -4,12 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/api/v1";
+import { useAuth } from "@/context/AuthContext";
+import { getErrorMessage } from "@/lib/formErrors";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -22,24 +22,13 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      const res = await fetch(`${API_BASE}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ email, password }),
-      });
-      const json = await res.json();
-
-      if (!json.success) {
-        setError(json.error?.message ?? "Invalid email or password.");
-        return;
-      }
-
-      // See accompanying message — json.data.accessToken is valid here,
-      // but there's no AuthContext yet to hold it for the rest of the app.
+      // Uses the real AuthContext now — this actually persists the
+      // session (token in memory, user in state) for the rest of the
+      // app to read via useAuth(), not just a one-off API call.
+      await login(email, password);
       router.push("/");
-    } catch {
-      setError("Could not reach the server. Please try again.");
+    } catch (err) {
+      setError(getErrorMessage(err));
     } finally {
       setIsSubmitting(false);
     }

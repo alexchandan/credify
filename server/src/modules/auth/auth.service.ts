@@ -308,3 +308,29 @@ export async function resendVerificationEmail(email: string): Promise<void> {
   );
   console.log(`email sent to ${email} `);
 }
+
+interface MeResult {
+  id: string;
+  email: string;
+  role: UserRole;
+  isVerified: boolean;
+}
+
+/**
+ * Supports frontend session restoration: after a silent POST /auth/refresh
+ * on page load, the frontend has a valid access token but no idea WHO the
+ * user is (refresh only ever returns a new token, never identity).
+ */
+export async function getMe(userId: string): Promise<MeResult> {
+  const user = await User.findOne({ _id: userId, deletedAt: null });
+  if (!user) {
+    throw new AppError(404, "USER_404", "User not found");
+  }
+
+  return {
+    id: user._id.toString(),
+    email: user.email,
+    role: user.role,
+    isVerified: user.isVerified,
+  };
+}

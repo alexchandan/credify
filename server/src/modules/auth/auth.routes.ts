@@ -63,4 +63,6 @@ router.post(
   catchAsync(authController.resetPassword),
 );
 
+router.get("/me", authenticate, catchAsync(authController.getMe));
+
 export { router as authRouter };

@@ -118,3 +118,8 @@ export async function resendVerification(
       "If this account is pending verification, a new link has been sent.",
   });
 }
+
+export async function getMe(req: Request, res: Response): Promise<void> {
+  const me = await authService.getMe(req.user!.userId);
+  sendSuccess(res, { data: me });
+}
