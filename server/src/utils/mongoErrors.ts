@@ -14,13 +14,7 @@ export function isDuplicateKeyError(
   );
 }
 
-/**
- * Narrower check: was the duplicate specifically on the given field?
- * Useful when a collection has multiple unique indexes and a service
- * only wants to translate ONE of them into a specific AppError,
- * letting duplicates on other fields fall through to the generic
- * DUPLICATE_ENTRY handling in errorHandler.ts.
- */
+// to acknowledge error on specific field
 export function isDuplicateKeyErrorOnField(
   err: unknown,
   field: string,

@@ -1,3 +1,4 @@
+// used for hybrid routes (logged in user or guest)
 import type { Request, Response, NextFunction } from "express";
 import { extractBearerToken } from "./authenticate.js";
 import { verifyAccessToken } from "../utils/tokenUtils.js";

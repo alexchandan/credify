@@ -1,4 +1,3 @@
-// src/modules/job/job.routes.ts
 import { Router } from "express";
 import { catchAsync } from "../../utils/catchAsync.js";
 import { validate } from "../../middlewares/validate.js";

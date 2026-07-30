@@ -37,6 +37,7 @@ interface ErrorBody {
   };
 }
 
+//fucntion(p1:type, p2:type):return type
 export function sendSuccess<T>(
   res: Response,
   {

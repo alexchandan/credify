@@ -1,4 +1,3 @@
-// src/modules/job/job.validation.ts
 import { z } from "zod";
 import {
   EmploymentType,

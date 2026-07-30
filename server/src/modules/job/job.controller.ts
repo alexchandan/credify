@@ -1,4 +1,3 @@
-// src/modules/job/job.controller.ts
 import type { Request, Response } from "express";
 import { sendSuccess } from "../../utils/apiResponse.js";
 import * as jobService from "./job.service.js";

@@ -1,5 +1,3 @@
-// src/scripts/createSearchIndexes.ts
-//
 // Creates the Atlas Search indexes the Search module's $search queries
 // depend on. This is a ONE-TIME infrastructure step, not something that
 // happens automatically via Mongoose schemas — Atlas Search indexes are a

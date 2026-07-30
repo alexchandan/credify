@@ -7,8 +7,8 @@ export const registerSchema = z.object({
   }),
   password: z
     .string()
-    .min(6, {
-      error: "Password must be at least 6 characters",
+    .min(8, {
+      error: "Password must be at least 8 characters",
     })
     .max(15, {
       error: "Password must be at most 15 characters",
@@ -50,13 +50,13 @@ export const forgotPasswordSchema = z.object({
   }),
 });
 
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+
 export const resendVerificationSchema = z.object({
   email: z.email({
     error: "Invalid email address",
   }),
 });
-
-export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 
 export type ResendVerificationInput = z.infer<typeof resendVerificationSchema>;
 
@@ -64,7 +64,7 @@ export const resetPasswordSchema = z.object({
   token: z.string().min(1, { error: "Reset token is required" }),
   newPassword: z
     .string()
-    .min(6, { error: "Password must be at least 6 characters" })
+    .min(8, { error: "Password must be at least 8 characters" })
     .max(15, { error: "Password must be at most 15 characters" }),
 });
 

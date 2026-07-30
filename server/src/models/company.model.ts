@@ -94,13 +94,9 @@ export const companySchema = new mongoose.Schema<ICompany, ICompanyModel>(
 );
 
 // ---- Indexes ----
-// Partial index: uniqueness is only enforced among non-deleted companies.
-// Without this, a soft-deleted company's slug stays permanently reserved
-// forever — the whole point of soft-delete is that deletion shouldn't have
-// permanent side effects like this.
 companySchema.index(
   { slug: 1 },
-  { unique: true, partialFilterExpression: { deletedAt: null } },
+  { unique: true, partialFilterExpression: { deletedAt: null } }, // partialFilterExpression to implement soft delete
 );
 companySchema.index({ name: "text" }); // support text search on company name
 companySchema.index({ deletedAt: 1 });

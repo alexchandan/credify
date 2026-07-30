@@ -14,7 +14,7 @@ export const logger = pino({
         "req.headers.authorization",
         "req.headers.cookie",
       ],
-      censor: "[REDACTED]",
+      censor: "[REDACTED]", // this tell pino what to replace sensitive value with
     },
   }),
 });

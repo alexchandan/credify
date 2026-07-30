@@ -1,4 +1,3 @@
-// src/policies/policyResult.ts
 import { AppError } from "../utils/AppError.js";
 
 export type PolicyResult =

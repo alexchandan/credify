@@ -52,11 +52,20 @@ export async function refresh(req: Request, res: Response): Promise<void> {
   sendSuccess(res, { data: { accessToken }, message: "Token refreshed" });
 }
 
+export async function resendVerification(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const { email } = req.body as ResendVerificationInput;
+  await authService.resendVerificationEmail(email);
+  sendSuccess(res, {
+    data: null,
+    message:
+      "If this account is pending verification, a new link has been sent.",
+  });
+}
+
 export async function logout(_req: Request, res: Response): Promise<void> {
-  // Stateless logout: the refresh token isn't individually revoked (see the
-  // known limitation noted in auth.service.ts's refreshTokens()) — we simply
-  // stop sending it. Clearing the cookie must use the SAME options it was
-  // set with (path/sameSite/secure), or the browser won't remove it.
   res.clearCookie(REFRESH_COOKIE_NAME, refreshCookieOptions());
   sendSuccess(res, { data: null, message: "Logged out" });
 }
@@ -83,12 +92,9 @@ export async function forgotPassword(
 ): Promise<void> {
   const { email } = req.body as ForgotPasswordInput;
   await authService.forgotPassword(email);
-  // Same response regardless of whether the email existed — see the
-  // enumeration-safety note on authService.forgotPassword().
   sendSuccess(res, {
     data: null,
-    message:
-      "If an account with that email exists, a password reset link has been sent.",
+    message: "Password reset link has been sent to your email account.",
   });
 }
 
@@ -101,21 +107,6 @@ export async function resetPassword(
   sendSuccess(res, {
     data: null,
     message: "Password reset successful. Please log in again.",
-  });
-}
-
-export async function resendVerification(
-  req: Request,
-  res: Response,
-): Promise<void> {
-  const { email } = req.body as ResendVerificationInput;
-  await authService.resendVerificationEmail(email);
-  // Same enumeration-safe generic response regardless of what actually
-  // happened server-side — see authService.resendVerificationEmail().
-  sendSuccess(res, {
-    data: null,
-    message:
-      "If this account is pending verification, a new link has been sent.",
   });
 }
 

@@ -1,13 +1,7 @@
 import dotenv from "dotenv";
 
-// Prefer .env.local (typically git-ignored, for real secrets), but fall
-// back to .env — the documented setup path (`cp .env.example .env`, per
-// README.md / docs/ENVIRONMENT_SETUP.md) must also work without silent
-// failure. dotenv.config() never overrides a variable that's already
-// set in process.env, so loading .env.local first correctly gives it
-// precedence if both happen to exist.
 dotenv.config({ path: ".env.local" });
-dotenv.config({ path: ".env" });
+dotenv.config({ path: ".env" }); //fallback
 
 interface Env {
   nodeEnv: string;
@@ -31,7 +25,7 @@ interface Env {
 
 // Fail fast: if a required env var is missing, crash on boot rather than
 // mysteriously later at runtime.
-const required = [
+const requiredEnv = [
   "MONGODB_URI",
   "JWT_ACCESS_SECRET",
   "JWT_REFRESH_SECRET",
@@ -41,11 +35,15 @@ const required = [
   "RESEND_API_KEY",
 ] as const;
 
-for (const key of required) {
-  if (!process.env[key]) {
-    console.error(`Missing required environment variable: ${key}`);
-    process.exit(1);
-  }
+const missingRequiredEnv = requiredEnv.filter((key) => !process.env[key]);
+if (missingRequiredEnv.length > 0) {
+  console.warn(
+    [
+      "Missing required environment variable:",
+      ...missingRequiredEnv.map((key) => key),
+    ].join("\n"),
+  );
+  process.exit(1);
 }
 
 export const env: Env = {
@@ -66,9 +64,6 @@ export const env: Env = {
   },
   email: {
     resendApiKey: process.env.RESEND_API_KEY as string,
-    // Resend's own test sender — works immediately with zero domain
-    // setup, which matters for actually getting this running today.
-    // Swap to a verified sender address once you own a domain in Resend.
-    from: process.env.EMAIL_FROM!,
+    from: process.env.EMAIL_FROM as string,
   },
 };

@@ -1,4 +1,3 @@
-// src/modules/job/job.service.ts
 import { Job, JobStatus, type IJob } from "../../models/job.model.js";
 import { RecruiterProfile } from "../../models/recruiterProfile.model.js";
 import { AppError } from "../../utils/AppError.js";

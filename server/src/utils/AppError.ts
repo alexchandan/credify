@@ -1,7 +1,5 @@
-/**
- * Throw this anywhere in a controller/service instead of a plain Error.
- * Example: throw new AppError(404, 'JOB_404', 'Job not found');
- */
+// use case: throw new AppError(404, 'JOB_404', 'Job not found');
+
 export class AppError extends Error {
   public readonly statusCode: number;
   public readonly code: string;
@@ -14,15 +12,13 @@ export class AppError extends Error {
     message: string,
     details: unknown[] = [],
   ) {
-    super(message);
+    super(message); // inherit the parent class Error. equivalent to - const err = new Error(message);
     this.statusCode = statusCode;
     this.code = code;
     this.details = details;
-    // Marks this as an error we anticipated and handled deliberately,
-    // as opposed to an unexpected bug — useful for logging severity later.
-    this.isOperational = true;
+    this.isOperational = true; // flag for is this an expected error. oppose to unexpected bug
 
-    Object.setPrototypeOf(this, AppError.prototype);
-    Error.captureStackTrace(this, this.constructor);
+    Object.setPrototypeOf(this, AppError.prototype); // this ensure checks such as - err instanceof AppError
+    Error.captureStackTrace(this, this.constructor); // removes constructure calls from the stack
   }
 }

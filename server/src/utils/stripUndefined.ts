@@ -1,3 +1,5 @@
+// stripUndefined function used to prevent the "undefined" input value
+
 type DeepStrip<T> = T extends (infer U)[]
   ? U[]
   : T extends Date

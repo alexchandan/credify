@@ -51,7 +51,7 @@ export async function register(
   }
 
   const rawVerificationToken = generateRawToken();
-  const session = await mongoose.startSession();
+  const session = await mongoose.startSession(); // session to provide ACID transaction
   let createdUserId: string;
 
   try {
@@ -88,8 +88,6 @@ export async function register(
 
   // Sent after the transaction commits — email delivery is not a DB
   // operation and shouldn't share the transaction's scope/session.
-  // sendEmailSafely ensures a flaky provider never fails registration
-  // itself; the account still exists and can be verified via resend.
   const verificationUrl = `${env.clientOrigins[0]}/verify-email?token=${rawVerificationToken}`;
   await sendEmailSafely(() =>
     emailService.sendVerificationEmail(input.email, verificationUrl),
@@ -129,7 +127,7 @@ export async function login(input: LoginInput): Promise<LoginResult> {
     throw new AppError(
       403,
       "AUTH_EMAIL_NOT_VERIFIED",
-      "Please verify your email before logging in",
+      "Please verify your email from Inbox before logging in",
     );
   }
 
@@ -207,6 +205,27 @@ export async function refreshTokens(
   return { accessToken, refreshToken };
 }
 
+// ---- Send verification Email through resend ----
+export async function resendVerificationEmail(email: string): Promise<void> {
+  const user = await User.findOne({ email, deletedAt: null });
+  if (!user || user.isVerified) {
+    return;
+  }
+
+  const rawVerificationToken = generateRawToken();
+  user.emailVerificationTokenHash = hashToken(rawVerificationToken);
+  user.emailVerificationTokenExpiry = new Date(
+    Date.now() + EMAIL_VERIFICATION_TTL_MS,
+  );
+  await user.save();
+
+  const verificationUrl = `${env.clientOrigins[0]}/verify-email?token=${rawVerificationToken}`;
+  await sendEmailSafely(() =>
+    emailService.sendVerificationEmail(email, verificationUrl),
+  );
+  console.log(`email sent to ${email} `);
+}
+
 // ---- Logic for email varification through link ----
 export async function verifyEmail(rawToken: string): Promise<void> {
   const tokenHash = hashToken(rawToken);
@@ -234,14 +253,12 @@ export async function verifyEmail(rawToken: string): Promise<void> {
 export async function forgotPassword(email: string): Promise<void> {
   const user = await User.findOne({ email, deletedAt: null });
 
-  // Deliberately silent if no match — the controller returns the same
-  // generic success response either way, so this endpoint can never be
-  // used to enumerate which emails have accounts.
+  // Deliberately silent if no match — to avoid email enumeration
   if (!user) {
     return;
   }
 
-  const PASSWORD_RESET_TTL_MS = 60 * 60 * 1000; // 1 hour — shorter than email verification, since a leaked reset link is more sensitive
+  const PASSWORD_RESET_TTL_MS = 30 * 60 * 1000; // 30 minutes — shorter than email verification, since a leaked reset link is more sensitive
 
   const rawResetToken = generateRawToken();
   user.passwordResetTokenHash = hashToken(rawResetToken);
@@ -279,34 +296,6 @@ export async function resetPassword(
   user.passwordResetTokenExpiry = undefined;
   user.tokenVersion += 1; // password changed — invalidate every existing session
   await user.save();
-}
-
-/**
- * Added to support the "Resend link" action on the post-registration
- * verification-waiting screen — no such endpoint existed before.
- * Enumeration-safe on the SAME principle as forgotPassword(): whether the
- * account doesn't exist, is already verified, or is genuinely pending,
- * the caller always gets the identical generic response. Only the truly
- * pending case actually generates and stores a new token.
- */
-export async function resendVerificationEmail(email: string): Promise<void> {
-  const user = await User.findOne({ email, deletedAt: null });
-  if (!user || user.isVerified) {
-    return;
-  }
-
-  const rawVerificationToken = generateRawToken();
-  user.emailVerificationTokenHash = hashToken(rawVerificationToken);
-  user.emailVerificationTokenExpiry = new Date(
-    Date.now() + EMAIL_VERIFICATION_TTL_MS,
-  );
-  await user.save();
-
-  const verificationUrl = `${env.clientOrigins[0]}/verify-email?token=${rawVerificationToken}`;
-  await sendEmailSafely(() =>
-    emailService.sendVerificationEmail(email, verificationUrl),
-  );
-  console.log(`email sent to ${email} `);
 }
 
 interface MeResult {

@@ -4,6 +4,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+// Recursive function to prevent No-SQL injection attack by striping out dengerous characters like doller ($) and dots (.) from user inputs.
 function sanitizeInPlace(target: unknown): void {
   if (Array.isArray(target)) {
     for (const item of target) {

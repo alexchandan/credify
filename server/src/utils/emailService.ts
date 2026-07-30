@@ -1,15 +1,7 @@
-// src/utils/emailService.ts
 import { Resend } from "resend";
 import { env } from "../config/env.js";
 import { logger } from "./logger.js";
 
-/**
- * Wraps the actual email provider (Resend today) behind an interface,
- * same reasoning as storageService.ts for Cloudinary: swapping providers
- * later, or mocking email in tests, means implementing this interface
- * once, not hunting down every call site that touched the Resend SDK
- * directly.
- */
 export interface EmailService {
   sendVerificationEmail(to: string, verificationUrl: string): Promise<void>;
   sendPasswordResetEmail(to: string, resetUrl: string): Promise<void>;
@@ -54,11 +46,7 @@ class ResendEmailService implements EmailService {
         verificationUrl,
       ),
     });
-    // Resend's SDK does NOT reject the promise on an API-level failure
-    // (e.g. "you can only send to your own email until you verify a
-    // domain") — it resolves normally with { data: null, error }.
-    // Without this check, sendEmailSafely()'s try/catch would never see
-    // these failures at all, and they'd be silently invisible.
+
     if (error) {
       throw new Error(`Resend API error: ${error.message}`);
     }
@@ -71,7 +59,7 @@ class ResendEmailService implements EmailService {
       subject: "Reset your Credify password",
       html: baseEmailLayout(
         "Reset your password",
-        "We received a request to reset your password. If this wasn't you, you can safely ignore this email. This link expires in 1 hour.",
+        "We received a request to reset your password. If this wasn't you, you can safely ignore this email. This link expires in 30 minutes.",
         "Reset Password",
         resetUrl,
       ),
@@ -84,18 +72,6 @@ class ResendEmailService implements EmailService {
 
 const realEmailService = new ResendEmailService();
 
-/**
- * Sends an email WITHOUT letting a failure break whatever action
- * triggered it (registration, password reset request, etc.). Email
- * delivery is inherently less reliable than your own database — a
- * flaky provider or a bad API key should never prevent someone from
- * successfully registering. Errors are logged, not thrown.
- *
- * NOTE: this is a direct, awaited send — not queued. Fine for current
- * volume; a real background job queue (BullMQ + Redis, already planned
- * for Phase 4 hardening) is the correct upgrade once email volume or
- * request-latency sensitivity actually requires it.
- */
 export async function sendEmailSafely(
   send: () => Promise<void>,
 ): Promise<void> {

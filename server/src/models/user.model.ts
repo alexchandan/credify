@@ -1,5 +1,5 @@
-import mongoose, { Schema } from "mongoose";
-import type { Document, Model } from "mongoose";
+import mongoose from "mongoose";
+import type { Document } from "mongoose";
 import bcrypt from "bcryptjs";
 
 export enum UserRole {
@@ -25,9 +25,9 @@ export interface IUser extends Document {
   comparePassword(password: string): Promise<boolean>;
 }
 
-type IUserModel = Model<IUser>;
+type IUserModel = mongoose.Model<IUser>;
 
-const userSchema = new Schema<IUser, IUserModel>(
+const userSchema = new mongoose.Schema<IUser, IUserModel>(
   {
     email: {
       type: String,

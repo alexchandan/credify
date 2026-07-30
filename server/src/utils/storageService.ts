@@ -12,14 +12,6 @@ export interface UploadOptions {
   publicId?: string;
 }
 
-/**
- * Wraps the actual storage provider (Cloudinary today) behind an
- * interface, per the original architecture decision: controllers/services
- * call storageService.upload()/delete(), never the Cloudinary SDK
- * directly. Swapping providers later (e.g. to S3) or mocking storage in
- * tests means implementing this interface once, not hunting down every
- * call site that touched the SDK.
- */
 export interface StorageService {
   upload(buffer: Buffer, options: UploadOptions): Promise<UploadResult>;
   delete(publicId: string, resourceType?: "image" | "raw"): Promise<void>;

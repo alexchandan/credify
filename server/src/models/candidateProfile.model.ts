@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import type { Document, Model } from "mongoose";
+import type { Document } from "mongoose";
 
 export enum Availability {
   IMMEDIATE = "immediate",
@@ -68,8 +68,6 @@ export interface ICandidateProfile extends Document {
   updatedAt: Date;
 }
 
-type ICandidateProfileModel = Model<ICandidateProfile>;
-
 // ---- Sub-Schemas for embedded documents ----
 // { _id: false } because these are pure embedded value objects, not
 // independently addressable entities — no need for Mongo to generate
@@ -129,6 +127,8 @@ const socialLinksSchema = new mongoose.Schema<ISocialLinks>(
   },
   { _id: false },
 );
+
+type ICandidateProfileModel = mongoose.Model<ICandidateProfile>;
 
 // ---- Main CandidateProfile Schema ----
 const candidateProfileSchema = new mongoose.Schema<

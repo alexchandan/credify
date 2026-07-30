@@ -23,7 +23,7 @@ const projectSchema = z.object({
   title: z.string().min(1, "Project title is required").trim(),
   description: z.string().trim().max(2000).optional(),
   techStack: z.array(z.string().trim()).default([]),
-  link: z.string().url("Invalid URL").optional(),
+  link: z.url("Invalid URL").optional(),
 });
 
 const certificationSchema = z.object({
