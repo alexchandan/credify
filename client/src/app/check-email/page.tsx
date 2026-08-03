@@ -2,7 +2,8 @@
 
 import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Mail } from "lucide-react";
+import { Mail, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080/api/v1";
@@ -88,7 +89,13 @@ function CheckEmailInner() {
       {resendMessage && (
         <p className="mt-2 text-xs text-slate-500">{resendMessage}</p>
       )}
-
+      <Link
+        href="/login"
+        className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-blue-700 hover:underline"
+      >
+        <ArrowLeft className="h-3.5 w-3.5" />
+        Back to Login
+      </Link>
       <div className="mt-6 border-t border-slate-100 pt-6 text-sm text-slate-500">
         Can&apos;t find the email? Check your spam folder.
       </div>
@@ -98,7 +105,7 @@ function CheckEmailInner() {
 
 export default function CheckEmailPage() {
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-b from-slate-50 to-white">
+    <div className="flex min-h-screen flex-col bg-linear-to-b from-slate-50 to-white">
       <div className="mx-auto flex w-full max-w-md flex-1 items-center px-6 py-12">
         <Suspense
           fallback={

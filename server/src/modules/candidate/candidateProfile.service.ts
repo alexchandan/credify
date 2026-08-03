@@ -39,11 +39,7 @@ export async function updateMyProfile(
   return updated;
 }
 
-/**
- * Recruiter-facing read of a specific candidate. Explicitly filters
- * deletedAt: null in the query itself — a soft-deleted candidate must be
- * invisible here, not just hidden by a UI-level check.
- */
+// ---- For recruiter ----
 export async function getCandidateById(
   candidateProfileId: string,
 ): Promise<ICandidateProfile> {
@@ -60,8 +56,8 @@ export async function getCandidateById(
 }
 
 /**
- * Uploads a new resume, replacing the old one. If a previous resume
- * exists, its Cloudinary file is deleted AFTER the new upload succeeds
+ * Uploads a new resume, replacing the old one.
+ * If a previous resume exists, its Cloudinary file is deleted AFTER the new upload succeeds
  * (not before) — if the new upload failed, the candidate should still
  * have their old resume rather than ending up with neither.
  */
@@ -86,15 +82,11 @@ export async function uploadResume(
   await profile.save();
 
   if (previousPublicId) {
-    // Best-effort cleanup — if this fails, an orphaned file on Cloudinary
-    // is a minor cost, not worth failing the whole request over (the
-    // profile is already correctly updated at this point).
+    // Cleanup - the field in claudinary does not replaced by the old one, it add a completly new file.
+    // So you have to delete the previously one
     try {
       await storageService.delete(previousPublicId, "raw");
     } catch (err) {
-      // Deliberately swallowed — see comment above. Logged (not silent)
-      // so an orphaned Cloudinary file is at least visible for periodic
-      // manual cleanup.
       logger.warn(
         { err, previousPublicId },
         "Failed to delete previous resume from storage",

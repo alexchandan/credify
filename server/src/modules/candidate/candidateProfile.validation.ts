@@ -2,8 +2,16 @@ import { z } from "zod";
 import { Availability } from "../../models/candidateProfile.model.js";
 
 const educationSchema = z.object({
-  institution: z.string().min(1, "Institution is required").trim(),
-  degree: z.string().min(1, "Degree is required").trim(),
+  institution: z
+    .string()
+    .trim()
+    .min(1, "Institution is required")
+    .max(100, "Institution name is too long"),
+  degree: z
+    .string()
+    .trim()
+    .min(1, "Degree is required")
+    .max(100, "Degree name is too long"),
   fieldOfStudy: z.string().trim().optional(),
   startDate: z.coerce.date(),
   endDate: z.coerce.date().optional(),
@@ -11,8 +19,16 @@ const educationSchema = z.object({
 });
 
 const experienceSchema = z.object({
-  company: z.string().min(1, "Company is required").trim(),
-  title: z.string().min(1, "Title is required").trim(),
+  company: z
+    .string()
+    .trim()
+    .min(1, "Company is required")
+    .max(100, "Company name is too long"),
+  title: z
+    .string()
+    .trim()
+    .min(1, "Title is required")
+    .max(100, "Title is too long"),
   startDate: z.coerce.date(),
   endDate: z.coerce.date().optional(),
   isCurrent: z.boolean().default(false),
@@ -20,30 +36,38 @@ const experienceSchema = z.object({
 });
 
 const projectSchema = z.object({
-  title: z.string().min(1, "Project title is required").trim(),
+  title: z
+    .string()
+    .trim()
+    .min(1, "Project title is required")
+    .max(100, "Title is too long"),
   description: z.string().trim().max(2000).optional(),
   techStack: z.array(z.string().trim()).default([]),
   link: z.url("Invalid URL").optional(),
 });
 
 const certificationSchema = z.object({
-  name: z.string().min(1, "Certification name is required").trim(),
-  issuingOrg: z.string().min(1, "Issuing organization is required").trim(),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Certification name is required")
+    .max(100, "Certification name is too long"),
+  issuingOrg: z.string().trim().min(1, "Issuing organization is required"),
   issueDate: z.coerce.date(),
   expiryDate: z.coerce.date().optional(),
-  credentialUrl: z.string().url("Invalid URL").optional(),
+  credentialUrl: z.url("Invalid URL").optional(),
 });
 
 const socialLinksSchema = z.object({
-  linkedIn: z.string().url("Invalid URL").optional(),
-  github: z.string().url("Invalid URL").optional(),
-  portfolio: z.string().url("Invalid URL").optional(),
-  twitter: z.string().url("Invalid URL").optional(),
+  linkedIn: z.url("Invalid URL").optional(),
+  github: z.url("Invalid URL").optional(),
+  portfolio: z.url("Invalid URL").optional(),
+  twitter: z.url("Invalid URL").optional(),
 });
 
 export const createCandidateProfileSchema = z.object({
-  fullName: z.string().min(1, "Full name is required").max(150).trim(),
-  headline: z.string().max(150).trim().optional(),
+  fullName: z.string().trim().min(1, "Full name is required").max(150),
+  headline: z.string().trim().max(150).optional(),
   skills: z.array(z.string().trim().min(1)).default([]),
   location: z.string().trim().optional(),
   availability: z

@@ -223,7 +223,6 @@ export async function resendVerificationEmail(email: string): Promise<void> {
   await sendEmailSafely(() =>
     emailService.sendVerificationEmail(email, verificationUrl),
   );
-  console.log(`email sent to ${email} `);
 }
 
 // ---- Logic for email varification through link ----

@@ -35,25 +35,8 @@ export async function updateMyProfile(
   return updated;
 }
 
-/**
- * Lets a recruiter leave their current company, clearing companyId/companyRole
- * back to null — the only path back to a company-less state (createCompany
- * refuses recruiters who already have a companyId, so without this, joining
- * the wrong company would be a permanent dead end).
- *
- * MEMBER/ADMIN can always leave freely. OWNER is more delicate: if other
- * recruiters still belong to the company, an OWNER leaving would strand
- * them — canManageCompany() requires an OWNER or ADMIN to exist at all, so
- * an ownerless company with remaining members would become permanently
- * unmanageable by any of them without direct DB intervention. That case is
- * blocked with a clear error rather than silently allowed; a real
- * ownership-transfer flow is the correct fix but is out of scope here.
- *
- * If the OWNER is the SOLE recruiter at the company, there's no one left
- * to strand — leaving also soft-deletes the company in the same
- * transaction, since an ownerless, memberless company would otherwise be
- * permanently stuck in an unmanageable state forever.
- */
+// Recruiter leave thier company
+// If there only one person in the company. Transfer the ownership before leaving the company.
 export async function leaveCompany(
   actorUserId: string,
 ): Promise<IRecruiterProfile> {

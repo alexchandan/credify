@@ -13,7 +13,7 @@ export default function ForgotPasswordPage() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     setIsSubmitting(true);
@@ -39,29 +39,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-b from-slate-50 to-white">
-      <header className="border-b border-slate-200 bg-white/80 px-6 py-4 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-lg font-bold text-slate-900"
-          >
-            Credify
-          </Link>
-          <div className="flex items-center gap-4 text-sm">
-            <Link href="/login" className="text-slate-600 hover:text-slate-900">
-              Sign In
-            </Link>
-            <Link
-              href="/register"
-              className="rounded-lg bg-slate-900 px-4 py-2 font-medium text-white"
-            >
-              Register
-            </Link>
-          </div>
-        </div>
-      </header>
-
+    <div className="flex min-h-screen flex-col bg-linear-to-b from-slate-50 to-white">
       <div className="mx-auto flex w-full max-w-md flex-1 items-center px-6 py-12">
         <div className="w-full rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
           {submitted ? (
