@@ -13,6 +13,8 @@ import type {
   ForgotPasswordInput,
   ResetPasswordInput,
   ResendVerificationInput,
+  ChangePasswordInput,
+  DeleteAccountInput,
 } from "./auth.validation.js";
 
 export async function register(req: Request, res: Response): Promise<void> {
@@ -113,4 +115,35 @@ export async function resetPassword(
 export async function getMe(req: Request, res: Response): Promise<void> {
   const me = await authService.getMe(req.user!.userId);
   sendSuccess(res, { data: me });
+}
+
+// ---- Change password ----
+export async function changePassword(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const { currentPassword, newPassword } = req.body as ChangePasswordInput;
+  const { accessToken, refreshToken, user } = await authService.changePassword(
+    req.user!.userId,
+    currentPassword,
+    newPassword,
+  );
+
+  res.cookie(REFRESH_COOKIE_NAME, refreshToken, refreshCookieOptions());
+  sendSuccess(res, {
+    data: { accessToken, user },
+    message: "Password changed. You've been logged out of all other sessions.",
+  });
+}
+
+// ---- Delete user Account ----
+export async function deleteAccount(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const { password } = req.body as DeleteAccountInput;
+  await authService.deleteAccount(req.user!.userId, password);
+
+  res.clearCookie(REFRESH_COOKIE_NAME, refreshCookieOptions());
+  sendSuccess(res, { data: null, message: "Account deleted." });
 }

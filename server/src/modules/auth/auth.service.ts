@@ -41,7 +41,7 @@ interface LoginResult {
 export async function register(
   input: RegisterInput,
 ): Promise<{ userId: string }> {
-  const existing = await User.findOne({ email: input.email });
+  const existing = await User.findOne({ email: input.email, deletedAt: null });
   if (existing) {
     throw new AppError(
       409,
@@ -321,4 +321,92 @@ export async function getMe(userId: string): Promise<MeResult> {
     role: user.role,
     isVerified: user.isVerified,
   };
+}
+
+// ---- Self serviced change password changed while logged In
+export async function changePassword(
+  userId: string,
+  currentPassowrd: string,
+  newPassword: string,
+): Promise<LoginResult> {
+  const user = await User.findOne({ _id: userId, deletedAt: null }).select(
+    "+passwordHash",
+  );
+  if (!user) {
+    throw new AppError(404, "USER_404", "User not found");
+  }
+
+  const isCurrentPasswordValid = await user.comparePassword(currentPassowrd);
+  if (!isCurrentPasswordValid) {
+    throw new AppError(
+      401,
+      "AUTH_INVALID_CREDENTIALS",
+      "Current passoword is invalid",
+    );
+  }
+
+  user.passwordHash = newPassword;
+  user.tokenVersion += 1;
+
+  await user.save();
+
+  const accessToken = signAccessToken({
+    userId: user._id.toString(),
+    role: user.role,
+  });
+
+  const refreshToken = signRefreshToken({
+    userId: user._id.toString(),
+    tokenVersion: user.tokenVersion,
+  });
+
+  return {
+    accessToken,
+    refreshToken,
+    user: { id: user._id.toString(), email: user.email, role: user.role },
+  };
+}
+
+// ---- Self serviced account deletion ----
+export async function deleteAccount(
+  userId: string,
+  password: string,
+): Promise<void> {
+  const user = await User.findOne({ _id: userId, deletedAt: null }).select(
+    "+passwordHash",
+  );
+
+  if (!user) {
+    throw new AppError(404, "USER_404", "User not found");
+  }
+
+  const isPasswordValid = await user.comparePassword(password);
+  if (!isPasswordValid) {
+    throw new AppError(401, "AUTH_INVALID_CREDENTIALS", "Incorrect password");
+  }
+
+  const session = await mongoose.startSession();
+  try {
+    await session.withTransaction(async () => {
+      user.deletedAt = new Date();
+      user.tokenVersion += 1;
+      await user.save({ session });
+
+      if (user.role === UserRole.CANDIDATE) {
+        await CandidateProfile.updateOne(
+          { userId: user._id },
+          { deletedAt: new Date() },
+          { session },
+        );
+      } else if (user.role === UserRole.RECRUITER) {
+        await RecruiterProfile.updateOne(
+          { userId: user._id },
+          { deletedAt: new Date() },
+          { session },
+        );
+      }
+    });
+  } finally {
+    await session.endSession();
+  }
 }

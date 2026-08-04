@@ -11,6 +11,8 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
   resendVerificationSchema,
+  changePasswordSchema,
+  deleteAccountSchema,
 } from "./auth.validation.js";
 
 const router: Router = Router();
@@ -64,5 +66,21 @@ router.post(
 );
 
 router.get("/me", authenticate, catchAsync(authController.getMe));
+
+router.post(
+  "/change-password",
+  authenticate,
+  authRateLimiter,
+  validate(changePasswordSchema),
+  catchAsync(authController.changePassword),
+);
+
+router.delete(
+  "/delete-account",
+  authenticate,
+  authRateLimiter,
+  validate(deleteAccountSchema),
+  catchAsync(authController.deleteAccount),
+);
 
 export { router as authRouter };

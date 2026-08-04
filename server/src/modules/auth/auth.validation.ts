@@ -69,3 +69,21 @@ export const resetPasswordSchema = z.object({
 });
 
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, { error: "Current password is required" }),
+  newPassword: z
+    .string()
+    .min(6, { error: "Password must be at least 6 characters" })
+    .max(15, { error: "Password must be at most 15 characters" }),
+});
+
+export type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
+
+export const deleteAccountSchema = z.object({
+  password: z
+    .string()
+    .min(1, { error: "Password is required to confirm account deletion" }),
+});
+
+export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>;

@@ -79,6 +79,7 @@ export async function uploadResume(
 
   profile.resumeUrl = result.url;
   profile.resumePublicId = result.publicId;
+  profile.resumeUploadedAt = new Date();
   await profile.save();
 
   if (previousPublicId) {

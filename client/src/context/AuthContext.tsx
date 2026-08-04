@@ -48,6 +48,11 @@ interface AuthContextValue {
   register: (input: RegisterInput) => Promise<RegisterResult>;
   logout: () => Promise<void>;
   logoutEverywhere: () => Promise<void>;
+  // update the session without re-implementing token storage. (eg. change Password)
+  applySession: (accessToken: string, user: AuthUser) => void;
+  /** Clears local session state without calling the API — for use after
+   * deleteAccount() succeeds, where there's no account left to log out of. */
+  clearLocalSession: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -147,9 +152,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [clearSession]);
 
+  const applySession = useCallback(
+    (accessToken: string, nextUser: AuthUser) => {
+      tokenRef.current = accessToken;
+      setUser(nextUser);
+    },
+    [],
+  );
+
+  const clearLocalSession = useCallback(() => {
+    clearSession();
+  }, [clearSession]);
+
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, login, register, logout, logoutEverywhere }}
+      value={{
+        user,
+        isLoading,
+        login,
+        register,
+        logout,
+        logoutEverywhere,
+        applySession,
+        clearLocalSession,
+      }}
     >
       {children}
     </AuthContext.Provider>

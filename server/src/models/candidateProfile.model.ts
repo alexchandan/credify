@@ -58,6 +58,7 @@ export interface ICandidateProfile extends Document {
   availability: Availability;
   resumeUrl?: string;
   resumePublicId?: string; //Cloudinary public_id for the current resume
+  resumeUploadedAt?: Date; // Timestamp of the last resume upload
   education: IEducation[];
   experience: IExperience[];
   projects: IProject[];
@@ -166,6 +167,7 @@ const candidateProfileSchema = new mongoose.Schema<
     },
     resumeUrl: { type: String, trim: true },
     resumePublicId: { type: String, trim: true },
+    resumeUploadedAt: { type: Date },
     education: { type: [educationSchema], default: [] },
     experience: { type: [experienceSchema], default: [] },
     projects: { type: [projectSchema], default: [] },
