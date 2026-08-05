@@ -4,14 +4,6 @@ import { SearchX, Home, Briefcase } from "lucide-react";
 export default function NotFound() {
   return (
     <div className="flex min-h-screen flex-col bg-linear-to-b from-slate-50 to-white">
-      <header className="border-b border-slate-200 bg-white/80 px-6 py-4 backdrop-blur-sm">
-        <div className="mx-auto max-w-6xl">
-          <Link href="/" className="text-lg font-bold text-slate-900">
-            Credify
-          </Link>
-        </div>
-      </header>
-
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center px-6 py-12 text-center">
         <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-100">
           <SearchX className="h-9 w-9 text-slate-400" strokeWidth={1.5} />

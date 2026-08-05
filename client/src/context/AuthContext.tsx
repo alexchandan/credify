@@ -25,10 +25,6 @@ interface LoginResult {
   user: AuthUser;
 }
 
-interface RefreshResult {
-  accessToken: string;
-}
-
 export interface RegisterInput {
   email: string;
   password: string;
@@ -42,7 +38,12 @@ interface RegisterResult {
 
 interface AuthContextValue {
   user: AuthUser | null;
-  /** True only during the initial mount-time session-restore attempt. */
+  /**
+   * Always false. Session restore now happens server-side (see
+   * getServerSession in @/lib/serverSession) before the app's first paint,
+   * so there's no client-side mount-time gap left to represent. Kept so
+   * existing consumers (RequireRole, RequireGuest) don't need to change.
+   */
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (input: RegisterInput) => Promise<RegisterResult>;
@@ -57,18 +58,26 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const tokenRef = useRef<string | null>(null);
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+interface AuthProviderProps {
+  children: ReactNode;
+  /** Resolved server-side by getServerSession() before this ever mounts. */
+  initialUser: AuthUser | null;
+  initialAccessToken: string | null;
+}
+
+export function AuthProvider({
+  children,
+  initialUser,
+  initialAccessToken,
+}: AuthProviderProps) {
+  const tokenRef = useRef<string | null>(initialAccessToken);
+  const [user, setUser] = useState<AuthUser | null>(initialUser);
 
   const clearSession = useCallback(() => {
     tokenRef.current = null;
     setUser(null);
   }, []);
 
-  // Must run BEFORE the session-restore effect below starts making
-  // requests — React runs effects in declaration order on mount.
   useEffect(() => {
     configureApiClient({
       getAccessToken: () => tokenRef.current,
@@ -77,44 +86,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
       onUnauthorized: clearSession,
     });
-  }, [clearSession]);
-
-  // The access token lives only in memory and is lost on every page
-  // reload — but the httpOnly refresh cookie persists. A silent refresh
-  // plus GET /auth/me restores full identity without forcing a fresh
-  // login on every reload.
-  useEffect(() => {
-    let cancelled = false;
-
-    async function restoreSession() {
-      try {
-        const refreshResult = await apiRequest<RefreshResult>("/auth/refresh", {
-          method: "POST",
-          skipAuth: true,
-        });
-        tokenRef.current = refreshResult.data.accessToken;
-
-        const meResult = await apiRequest<AuthUser>("/auth/me");
-        if (!cancelled) {
-          setUser(meResult.data);
-        }
-      } catch {
-        // No valid refresh cookie, or it expired — a completely normal
-        // "not logged in" state, not an error to surface.
-        if (!cancelled) {
-          clearSession();
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    restoreSession();
-    return () => {
-      cancelled = true;
-    };
   }, [clearSession]);
 
   const login = useCallback(async (email: string, password: string) => {
@@ -168,7 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
-        isLoading,
+        isLoading: false,
         login,
         register,
         logout,

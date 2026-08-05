@@ -836,7 +836,10 @@ function ListEditor<T extends object>({
 
 function AccountSettingsSection() {
   return (
-    <section className="mt-4 rounded-2xl border border-red-200 bg-white p-5">
+    <section
+      id="account-settings"
+      className="mt-4 scroll-mt-20 rounded-2xl border border-red-200 bg-white p-5"
+    >
       <div className="mb-4 flex items-center gap-2 border-b border-red-100 pb-3">
         <ShieldAlert className="h-4 w-4 text-red-600" strokeWidth={2} />
         <h2 className="text-base font-semibold text-slate-900">
