@@ -68,12 +68,7 @@ export interface ApiRequestOptions extends Omit<RequestInit, "body"> {
   skipAuth?: boolean;
 }
 
-/**
- * The actual fetch + envelope-parsing logic, with NO retry behavior of
- * its own. apiRequest() (below) wraps this with the refresh-and-retry
- * decision. Kept separate so the refresh call itself (which must not
- * trigger its own retry logic) can call this directly.
- */
+// ---- This function performs one HTTP request. It doesn't retry ----
 async function performRequest<T>(
   path: string,
   options: ApiRequestOptions,

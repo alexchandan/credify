@@ -42,10 +42,7 @@ export function refreshCookieOptions() {
     httpOnly: true,
     secure: env.nodeEnv === "production",
     sameSite: "strict" as const,
-    // "/" (not scoped to /api/v1/auth) so the browser also sends it on
-    // normal page navigations — the Next.js app reads it server-side via
-    // next/headers to resolve the session before first paint.
-    path: "/",
+    path: "/api/v1/auth",
     maxAge: 30 * 24 * 60 * 60 * 1000,
   };
 }

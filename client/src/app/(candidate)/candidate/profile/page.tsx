@@ -857,7 +857,6 @@ function AccountSettingsSection() {
 }
 
 function ChangePasswordForm() {
-  const { applySession } = useAuth();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [showPasswords, setShowPasswords] = useState(false);
@@ -880,7 +879,6 @@ function ChangePasswordForm() {
       );
       // Keeps THIS session logged in with the fresh token, while every
       // other session was just invalidated server-side.
-      applySession(result.data.accessToken, result.data.user);
       setSuccess(true);
       setCurrentPassword("");
       setNewPassword("");
@@ -948,7 +946,6 @@ function ChangePasswordForm() {
 
 function DeleteAccountForm() {
   const router = useRouter();
-  const { clearLocalSession } = useAuth();
   const [password, setPassword] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -962,7 +959,6 @@ function DeleteAccountForm() {
         method: "DELETE",
         body: { password },
       });
-      clearLocalSession();
       router.push("/");
     } catch (err) {
       setError(getErrorMessage(err));

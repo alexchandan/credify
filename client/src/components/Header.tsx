@@ -72,10 +72,6 @@ export function Nav() {
 
         {!isLoading && user && (
           <nav className="hidden items-center gap-6 text-sm sm:flex">
-            {/* No "Dashboard" link here — /candidate/dashboard (and the
-                recruiter/admin equivalents) don't exist as pages yet,
-                even though the backend endpoints do. Not linking to
-                something that would 404. */}
             {user.role === "candidate" && (
               <>
                 <Link
