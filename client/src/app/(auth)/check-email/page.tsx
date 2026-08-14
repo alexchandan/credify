@@ -59,12 +59,12 @@ function CheckEmailInner() {
       description="Use the verification link we sent to confirm your account."
     >
       <div className="mt-7 text-center">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-orange-50 text-orange-700">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-400">
           <Mail className="h-5 w-5" aria-hidden="true" />
         </div>
-        <p className="mt-4 text-sm leading-6 text-slate-600">
+        <p className="mt-4 text-sm leading-6 text-slate-600 dark:text-slate-300">
           Sent to{" "}
-          <span className="font-semibold text-slate-800">
+          <span className="font-semibold text-slate-800 dark:text-slate-200">
             {email || "your email address"}
           </span>
         </p>
@@ -80,7 +80,7 @@ function CheckEmailInner() {
             <ExternalLink className="h-4 w-4" aria-hidden="true" />
           </a>
         ) : (
-          <p className="mt-5 rounded-md border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-orange-800">
+          <p className="mt-5 rounded-md border border-orange-200 bg-orange-50 px-3 py-2 text-sm text-orange-800 dark:border-orange-800 dark:bg-orange-950/40 dark:text-orange-300">
             No email address was provided. Register again to request a new link.
           </p>
         )}
@@ -89,24 +89,27 @@ function CheckEmailInner() {
           type="button"
           onClick={handleResend}
           disabled={isResending || !email}
-          className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-orange-300 px-4 py-2.5 text-sm font-semibold text-orange-700 transition hover:bg-orange-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
+          className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-orange-300 px-4 py-2.5 text-sm font-semibold text-orange-700 transition hover:bg-orange-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:cursor-not-allowed disabled:opacity-50 dark:border-orange-700 dark:text-orange-400 dark:hover:bg-orange-950/40"
         >
           {isResending ? "Sending..." : "Resend verification link"}
         </button>
         {resendMessage && (
-          <p className="mt-3 text-sm text-slate-600" aria-live="polite">
+          <p
+            className="mt-3 text-sm text-slate-600 dark:text-slate-300"
+            aria-live="polite"
+          >
             {resendMessage}
           </p>
         )}
 
         <Link
           href="/login"
-          className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-orange-700 hover:underline"
+          className="mt-5 inline-flex items-center gap-1.5 text-sm font-semibold text-orange-700 hover:underline dark:text-orange-400"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Back to sign in
         </Link>
-        <p className="mt-6 border-t border-slate-100 pt-5 text-xs text-slate-500">
+        <p className="mt-6 border-t border-slate-100 pt-5 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
           Can&apos;t find the email? Check your spam folder.
         </p>
       </div>
@@ -122,7 +125,10 @@ export default function CheckEmailPage() {
           title="Loading your email details"
           description="This will only take a moment."
         >
-          <p className="mt-7 text-center text-sm text-slate-500" role="status">
+          <p
+            className="mt-7 text-center text-sm text-slate-500 dark:text-slate-400"
+            role="status"
+          >
             Loading...
           </p>
         </AuthShell>

@@ -64,8 +64,10 @@ duplicate complex authorization rules across controllers.
 - Avoid `z.coerce.boolean()` for query strings. Parse the literal strings
   `"true"` and `"false"` explicitly.
 
-Express 5 exposes `req.query` through a getter. Middleware may sanitize its
-contents in place but must not assign a new object to `req.query`.
+Express 5 exposes `req.query` through a getter that can return a newly parsed
+object on every access. After parsing or sanitizing query data, shadow that
+prototype getter with an own request property via `Object.defineProperty()`;
+mutating one getter result does not guarantee later middleware will see it.
 
 ## Authentication and Authorization
 
@@ -139,10 +141,10 @@ Test scope should match the change:
 - **End-to-end tests:** high-value browser flows such as registration, sign-in,
   job application, and recruiter review.
 
-The repository does not yet contain an automated test suite, so adding the test
-infrastructure is still an open project task. Until it exists, a clean type-check
-alone is not enough: boot affected applications and exercise the changed route or
-screen with a real request.
+The repository currently has only a focused query-validation regression test,
+so broader test infrastructure remains an open project task. A clean type-check
+alone is not enough: boot affected applications and exercise the changed route
+or screen with a real request.
 
 Run the available checks from the repository root:
 

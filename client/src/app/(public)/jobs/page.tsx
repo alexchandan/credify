@@ -18,12 +18,12 @@ interface PaginationMeta {
 function JobsFallback() {
   return (
     <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-12 sm:px-6">
-      <div className="h-8 w-52 animate-pulse rounded bg-slate-100" />
+      <div className="h-8 w-52 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
       <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 6 }, (_, index) => (
           <div
             key={index}
-            className="h-64 animate-pulse rounded-lg border border-slate-200 bg-slate-50"
+            className="h-64 animate-pulse rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900"
           />
         ))}
       </div>
@@ -106,14 +106,16 @@ function JobBoard() {
   }
 
   return (
-    <div className="flex-1 bg-slate-50">
-      <section className="border-b border-slate-200 bg-white px-4 py-10 sm:px-6">
+    <div className="flex-1 bg-slate-50 dark:bg-slate-900">
+      <section className="border-b border-slate-200 bg-white px-4 py-10 sm:px-6 dark:border-slate-800 dark:bg-slate-950">
         <div className="mx-auto max-w-6xl">
-          <p className="text-sm font-semibold text-orange-700">Job board</p>
-          <h1 className="mt-1 text-3xl font-bold text-slate-950">
+          <p className="text-sm font-semibold text-orange-700 dark:text-orange-400">
+            Job board
+          </p>
+          <h1 className="mt-1 text-3xl font-bold text-slate-950 dark:text-white">
             Find your next opportunity
           </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
             Search published roles and narrow the list by location, work type,
             or experience level.
           </p>
@@ -121,12 +123,12 @@ function JobBoard() {
           <form
             key={queryString}
             onSubmit={submitFilters}
-            className="mt-7 grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_0.8fr_0.8fr_auto]"
+            className="mt-7 grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_0.8fr_0.8fr_auto] dark:border-slate-800 dark:bg-slate-900"
           >
             <label className="relative">
               <span className="sr-only">Keywords</span>
               <Search
-                className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400"
+                className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
                 aria-hidden="true"
               />
               <input
@@ -134,7 +136,7 @@ function JobBoard() {
                 name="q"
                 defaultValue={searchParams.get("q") ?? ""}
                 placeholder="Title, skill, or keyword"
-                className="h-11 w-full rounded-lg border border-slate-300 bg-white pr-3 pl-9 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
+                className="h-11 w-full rounded-lg border border-slate-300 bg-white pr-3 pl-9 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:border-slate-700 dark:bg-slate-950 dark:focus:ring-orange-900/50"
               />
             </label>
             <label>
@@ -144,7 +146,7 @@ function JobBoard() {
                 name="location"
                 defaultValue={searchParams.get("location") ?? ""}
                 placeholder="Location"
-                className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
+                className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:border-slate-700 dark:bg-slate-950 dark:focus:ring-orange-900/50"
               />
             </label>
             <label>
@@ -152,7 +154,7 @@ function JobBoard() {
               <select
                 name="employmentType"
                 defaultValue={searchParams.get("employmentType") ?? ""}
-                className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
+                className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:ring-orange-900/50"
               >
                 <option value="">All types</option>
                 <option value="full_time">Full time</option>
@@ -166,7 +168,7 @@ function JobBoard() {
               <select
                 name="experienceLevel"
                 defaultValue={searchParams.get("experienceLevel") ?? ""}
-                className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
+                className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:ring-orange-900/50"
               >
                 <option value="">All levels</option>
                 <option value="entry">Entry</option>
@@ -189,11 +191,11 @@ function JobBoard() {
       <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-slate-950">
+            <h2 className="text-xl font-semibold text-slate-950 dark:text-white">
               Available roles
             </h2>
             {!isLoading && !error && (
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                 {meta.totalCount} role{meta.totalCount === 1 ? "" : "s"} found
               </p>
             )}
@@ -203,7 +205,7 @@ function JobBoard() {
         {error && (
           <div
             role="alert"
-            className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300"
           >
             {error}
           </div>
@@ -214,7 +216,7 @@ function JobBoard() {
             {Array.from({ length: 6 }, (_, index) => (
               <div
                 key={index}
-                className="h-64 animate-pulse rounded-lg border border-slate-200 bg-white"
+                className="h-64 animate-pulse rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950"
               />
             ))}
           </div>
@@ -225,9 +227,11 @@ function JobBoard() {
             ))}
           </div>
         ) : !error ? (
-          <div className="mt-6 rounded-lg border border-slate-200 bg-white px-6 py-12 text-center">
-            <h3 className="font-semibold text-slate-900">No matching jobs</h3>
-            <p className="mt-2 text-sm text-slate-500">
+          <div className="mt-6 rounded-lg border border-slate-200 bg-white px-6 py-12 text-center dark:border-slate-800 dark:bg-slate-950">
+            <h3 className="font-semibold text-slate-900 dark:text-slate-100">
+              No matching jobs
+            </h3>
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
               Try a broader keyword or remove one of the filters.
             </p>
           </div>
@@ -242,18 +246,18 @@ function JobBoard() {
               type="button"
               disabled={meta.page <= 1}
               onClick={() => changePage(meta.page - 1)}
-              className="h-10 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              className="h-10 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800"
             >
               Previous
             </button>
-            <span className="text-sm text-slate-600">
+            <span className="text-sm text-slate-600 dark:text-slate-300">
               Page {meta.page} of {meta.totalPages}
             </span>
             <button
               type="button"
               disabled={meta.page >= meta.totalPages}
               onClick={() => changePage(meta.page + 1)}
-              className="h-10 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
+              className="h-10 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800"
             >
               Next
             </button>

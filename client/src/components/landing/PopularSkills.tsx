@@ -19,25 +19,27 @@ const SKILLS = [
     skill: "javascript",
     label: "JavaScript",
     icon: Code2,
-    accent: "bg-orange-50 text-orange-700",
+    accent:
+      "bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-400",
   },
   {
     skill: "sql",
     label: "SQL & Data",
     icon: Database,
-    accent: "bg-sky-50 text-sky-700",
+    accent: "bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300",
   },
   {
     skill: "figma",
     label: "Product Design",
     icon: Palette,
-    accent: "bg-rose-50 text-rose-700",
+    accent: "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300",
   },
   {
     skill: "aws",
     label: "Cloud & AWS",
     icon: Cloud,
-    accent: "bg-emerald-50 text-emerald-700",
+    accent:
+      "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400",
   },
 ];
 
@@ -79,12 +81,12 @@ export function PopularSkills() {
   }, []);
 
   return (
-    <section className="bg-slate-50 px-5 py-14 sm:px-6">
+    <section className="bg-slate-50 px-5 py-14 sm:px-6 dark:bg-slate-900">
       <div className="mx-auto max-w-5xl">
-        <p className="text-sm font-semibold text-orange-700">
+        <p className="text-sm font-semibold text-orange-700 dark:text-orange-400">
           Explore by skill
         </p>
-        <h2 className="mt-1 text-2xl font-bold text-slate-950">
+        <h2 className="mt-1 text-2xl font-bold text-slate-950 dark:text-white">
           Popular job categories
         </h2>
 
@@ -95,17 +97,17 @@ export function PopularSkills() {
               <Link
                 key={skill}
                 href={`/jobs?skill=${encodeURIComponent(skill)}`}
-                className="flex min-h-44 flex-col items-center justify-center rounded-lg border border-slate-200 bg-white p-4 text-center transition hover:border-orange-300 hover:shadow-sm sm:p-6"
+                className="flex min-h-44 flex-col items-center justify-center rounded-lg border border-slate-200 bg-white p-4 text-center transition hover:border-orange-300 hover:shadow-sm sm:p-6 dark:border-slate-800 dark:bg-slate-950 dark:hover:border-orange-600"
               >
                 <div
                   className={`flex h-12 w-12 items-center justify-center rounded-lg ${accent}`}
                 >
                   <Icon className="h-6 w-6" strokeWidth={2} />
                 </div>
-                <h3 className="mt-3 text-base font-semibold text-slate-900">
+                <h3 className="mt-3 text-base font-semibold text-slate-900 dark:text-slate-100">
                   {label}
                 </h3>
-                <p className="mt-1 text-sm text-slate-500">
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                   {count === null
                     ? "Unavailable"
                     : count === undefined

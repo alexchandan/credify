@@ -18,6 +18,7 @@ import {
 import logo from "@/../public/logo.png";
 import { useAuth, type AuthUser } from "@/context/AuthContext";
 import { apiRequest } from "@/lib/apiClient";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface NavItem {
   href: string;
@@ -54,7 +55,9 @@ function NavLink({
       onClick={onClick}
       aria-current={isActive ? "page" : undefined}
       className={`text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-500 ${
-        isActive ? "text-orange-700" : "text-slate-600 hover:text-slate-950"
+        isActive
+          ? "text-orange-700 dark:text-orange-400"
+          : "text-slate-600 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white"
       }`}
     >
       {item.label}
@@ -150,13 +153,13 @@ export function Nav() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95">
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
         <Link
           href="/"
           onClick={() => setIsMobileMenuOpen(false)}
           aria-label="Credify home"
-          className="flex shrink-0 items-center gap-2 text-xl font-extrabold text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-500"
+          className="flex shrink-0 items-center gap-2 text-xl font-extrabold text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-500 dark:text-white"
         >
           <Image
             src={logo}
@@ -189,7 +192,7 @@ export function Nav() {
             </label>
             <Search
               aria-hidden="true"
-              className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400"
+              className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
             />
             <input
               id="header-job-search"
@@ -197,9 +200,11 @@ export function Nav() {
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder="Search jobs"
-              className="h-10 w-full rounded-lg border border-slate-300 bg-slate-50 pr-3 pl-9 text-sm text-slate-950 transition outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-100"
+              className="h-10 w-full rounded-lg border border-slate-300 bg-slate-50 pr-3 pl-9 text-sm text-slate-950 transition outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-100 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950 dark:focus:ring-orange-900/50"
             />
           </form>
+
+          <ThemeToggle />
 
           {!isLoading && user && (
             <span
@@ -210,7 +215,7 @@ export function Nav() {
                   : `${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}`
               }
               title="Unread notifications"
-              className="relative flex h-10 w-10 items-center justify-center rounded-md text-slate-600"
+              className="relative flex h-10 w-10 items-center justify-center rounded-md text-slate-600 dark:text-slate-300"
             >
               <Bell className="h-5 w-5" aria-hidden="true" />
               {unreadCount !== null && unreadCount > 0 && (
@@ -222,7 +227,7 @@ export function Nav() {
           )}
 
           {isLoading ? (
-            <div className="hidden h-10 w-28 animate-pulse rounded-lg bg-slate-100 md:block" />
+            <div className="hidden h-10 w-28 animate-pulse rounded-lg bg-slate-100 md:block dark:bg-slate-800" />
           ) : user ? (
             <div className="relative hidden md:block" ref={accountMenuRef}>
               <button
@@ -231,7 +236,7 @@ export function Nav() {
                 aria-haspopup="true"
                 aria-expanded={isAccountMenuOpen}
                 aria-controls="account-menu"
-                className="flex h-10 items-center gap-2 rounded-lg px-1.5 text-slate-700 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500"
+                className="flex h-10 items-center gap-2 rounded-lg px-1.5 text-slate-700 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500 dark:text-slate-200 dark:hover:bg-slate-800"
               >
                 <span className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-600 text-xs font-bold text-white">
                   {user.email[0]?.toUpperCase() ?? "U"}
@@ -246,13 +251,13 @@ export function Nav() {
               {isAccountMenuOpen && (
                 <div
                   id="account-menu"
-                  className="absolute right-0 mt-2 w-60 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg"
+                  className="absolute right-0 mt-2 w-60 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-800 dark:bg-slate-950"
                 >
-                  <div className="border-b border-slate-100 px-4 py-3">
-                    <p className="truncate text-sm font-medium text-slate-900">
+                  <div className="border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+                    <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
                       {user.email}
                     </p>
-                    <p className="mt-0.5 text-xs text-slate-500 capitalize">
+                    <p className="mt-0.5 text-xs text-slate-500 capitalize dark:text-slate-400">
                       {user.role}
                     </p>
                   </div>
@@ -262,7 +267,7 @@ export function Nav() {
                       <Link
                         href="/candidate/profile"
                         onClick={() => setIsAccountMenuOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
                       >
                         <UserIcon className="h-4 w-4" aria-hidden="true" />
                         My profile
@@ -270,7 +275,7 @@ export function Nav() {
                       <Link
                         href="/candidate/profile#account-settings"
                         onClick={() => setIsAccountMenuOpen(false)}
-                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50"
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
                       >
                         <Settings className="h-4 w-4" aria-hidden="true" />
                         Account settings
@@ -281,7 +286,7 @@ export function Nav() {
                   <button
                     type="button"
                     onClick={handleLogout}
-                    className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-red-700 hover:bg-red-50"
+                    className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-red-700 hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-950/50"
                   >
                     <LogOut className="h-4 w-4" aria-hidden="true" />
                     Sign out
@@ -293,7 +298,7 @@ export function Nav() {
             <div className="hidden items-center gap-2 md:flex">
               <Link
                 href="/login"
-                className="inline-flex h-10 items-center justify-center rounded-lg border border-orange-600 px-4 text-sm font-semibold text-orange-700 transition hover:bg-orange-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500"
+                className="inline-flex h-10 items-center justify-center rounded-lg border border-orange-600 px-4 text-sm font-semibold text-orange-700 transition hover:bg-orange-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500 dark:text-orange-400 dark:hover:bg-orange-950/40"
               >
                 Sign in
               </Link>
@@ -315,7 +320,7 @@ export function Nav() {
             }
             aria-expanded={isMobileMenuOpen}
             aria-controls="mobile-navigation"
-            className="flex h-10 w-10 items-center justify-center rounded-md text-slate-700 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500 md:hidden"
+            className="flex h-10 w-10 items-center justify-center rounded-md text-slate-700 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500 md:hidden dark:text-slate-200 dark:hover:bg-slate-800"
           >
             {isMobileMenuOpen ? (
               <X className="h-5 w-5" aria-hidden="true" />
@@ -329,7 +334,7 @@ export function Nav() {
       {isMobileMenuOpen && (
         <div
           id="mobile-navigation"
-          className="border-t border-slate-200 bg-white px-4 py-4 md:hidden"
+          className="border-t border-slate-200 bg-white px-4 py-4 md:hidden dark:border-slate-800 dark:bg-slate-950"
         >
           <form
             onSubmit={handleSearchSubmit}
@@ -341,7 +346,7 @@ export function Nav() {
             </label>
             <Search
               aria-hidden="true"
-              className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400"
+              className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
             />
             <input
               id="mobile-job-search"
@@ -349,13 +354,13 @@ export function Nav() {
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder="Search jobs"
-              className="h-11 w-full rounded-lg border border-slate-300 bg-slate-50 pr-3 pl-9 text-sm outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-100"
+              className="h-11 w-full rounded-lg border border-slate-300 bg-slate-50 pr-3 pl-9 text-sm outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-100 dark:border-slate-700 dark:bg-slate-900 dark:focus:bg-slate-950 dark:focus:ring-orange-900/50"
             />
           </form>
 
           <nav
             aria-label="Mobile navigation"
-            className="mt-4 flex flex-col items-start gap-4 border-b border-slate-100 pb-4"
+            className="mt-4 flex flex-col items-start gap-4 border-b border-slate-100 pb-4 dark:border-slate-800"
           >
             {navItems.map((item) => (
               <NavLink
@@ -369,16 +374,16 @@ export function Nav() {
 
           {!isLoading && user ? (
             <div className="pt-4">
-              <p className="truncate text-sm font-medium text-slate-900">
+              <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
                 {user.email}
               </p>
-              <p className="mt-0.5 text-xs text-slate-500 capitalize">
+              <p className="mt-0.5 text-xs text-slate-500 capitalize dark:text-slate-400">
                 {user.role}
               </p>
               <button
                 type="button"
                 onClick={handleLogout}
-                className="mt-4 inline-flex h-10 items-center gap-2 rounded-lg border border-red-200 px-4 text-sm font-semibold text-red-700 hover:bg-red-50"
+                className="mt-4 inline-flex h-10 items-center gap-2 rounded-lg border border-red-200 px-4 text-sm font-semibold text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/50"
               >
                 <LogOut className="h-4 w-4" aria-hidden="true" />
                 Sign out
@@ -388,7 +393,7 @@ export function Nav() {
             <div className="grid grid-cols-2 gap-3 pt-4">
               <Link
                 href="/login"
-                className="inline-flex h-11 items-center justify-center rounded-lg border border-orange-600 text-sm font-semibold text-orange-700"
+                className="inline-flex h-11 items-center justify-center rounded-lg border border-orange-600 text-sm font-semibold text-orange-700 dark:text-orange-400"
               >
                 Sign in
               </Link>

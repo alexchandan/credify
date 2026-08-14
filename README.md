@@ -28,9 +28,9 @@ AI provider or user-facing AI workflow is connected yet.
 | Notifications      | Backend implemented                             | Paginated notification feed, unread counts, mark one/all as read                                                                                                                               |
 | Dashboards         | Backend implemented                             | Candidate, recruiter, and administrator summary endpoints                                                                                                                                      |
 | Administration     | Backend implemented                             | User moderation, company/job listings, company/job deletion, and partial activity logging                                                                                                      |
-| Frontend           | In progress                                     | Responsive landing/header, authentication, public job board/details, candidate application submission, and candidate profile                                                                   |
+| Frontend           | In progress                                     | Responsive light/dark interface, landing/header, authentication, public job board/details, candidate application submission, and candidate profile                                             |
 | AI features        | Schema only                                     | `AIReport` model and lifecycle; no queue, provider, service, route, or UI yet                                                                                                                  |
-| Automated tests    | Not started                                     | No unit, integration, or end-to-end test suite is currently configured                                                                                                                         |
+| Automated tests    | Minimal                                         | Shared query validation has an Express 5 regression test; broader unit, integration, and end-to-end coverage is still needed                                                                   |
 
 ## Technology Stack
 
@@ -338,12 +338,12 @@ expires.
 - Most backend modules do not yet have corresponding frontend screens.
 - Company deletion does not cascade or close the company's published jobs.
 - Job permission rules need reconciliation with the documented member role.
-- Atlas Search pipelines have not been validated against a live search index;
-  filtered result counts also need review.
+- Candidate Atlas Search still needs production-like validation and filtered
+  count review; the public job-search filter pipeline has been live-checked.
 - Activity logging covers selected admin moderation/deletion actions, not every
   action represented by the activity model.
-- No automated tests, CI workflow, Docker setup, or production deployment
-  configuration exists yet.
+- Automated coverage is limited to query-validation regression; no CI workflow,
+  Docker setup, or production deployment configuration exists yet.
 - AI reports are data-model-only; provider integration, background queues, and
   AI UI flows remain roadmap work.
 - The server `build` command type-checks with `tsc --noEmit`; it does not emit a

@@ -29,17 +29,17 @@ export function Hero() {
         sizes="100vw"
         className="object-cover object-[62%_center] sm:object-center"
       />
-      <div className="absolute inset-0 bg-white/80 sm:bg-white/25" />
+      <div className="absolute inset-0 bg-white/80 sm:bg-white/25 dark:bg-slate-950/80 dark:sm:bg-slate-950/70" />
 
       <div className="relative mx-auto w-full max-w-6xl px-5 py-12 sm:px-6">
         <div className="max-w-xl">
-          <p className="text-sm font-bold text-orange-700">
+          <p className="text-sm font-bold text-orange-700 dark:text-orange-400">
             Verified opportunities
           </p>
-          <h1 className="mt-3 text-4xl leading-tight font-extrabold text-slate-950 sm:text-5xl">
+          <h1 className="mt-3 text-4xl leading-tight font-extrabold text-slate-950 sm:text-5xl dark:text-white">
             Find work that moves you forward
           </h1>
-          <p className="mt-4 max-w-lg text-base leading-7 text-slate-700 sm:text-lg">
+          <p className="mt-4 max-w-lg text-base leading-7 text-slate-700 sm:text-lg dark:text-slate-200">
             Search real roles from growing companies and keep every application
             organized from submission to decision.
           </p>
@@ -47,12 +47,12 @@ export function Hero() {
           <form
             onSubmit={handleSearch}
             role="search"
-            className="mt-7 grid gap-2 rounded-lg border border-slate-200 bg-white/95 p-2 shadow-sm sm:grid-cols-[1fr_0.8fr_auto]"
+            className="mt-7 grid gap-2 rounded-lg border border-slate-200 bg-white/95 p-2 shadow-sm sm:grid-cols-[1fr_0.8fr_auto] dark:border-slate-800 dark:bg-slate-950/95"
           >
             <label className="relative">
               <span className="sr-only">Job title, skill, or keyword</span>
               <Search
-                className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400"
+                className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
                 aria-hidden="true"
               />
               <input
@@ -60,13 +60,13 @@ export function Hero() {
                 value={keywords}
                 onChange={(event) => setKeywords(event.target.value)}
                 placeholder="Title, skill, or keyword"
-                className="h-11 w-full rounded-md border border-transparent bg-slate-50 pr-3 pl-9 text-sm text-slate-950 outline-none focus:border-orange-400 focus:bg-white focus:ring-2 focus:ring-orange-100"
+                className="h-11 w-full rounded-md border border-transparent bg-slate-50 pr-3 pl-9 text-sm text-slate-950 outline-none focus:border-orange-400 focus:bg-white focus:ring-2 focus:ring-orange-100 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950 dark:focus:ring-orange-900/50"
               />
             </label>
             <label className="relative">
               <span className="sr-only">Location</span>
               <MapPin
-                className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400"
+                className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
                 aria-hidden="true"
               />
               <input
@@ -74,7 +74,7 @@ export function Hero() {
                 value={location}
                 onChange={(event) => setLocation(event.target.value)}
                 placeholder="City or remote"
-                className="h-11 w-full rounded-md border border-transparent bg-slate-50 pr-3 pl-9 text-sm text-slate-950 outline-none focus:border-orange-400 focus:bg-white focus:ring-2 focus:ring-orange-100"
+                className="h-11 w-full rounded-md border border-transparent bg-slate-50 pr-3 pl-9 text-sm text-slate-950 outline-none focus:border-orange-400 focus:bg-white focus:ring-2 focus:ring-orange-100 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950 dark:focus:ring-orange-900/50"
               />
             </label>
             <button

@@ -27,7 +27,14 @@ function sanitizeInPlace(target: unknown): void {
 export function mongoSanitize() {
   return (req: Request, _res: Response, next: NextFunction): void => {
     sanitizeInPlace(req.body);
-    sanitizeInPlace(req.query);
+    const sanitizedQuery = req.query;
+    sanitizeInPlace(sanitizedQuery);
+    Object.defineProperty(req, "query", {
+      value: sanitizedQuery,
+      writable: false,
+      enumerable: true,
+      configurable: true,
+    });
     sanitizeInPlace(req.params);
     next();
   };

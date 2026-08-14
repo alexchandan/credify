@@ -29,7 +29,7 @@ export function RequireRole({ allowedRoles, children }: RequireRoleProps) {
   if (isLoading || !isAllowed) {
     return (
       <div
-        className="flex flex-1 items-center justify-center px-6 py-16 text-sm text-slate-500"
+        className="flex flex-1 items-center justify-center px-6 py-16 text-sm text-slate-500 dark:text-slate-400"
         role="status"
         aria-live="polite"
       >

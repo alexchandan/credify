@@ -87,8 +87,8 @@ export default function JobDetailPage() {
   if (isLoading) {
     return (
       <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-12 sm:px-6">
-        <div className="h-8 w-64 animate-pulse rounded bg-slate-100" />
-        <div className="mt-8 h-80 animate-pulse rounded-lg bg-slate-100" />
+        <div className="h-8 w-64 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
+        <div className="mt-8 h-80 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800" />
       </div>
     );
   }
@@ -96,13 +96,15 @@ export default function JobDetailPage() {
   if (error || !job) {
     return (
       <div className="mx-auto flex w-full max-w-xl flex-1 flex-col items-center justify-center px-4 py-16 text-center">
-        <h1 className="text-2xl font-bold text-slate-950">Job unavailable</h1>
-        <p className="mt-2 text-sm text-slate-600">
+        <h1 className="text-2xl font-bold text-slate-950 dark:text-white">
+          Job unavailable
+        </h1>
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
           {error ?? "This job could not be found."}
         </p>
         <Link
           href="/jobs"
-          className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-orange-700"
+          className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-orange-700 dark:text-orange-400"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Back to jobs
@@ -116,79 +118,90 @@ export default function JobDetailPage() {
     : job.location.join(", ") || "Location not specified";
 
   return (
-    <div className="flex-1 bg-slate-50 px-4 py-8 sm:px-6 sm:py-12">
+    <div className="flex-1 bg-slate-50 px-4 py-8 sm:px-6 sm:py-12 dark:bg-slate-900">
       <div className="mx-auto max-w-5xl">
         <Link
           href="/jobs"
-          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-orange-700"
+          className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-orange-700 dark:text-slate-300"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           Back to jobs
         </Link>
 
         <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <article className="rounded-lg border border-slate-200 bg-white p-6 sm:p-8">
+          <article className="rounded-lg border border-slate-200 bg-white p-6 sm:p-8 dark:border-slate-800 dark:bg-slate-950">
             <div className="flex items-start gap-4">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-orange-700">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-400">
                 <Building2 className="h-6 w-6" aria-hidden="true" />
               </span>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-orange-700">
+                <p className="text-sm font-semibold text-orange-700 dark:text-orange-400">
                   {company?.name ?? "Company unavailable"}
                 </p>
-                <h1 className="mt-1 text-2xl font-bold text-slate-950 sm:text-3xl">
+                <h1 className="mt-1 text-2xl font-bold text-slate-950 sm:text-3xl dark:text-white">
                   {job.title}
                 </h1>
                 {company?.industry && (
-                  <p className="mt-1 text-sm text-slate-500">
+                  <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
                     {company.industry}
                   </p>
                 )}
               </div>
             </div>
 
-            <dl className="mt-7 grid gap-3 border-y border-slate-100 py-5 text-sm text-slate-600 sm:grid-cols-2">
+            <dl className="mt-7 grid gap-3 border-y border-slate-100 py-5 text-sm text-slate-600 sm:grid-cols-2 dark:border-slate-800 dark:text-slate-300">
               <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4 text-slate-400" aria-hidden="true" />
+                <MapPin
+                  className="h-4 w-4 text-slate-400 dark:text-slate-500"
+                  aria-hidden="true"
+                />
                 <dt className="sr-only">Location</dt>
                 <dd>{location}</dd>
               </div>
               <div className="flex items-center gap-2">
                 <BriefcaseBusiness
-                  className="h-4 w-4 text-slate-400"
+                  className="h-4 w-4 text-slate-400 dark:text-slate-500"
                   aria-hidden="true"
                 />
                 <dt className="sr-only">Employment type</dt>
                 <dd>{formatJobLabel(job.employmentType)}</dd>
               </div>
               <div className="flex items-center gap-2">
-                <Clock3 className="h-4 w-4 text-slate-400" aria-hidden="true" />
+                <Clock3
+                  className="h-4 w-4 text-slate-400 dark:text-slate-500"
+                  aria-hidden="true"
+                />
                 <dt className="sr-only">Experience level</dt>
                 <dd>{formatJobLabel(job.experienceLevel)} level</dd>
               </div>
               <div className="flex items-center gap-2">
-                <Wallet className="h-4 w-4 text-slate-400" aria-hidden="true" />
+                <Wallet
+                  className="h-4 w-4 text-slate-400 dark:text-slate-500"
+                  aria-hidden="true"
+                />
                 <dt className="sr-only">Salary</dt>
                 <dd>{formatSalary(job)}</dd>
               </div>
             </dl>
 
             <section className="mt-7">
-              <h2 className="text-lg font-semibold text-slate-950">
+              <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
                 About the role
               </h2>
-              <p className="mt-3 text-sm leading-7 whitespace-pre-wrap text-slate-700">
+              <p className="mt-3 text-sm leading-7 whitespace-pre-wrap text-slate-700 dark:text-slate-200">
                 {job.description}
               </p>
             </section>
 
             <section className="mt-7">
-              <h2 className="text-lg font-semibold text-slate-950">Skills</h2>
+              <h2 className="text-lg font-semibold text-slate-950 dark:text-white">
+                Skills
+              </h2>
               <ul className="mt-3 flex flex-wrap gap-2">
                 {job.skillsRequired.map((skill) => (
                   <li
                     key={skill}
-                    className="rounded-md bg-slate-100 px-3 py-1.5 text-sm text-slate-700"
+                    className="rounded-md bg-slate-100 px-3 py-1.5 text-sm text-slate-700 dark:bg-slate-800 dark:text-slate-200"
                   >
                     {skill}
                   </li>
@@ -197,28 +210,28 @@ export default function JobDetailPage() {
             </section>
           </article>
 
-          <aside className="rounded-lg border border-slate-200 bg-white p-5 lg:sticky lg:top-24">
-            <h2 className="font-semibold text-slate-950">
+          <aside className="rounded-lg border border-slate-200 bg-white p-5 lg:sticky lg:top-24 dark:border-slate-800 dark:bg-slate-950">
+            <h2 className="font-semibold text-slate-950 dark:text-white">
               Apply for this role
             </h2>
 
             {job.status !== "published" ? (
-              <p className="mt-3 text-sm text-slate-600">
+              <p className="mt-3 text-sm text-slate-600 dark:text-slate-300">
                 This role is no longer accepting applications.
               </p>
             ) : hasApplied ? (
               <div
                 role="status"
-                className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800"
+                className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
               >
                 <CheckCircle2 className="mb-2 h-5 w-5" aria-hidden="true" />
                 Your application was submitted successfully.
               </div>
             ) : isAuthLoading ? (
-              <div className="mt-4 h-11 animate-pulse rounded-lg bg-slate-100" />
+              <div className="mt-4 h-11 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800" />
             ) : !user ? (
               <>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
+                <p className="mt-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
                   Sign in with a candidate account to submit your application.
                 </p>
                 <Link
@@ -229,17 +242,19 @@ export default function JobDetailPage() {
                 </Link>
               </>
             ) : user.role !== "candidate" ? (
-              <p className="mt-3 text-sm leading-6 text-slate-600">
+              <p className="mt-3 text-sm leading-6 text-slate-600 dark:text-slate-300">
                 Applications can only be submitted from a candidate account.
               </p>
             ) : (
               <>
                 <label
                   htmlFor="cover-letter"
-                  className="mt-4 block text-sm font-medium text-slate-700"
+                  className="mt-4 block text-sm font-medium text-slate-700 dark:text-slate-200"
                 >
                   Cover letter{" "}
-                  <span className="text-slate-400">(optional)</span>
+                  <span className="text-slate-400 dark:text-slate-500">
+                    (optional)
+                  </span>
                 </label>
                 <textarea
                   id="cover-letter"
@@ -247,12 +262,12 @@ export default function JobDetailPage() {
                   onChange={(event) => setCoverLetter(event.target.value)}
                   maxLength={3000}
                   rows={6}
-                  className="mt-1.5 w-full resize-y rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
+                  className="mt-1.5 w-full resize-y rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:border-slate-700 dark:focus:ring-orange-900/50"
                 />
                 {applicationError && (
                   <div
                     role="alert"
-                    className="mt-3 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700"
+                    className="mt-3 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300"
                   >
                     {applicationError}
                     {needsResume && (

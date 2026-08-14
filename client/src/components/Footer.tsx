@@ -2,11 +2,11 @@ import Link from "next/link";
 
 export function Footer() {
   return (
-    <footer className="bg-slate-900 px-6 py-12 text-slate-300">
+    <footer className="bg-slate-900 px-6 py-12 text-slate-300 dark:bg-black dark:text-slate-400">
       <div className="mx-auto grid max-w-6xl grid-cols-1 gap-10 sm:grid-cols-3">
         <div>
           <span className="text-xl font-bold text-white">Credify</span>
-          <p className="mt-3 max-w-xs text-sm text-slate-400">
+          <p className="mt-3 max-w-xs text-sm text-slate-400 dark:text-slate-500">
             Helping professionals find real roles at real companies — verified,
             transparent, and built for clarity.
           </p>
@@ -45,7 +45,7 @@ export function Footer() {
         </div>
       </div>
 
-      <div className="mx-auto mt-10 max-w-6xl border-t border-slate-700 pt-6 text-sm text-slate-500">
+      <div className="mx-auto mt-10 max-w-6xl border-t border-slate-700 pt-6 text-sm text-slate-500 dark:border-slate-800 dark:text-slate-400">
         © {new Date().getFullYear()} Credify. All rights reserved.
       </div>
     </footer>

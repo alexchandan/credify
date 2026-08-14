@@ -24,22 +24,23 @@ modules, plus service discovery and health routes.
 
 ## Feature Readiness
 
-| Area                                                   | Backend     | Frontend        | Notes                                                                                   |
-| ------------------------------------------------------ | ----------- | --------------- | --------------------------------------------------------------------------------------- |
-| Registration, verification, sign-in, refresh, sign-out | Implemented | Implemented     | Email verification, refresh-cookie restoration, and shared auth state are wired.        |
-| Password recovery                                      | Implemented | Implemented     | Includes request and token reset pages.                                                 |
-| Password/account settings                              | Implemented | Implemented     | Password changes install the new token; deletion clears the client session.             |
-| Candidate profile and resume                           | Implemented | Implemented     | Profile edit, PDF upload, session restoration, and candidate role protection are wired. |
-| Recruiter profile                                      | Implemented | Not implemented | API supports self profile and company linkage.                                          |
-| Company management                                     | Implemented | Not implemented | Owner/member policy exists; deletion cascade is unresolved.                             |
-| Jobs                                                   | Implemented | Partial         | Public job browsing, filtering, details, and pagination exist; recruiter UI is absent.  |
-| Applications                                           | Implemented | Partial         | Candidate submission exists; history, withdrawal, review, and status UI are absent.     |
-| Candidate/job search                                   | Implemented | Partial         | Public job search is wired; candidate search has no UI. Atlas indexes are required.     |
-| Saved candidates                                       | Implemented | Not implemented | Recruiter API only.                                                                     |
-| Notifications                                          | Implemented | Count only      | Header shows unread count; feed and read actions have no UI.                            |
-| Dashboards                                             | Implemented | Not implemented | Candidate, recruiter, and admin aggregates exist.                                       |
-| Administration                                         | Implemented | Not implemented | User moderation and company/job removal exist.                                          |
-| AI reports                                             | Model only  | Not implemented | No generation provider, queue, endpoints, or UI.                                        |
+| Area                                                   | Backend     | Frontend        | Notes                                                                                    |
+| ------------------------------------------------------ | ----------- | --------------- | ---------------------------------------------------------------------------------------- |
+| Registration, verification, sign-in, refresh, sign-out | Implemented | Implemented     | Email verification, refresh-cookie restoration, and shared auth state are wired.         |
+| Password recovery                                      | Implemented | Implemented     | Includes request and token reset pages.                                                  |
+| Password/account settings                              | Implemented | Implemented     | Password changes install the new token; deletion clears the client session.              |
+| Candidate profile and resume                           | Implemented | Implemented     | Profile edit, PDF upload, session restoration, and candidate role protection are wired.  |
+| Recruiter profile                                      | Implemented | Not implemented | API supports self profile and company linkage.                                           |
+| Company management                                     | Implemented | Not implemented | Owner/member policy exists; deletion cascade is unresolved.                              |
+| Jobs                                                   | Implemented | Partial         | Public job browsing, filtering, details, and pagination exist; recruiter UI is absent.   |
+| Applications                                           | Implemented | Partial         | Candidate submission exists; history, withdrawal, review, and status UI are absent.      |
+| Candidate/job search                                   | Implemented | Partial         | Public job search is wired; candidate search has no UI. Atlas indexes are required.      |
+| Saved candidates                                       | Implemented | Not implemented | Recruiter API only.                                                                      |
+| Notifications                                          | Implemented | Count only      | Header shows unread count; feed and read actions have no UI.                             |
+| Interface theme                                        | N/A         | Implemented     | System-aware light/dark mode is available globally and persists the selected preference. |
+| Dashboards                                             | Implemented | Not implemented | Candidate, recruiter, and admin aggregates exist.                                        |
+| Administration                                         | Implemented | Not implemented | User moderation and company/job removal exist.                                           |
+| AI reports                                             | Model only  | Not implemented | No generation provider, queue, endpoints, or UI.                                         |
 
 ## Client Routes
 
@@ -70,8 +71,8 @@ prepared:
 | Server lint                 | Blocked locally | The installed `@eslint/js` link is stale/broken even though manifests declare it. Reinstall dependencies before treating this as a source failure. |
 | Prettier                    | Pass            | The repository passes the configured Prettier check.                                                                                               |
 | Browser smoke check         | Pass            | Desktop and 390px auth/public layout checks pass; protected candidate access redirects to sign-in.                                                 |
-| Automated tests             | Unavailable     | No test suite is currently implemented.                                                                                                            |
-| Live API/Atlas verification | Not performed   | Avoided external database mutations and automatic index creation during the docs audit.                                                            |
+| Automated tests             | Minimal         | Express 5 query validation has a focused regression test; broader coverage is absent.                                                              |
+| Live API/Atlas verification | Partial         | Public job listing and combined keyword/dropdown filtering pass against the configured live dataset.                                               |
 
 ## Priority Risks
 
@@ -115,9 +116,8 @@ prepared:
 1. Boolean query filters use `z.coerce.boolean()`. The string `"false"` is
    truthy in JavaScript and can be parsed as `true` for job and notification
    filters.
-2. Atlas Search result counts are computed before later `deletedAt`,
-   `isDeleted`, and published-status filters, so pagination totals can exceed
-   visible results.
+2. Candidate Atlas Search counts are computed before the later `deletedAt`
+   filter, so candidate-search pagination totals can exceed visible results.
 3. Some service queries accept unvalidated ObjectId strings. A malformed ID can
    surface as a Mongoose cast error and become a `500` instead of a stable
    client error.
@@ -127,7 +127,8 @@ prepared:
 
 ## Delivery Gaps
 
-- There are no unit, API integration, or browser end-to-end tests.
+- Automated coverage is limited to one query-validation regression test; API
+  integration and browser end-to-end tests are still absent.
 - There is no CI workflow, container definition, or deployment configuration.
 - The server has no emitted production build or `start` script; its `build`
   command is a type-check.
@@ -144,11 +145,11 @@ prepared:
 1. Fix access control and session invalidation, then add authorization tests.
 2. Repair seed password hashing, resume snapshot retention, and job deletion
    persistence.
-3. Add test infrastructure around auth, job policy, applications, and account
-   moderation.
-4. Add the missing candidate route guard and protected-route tests.
-5. Correct boolean parsing, ObjectId validation, search totals, and deletion
-   cascades.
+3. Expand test infrastructure around auth, job policy, applications, and
+   account moderation.
+4. Add automated protected-route tests for the candidate route guard.
+5. Correct boolean parsing, ObjectId validation, candidate-search totals, and
+   deletion cascades.
 6. Define a real server production build/start path and add CI.
 7. Build the missing recruiter, job, application, notification, dashboard, and
    admin client flows.

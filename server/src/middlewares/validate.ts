@@ -26,11 +26,16 @@ export function validate(schema: ZodType, source: ValidationSource = "body") {
     }
 
     if (source === "query") {
-      const target = req.query as Record<string, unknown>;
-      for (const key of Object.keys(target)) {
-        delete target[key];
-      }
-      Object.assign(target, result.data);
+      // Express 5 exposes req.query as a prototype getter that reparses the
+      // URL on every access. Mutating the returned object loses Zod coercions
+      // and defaults before the controller reads it again, so shadow the
+      // getter with this request's validated query value.
+      Object.defineProperty(req, "query", {
+        value: result.data,
+        writable: false,
+        enumerable: true,
+        configurable: true,
+      });
     } else {
       req[source] = result.data;
     }

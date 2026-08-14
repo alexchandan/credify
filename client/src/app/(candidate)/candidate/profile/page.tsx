@@ -135,14 +135,14 @@ export default function CandidateProfilePage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-1 items-center justify-center p-12 text-slate-500">
+      <div className="flex flex-1 items-center justify-center p-12 text-slate-500 dark:text-slate-400">
         Loading your profile...
       </div>
     );
   }
   if (error || !profile) {
     return (
-      <div className="flex flex-1 items-center justify-center p-12 text-red-600">
+      <div className="flex flex-1 items-center justify-center p-12 text-red-600 dark:text-red-400">
         {error ?? "Profile not found."}
       </div>
     );
@@ -151,33 +151,37 @@ export default function CandidateProfilePage() {
   const strength = calculateProfileStrength(profile);
 
   return (
-    <div className="flex flex-1 flex-col bg-slate-50">
+    <div className="flex flex-1 flex-col bg-slate-50 dark:bg-slate-900">
       <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-8 pb-32">
-        <h1 className="text-sm font-medium text-slate-500">Edit Profile</h1>
-        <p className="mt-1 text-2xl font-semibold text-slate-900">
+        <h1 className="text-sm font-medium text-slate-500 dark:text-slate-400">
+          Edit Profile
+        </h1>
+        <p className="mt-1 text-2xl font-semibold text-slate-900 dark:text-slate-100">
           Update your professional profile
         </p>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
           Keep your skills, resume, and experience current so recruiters see an
           accurate picture of you.
         </p>
 
         {/* --- Profile Strength --- */}
-        <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5">
+        <section className="mt-6 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center justify-between text-sm">
-            <span className="font-medium text-blue-700">
+            <span className="font-medium text-orange-700 dark:text-orange-400">
               {strengthLabel(strength)}
             </span>
-            <span className="font-semibold text-slate-900">{strength}%</span>
+            <span className="font-semibold text-slate-900 dark:text-slate-100">
+              {strength}%
+            </span>
           </div>
-          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+          <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
             <div
-              className="h-full rounded-full bg-blue-700 transition-all"
+              className="h-full rounded-full bg-orange-600 transition-all"
               style={{ width: `${strength}%` }}
             />
           </div>
           {strength < 100 && (
-            <p className="mt-2 text-xs text-slate-400">
+            <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
               {!profile.headline && "Add a headline. "}
               {profile.skills.length === 0 && "Add your skills. "}
               {!profile.location && "Add your location. "}
@@ -207,7 +211,7 @@ export default function CandidateProfilePage() {
               onChange={(v) => setProfile({ ...profile, location: v })}
             />
             <div>
-              <label className="block text-xs font-medium tracking-wide text-slate-500 uppercase">
+              <label className="block text-xs font-medium tracking-wide text-slate-500 uppercase dark:text-slate-400">
                 Availability
               </label>
               <select
@@ -218,7 +222,7 @@ export default function CandidateProfilePage() {
                     availability: e.target.value as Availability,
                   })
                 }
-                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none"
+                className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:border-orange-500 focus:outline-none dark:border-slate-700 dark:text-slate-100"
               >
                 {AVAILABILITY_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -233,16 +237,16 @@ export default function CandidateProfilePage() {
         {/* --- Account (read-only email) --- */}
         <Card icon={UserIcon} title="Account">
           <div>
-            <label className="block text-xs font-medium tracking-wide text-slate-500 uppercase">
+            <label className="block text-xs font-medium tracking-wide text-slate-500 uppercase dark:text-slate-400">
               Email
             </label>
             <input
               type="email"
               value={user?.email ?? ""}
               disabled
-              className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-500"
+              className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400"
             />
-            <p className="mt-1 text-xs text-slate-400">
+            <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
               Your email is tied to your account and can&apos;t be changed here.
             </p>
           </div>
@@ -259,17 +263,17 @@ export default function CandidateProfilePage() {
         {/* --- Resume --- */}
         <Card icon={FileText} title="Resume">
           {profile.resumeUrl ? (
-            <div className="flex items-center justify-between rounded-lg border border-slate-200 p-3">
+            <div className="flex items-center justify-between rounded-lg border border-slate-200 p-3 dark:border-slate-800">
               <div>
                 <a
                   href={profile.resumeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm font-medium text-slate-900 hover:underline"
+                  className="text-sm font-medium text-slate-900 hover:underline dark:text-slate-100"
                 >
                   Current resume
                 </a>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-slate-400 dark:text-slate-500">
                   {profile.resumeUploadedAt
                     ? `Uploaded on ${new Date(profile.resumeUploadedAt).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}`
                     : "Upload date unavailable"}
@@ -280,7 +284,7 @@ export default function CandidateProfilePage() {
                   href={profile.resumeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="rounded-full border border-slate-300 px-4 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                  className="rounded-full border border-slate-300 px-4 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
                 >
                   View Current
                 </a>
@@ -288,22 +292,22 @@ export default function CandidateProfilePage() {
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isUploadingResume}
-                  className="rounded-full bg-blue-700 px-4 py-1.5 text-xs font-medium text-white hover:bg-blue-800 disabled:opacity-50"
+                  className="rounded-full bg-orange-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-orange-700 disabled:opacity-50"
                 >
                   {isUploadingResume ? "Uploading..." : "Replace File"}
                 </button>
               </div>
             </div>
           ) : (
-            <div className="flex items-center justify-between rounded-lg border border-dashed border-slate-300 p-4">
-              <p className="text-sm text-slate-500">
+            <div className="flex items-center justify-between rounded-lg border border-dashed border-slate-300 p-4 dark:border-slate-700">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 No resume uploaded yet — required before you can apply to jobs.
               </p>
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploadingResume}
-                className="rounded-full bg-blue-700 px-4 py-1.5 text-xs font-medium text-white hover:bg-blue-800 disabled:opacity-50"
+                className="rounded-full bg-orange-600 px-4 py-1.5 text-xs font-medium text-white hover:bg-orange-700 disabled:opacity-50"
               >
                 {isUploadingResume ? "Uploading..." : "Upload Resume"}
               </button>
@@ -395,7 +399,7 @@ export default function CandidateProfilePage() {
                     value={item.startDate}
                     onChange={(v) => update({ startDate: v })}
                   />
-                  <label className="flex items-center gap-2 text-sm text-slate-700">
+                  <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
                     <input
                       type="checkbox"
                       checked={item.isCurrent}
@@ -547,16 +551,18 @@ export default function CandidateProfilePage() {
       </div>
 
       {/* --- Sticky Save Bar --- */}
-      <div className="fixed inset-x-0 bottom-0 border-t border-slate-200 bg-white/90 px-6 py-3 backdrop-blur-sm">
+      <div className="fixed inset-x-0 bottom-0 border-t border-slate-200 bg-white/90 px-6 py-3 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-950/90">
         <div className="mx-auto flex max-w-3xl items-center justify-end gap-3">
           {saveMessage && (
-            <span className="text-sm text-slate-500">{saveMessage}</span>
+            <span className="text-sm text-slate-500 dark:text-slate-400">
+              {saveMessage}
+            </span>
           )}
           <button
             type="button"
             onClick={handleSave}
             disabled={isSaving}
-            className="flex items-center gap-2 rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-blue-800 disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg bg-orange-600 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-orange-700 disabled:opacity-50"
           >
             <Save className="h-4 w-4" />
             {isSaving ? "Saving..." : "Save Profile"}
@@ -581,10 +587,15 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-5">
-      <div className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3">
-        <Icon className="h-4 w-4 text-blue-700" strokeWidth={2} />
-        <h2 className="text-base font-semibold text-slate-900">{title}</h2>
+    <section className="mt-4 rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950">
+      <div className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
+        <Icon
+          className="h-4 w-4 text-orange-700 dark:text-orange-400"
+          strokeWidth={2}
+        />
+        <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
+          {title}
+        </h2>
       </div>
       {children}
     </section>
@@ -602,14 +613,14 @@ function TextField({
 }) {
   return (
     <div>
-      <label className="block text-xs font-medium tracking-wide text-slate-500 uppercase">
+      <label className="block text-xs font-medium tracking-wide text-slate-500 uppercase dark:text-slate-400">
         {label}
       </label>
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none"
+        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:border-orange-500 focus:outline-none dark:border-slate-700 dark:text-slate-100"
       />
     </div>
   );
@@ -626,14 +637,14 @@ function DateField({
 }) {
   return (
     <div>
-      <label className="block text-xs font-medium tracking-wide text-slate-500 uppercase">
+      <label className="block text-xs font-medium tracking-wide text-slate-500 uppercase dark:text-slate-400">
         {label}
       </label>
       <input
         type="date"
         value={value ? value.slice(0, 10) : ""}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:border-blue-500 focus:outline-none"
+        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:border-orange-500 focus:outline-none dark:border-slate-700 dark:text-slate-100"
       />
     </div>
   );
@@ -658,24 +669,26 @@ function SkillsEditor({
 
   return (
     <div>
-      <div className="flex flex-wrap gap-2 border-b border-slate-100 pb-3">
+      <div className="flex flex-wrap gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
         {skills.map((skill) => (
           <span
             key={skill}
-            className="flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700"
+            className="flex items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1 text-xs font-medium text-orange-700 dark:bg-orange-950/40 dark:text-orange-400"
           >
             {skill}
             <button
               type="button"
               onClick={() => onChange(skills.filter((s) => s !== skill))}
-              className="text-blue-400 hover:text-blue-700"
+              className="text-orange-500 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300"
             >
               ×
             </button>
           </span>
         ))}
         {skills.length === 0 && (
-          <span className="text-sm text-slate-400">No skills added yet.</span>
+          <span className="text-sm text-slate-400 dark:text-slate-500">
+            No skills added yet.
+          </span>
         )}
       </div>
       <div className="mt-3 flex gap-2">
@@ -690,12 +703,12 @@ function SkillsEditor({
             }
           }}
           placeholder="Type a skill and press enter..."
-          className="flex-1 rounded-full border border-slate-300 px-4 py-2 text-sm focus:border-blue-500 focus:outline-none"
+          className="flex-1 rounded-full border border-slate-300 px-4 py-2 text-sm focus:border-orange-500 focus:outline-none dark:border-slate-700"
         />
         <button
           type="button"
           onClick={addSkill}
-          className="rounded-full bg-blue-50 px-4 py-2 text-xs font-medium text-blue-700 hover:bg-blue-100"
+          className="rounded-full bg-orange-50 px-4 py-2 text-xs font-medium text-orange-700 hover:bg-orange-100 dark:bg-orange-950/40 dark:text-orange-400 dark:hover:bg-orange-900/60"
         >
           + Add
         </button>
@@ -745,20 +758,22 @@ function ListEditor<T extends object>({
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-slate-200">
+    <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
       <button
         type="button"
         onClick={() => setIsOpen((v) => !v)}
-        className="flex w-full items-center justify-between bg-slate-50 px-4 py-3 text-left"
+        className="flex w-full items-center justify-between bg-slate-50 px-4 py-3 text-left dark:bg-slate-900"
       >
-        <span className="flex items-center gap-2 font-medium text-slate-900">
-          <Icon className="h-4 w-4 text-blue-700" />
+        <span className="flex items-center gap-2 font-medium text-slate-900 dark:text-slate-100">
+          <Icon className="h-4 w-4 text-orange-700 dark:text-orange-400" />
           {title}
-          <span className="text-xs font-normal text-slate-400">
+          <span className="text-xs font-normal text-slate-400 dark:text-slate-500">
             ({items.length})
           </span>
         </span>
-        <span className="text-slate-400">{isOpen ? "−" : "+"}</span>
+        <span className="text-slate-400 dark:text-slate-500">
+          {isOpen ? "−" : "+"}
+        </span>
       </button>
 
       {isOpen && (
@@ -766,9 +781,9 @@ function ListEditor<T extends object>({
           {items.map((item, index) => (
             <details
               key={index}
-              className="rounded-lg border border-slate-200 p-3"
+              className="rounded-lg border border-slate-200 p-3 dark:border-slate-800"
             >
-              <summary className="flex cursor-pointer items-center justify-between text-sm text-slate-700">
+              <summary className="flex cursor-pointer items-center justify-between text-sm text-slate-700 dark:text-slate-200">
                 {renderSummary(item)}
                 <button
                   type="button"
@@ -776,7 +791,7 @@ function ListEditor<T extends object>({
                     e.preventDefault();
                     removeExisting(index);
                   }}
-                  className="text-xs text-red-600 hover:underline"
+                  className="text-xs text-red-600 hover:underline dark:text-red-400"
                 >
                   Remove
                 </button>
@@ -788,7 +803,7 @@ function ListEditor<T extends object>({
           ))}
 
           {isAdding ? (
-            <div className="rounded-lg border border-dashed border-slate-300 p-3">
+            <div className="rounded-lg border border-dashed border-slate-300 p-3 dark:border-slate-700">
               <div className="flex flex-col gap-2">
                 {renderFields(draft, (patch) =>
                   setDraft({ ...draft, ...patch }),
@@ -798,7 +813,7 @@ function ListEditor<T extends object>({
                 <button
                   type="button"
                   onClick={addDraft}
-                  className="rounded-full bg-blue-700 px-3 py-1.5 text-xs font-medium text-white"
+                  className="rounded-full bg-orange-600 px-3 py-1.5 text-xs font-medium text-white"
                 >
                   Add
                 </button>
@@ -808,7 +823,7 @@ function ListEditor<T extends object>({
                     setIsAdding(false);
                     setDraft(emptyItem);
                   }}
-                  className="rounded-full border border-slate-300 px-3 py-1.5 text-xs text-slate-600"
+                  className="rounded-full border border-slate-300 px-3 py-1.5 text-xs text-slate-600 dark:border-slate-700 dark:text-slate-300"
                 >
                   Cancel
                 </button>
@@ -818,7 +833,7 @@ function ListEditor<T extends object>({
             <button
               type="button"
               onClick={() => setIsAdding(true)}
-              className="text-left text-sm text-blue-700 hover:underline"
+              className="text-left text-sm text-orange-700 hover:underline dark:text-orange-400"
             >
               + Add {title.toLowerCase()}
             </button>
@@ -837,17 +852,20 @@ function AccountSettingsSection() {
   return (
     <section
       id="account-settings"
-      className="mt-4 scroll-mt-20 rounded-2xl border border-red-200 bg-white p-5"
+      className="mt-4 scroll-mt-20 rounded-2xl border border-red-200 bg-white p-5 dark:border-red-800 dark:bg-slate-950"
     >
-      <div className="mb-4 flex items-center gap-2 border-b border-red-100 pb-3">
-        <ShieldAlert className="h-4 w-4 text-red-600" strokeWidth={2} />
-        <h2 className="text-base font-semibold text-slate-900">
+      <div className="mb-4 flex items-center gap-2 border-b border-red-100 pb-3 dark:border-red-900">
+        <ShieldAlert
+          className="h-4 w-4 text-red-600 dark:text-red-400"
+          strokeWidth={2}
+        />
+        <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
           Account Settings
         </h2>
       </div>
       <div className="flex flex-col gap-6">
         <ChangePasswordForm />
-        <div className="border-t border-slate-100 pt-6">
+        <div className="border-t border-slate-100 pt-6 dark:border-slate-800">
           <DeleteAccountForm />
         </div>
       </div>
@@ -883,7 +901,9 @@ function ChangePasswordForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <h3 className="text-sm font-medium text-slate-900">Change Password</h3>
+      <h3 className="text-sm font-medium text-slate-900 dark:text-slate-100">
+        Change Password
+      </h3>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div className="relative">
           <input
@@ -892,7 +912,7 @@ function ChangePasswordForm() {
             onChange={(e) => setCurrentPassword(e.target.value)}
             placeholder="Current password"
             required
-            className="w-full rounded-lg border border-slate-300 px-3 py-2.5 pr-10 text-sm focus:border-blue-500 focus:outline-none"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2.5 pr-10 text-sm focus:border-orange-500 focus:outline-none dark:border-slate-700"
           />
         </div>
         <div className="relative">
@@ -904,12 +924,12 @@ function ChangePasswordForm() {
             required
             minLength={6}
             maxLength={15}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2.5 pr-10 text-sm focus:border-blue-500 focus:outline-none"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2.5 pr-10 text-sm focus:border-orange-500 focus:outline-none dark:border-slate-700"
           />
           <button
             type="button"
             onClick={() => setShowPasswords((v) => !v)}
-            className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400"
+            className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 dark:text-slate-500"
           >
             {showPasswords ? (
               <EyeOff className="h-4 w-4" />
@@ -919,16 +939,18 @@ function ChangePasswordForm() {
           </button>
         </div>
       </div>
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && (
+        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+      )}
       {success && (
-        <p className="text-sm text-emerald-600">
+        <p className="text-sm text-emerald-600 dark:text-emerald-400">
           Password changed. You&apos;ve been logged out of all other sessions.
         </p>
       )}
       <button
         type="submit"
         disabled={isSubmitting}
-        className="w-fit rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+        className="w-fit rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
       >
         {isSubmitting ? "Updating..." : "Update Password"}
       </button>
@@ -958,8 +980,10 @@ function DeleteAccountForm() {
 
   return (
     <div className="flex flex-col gap-3">
-      <h3 className="text-sm font-medium text-red-700">Delete Account</h3>
-      <p className="text-sm text-slate-500">
+      <h3 className="text-sm font-medium text-red-700 dark:text-red-300">
+        Delete Account
+      </h3>
+      <p className="text-sm text-slate-500 dark:text-slate-400">
         This permanently deactivates your account and profile. This cannot be
         undone from within the app.
       </p>
@@ -968,13 +992,13 @@ function DeleteAccountForm() {
         <button
           type="button"
           onClick={() => setConfirmOpen(true)}
-          className="w-fit rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
+          className="w-fit rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-950/50"
         >
           Delete My Account
         </button>
       ) : (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4">
-          <p className="text-sm font-medium text-red-800">
+        <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950/40">
+          <p className="text-sm font-medium text-red-800 dark:text-red-300">
             Enter your password to confirm. This is permanent.
           </p>
           <input
@@ -982,9 +1006,13 @@ function DeleteAccountForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Your password"
-            className="mt-2 w-full rounded-lg border border-red-300 px-3 py-2.5 text-sm focus:outline-none"
+            className="mt-2 w-full rounded-lg border border-red-300 px-3 py-2.5 text-sm focus:outline-none dark:border-red-700"
           />
-          {error && <p className="mt-2 text-sm text-red-700">{error}</p>}
+          {error && (
+            <p className="mt-2 text-sm text-red-700 dark:text-red-300">
+              {error}
+            </p>
+          )}
           <div className="mt-3 flex gap-2">
             <button
               type="button"
@@ -1003,7 +1031,7 @@ function DeleteAccountForm() {
                 setPassword("");
                 setError(null);
               }}
-              className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600"
+              className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300"
             >
               Cancel
             </button>

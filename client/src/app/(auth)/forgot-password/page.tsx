@@ -51,12 +51,12 @@ export default function ForgotPasswordPage() {
     >
       {submitted ? (
         <div className="mt-7 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-orange-50 text-orange-700">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-400">
             <Mail className="h-5 w-5" aria-hidden="true" />
           </div>
           <Link
             href="/login"
-            className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-orange-700 hover:underline"
+            className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-orange-700 hover:underline dark:text-orange-400"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Back to sign in
@@ -68,13 +68,13 @@ export default function ForgotPasswordPage() {
             <div>
               <label
                 htmlFor="forgot-password-email"
-                className="block text-sm font-medium text-slate-700"
+                className="block text-sm font-medium text-slate-700 dark:text-slate-200"
               >
                 Email address
               </label>
               <div className="relative mt-1.5">
                 <Mail
-                  className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400"
+                  className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500"
                   aria-hidden="true"
                 />
                 <input
@@ -90,7 +90,7 @@ export default function ForgotPasswordPage() {
                   autoFocus
                   aria-invalid={Boolean(error)}
                   aria-describedby={error ? "forgot-password-error" : undefined}
-                  className="w-full rounded-lg border border-slate-300 py-2.5 pr-3 pl-10 text-sm text-slate-950 transition outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
+                  className="w-full rounded-lg border border-slate-300 py-2.5 pr-3 pl-10 text-sm text-slate-950 transition outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:border-slate-700 dark:text-white dark:focus:ring-orange-900/50"
                 />
               </div>
             </div>
@@ -99,7 +99,7 @@ export default function ForgotPasswordPage() {
               <p
                 id="forgot-password-error"
                 role="alert"
-                className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+                className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300"
               >
                 {error}
               </p>
@@ -116,7 +116,7 @@ export default function ForgotPasswordPage() {
 
           <Link
             href="/login"
-            className="mt-6 flex items-center justify-center gap-1.5 text-sm font-semibold text-orange-700 hover:underline"
+            className="mt-6 flex items-center justify-center gap-1.5 text-sm font-semibold text-orange-700 hover:underline dark:text-orange-400"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Back to sign in

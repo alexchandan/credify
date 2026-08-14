@@ -226,16 +226,17 @@ suspended user remain a known gap.
 
 ## ADR-016: Replace `express-mongo-sanitize` for Express 5
 
-**Decision:** Use the local `mongoSanitize()` middleware, which recursively
-deletes `$`-prefixed and dotted keys by mutating request containers in place.
+**Decision:** Use local request sanitization and schema validation. Query
+middleware must shadow Express 5's prototype getter with an own validated
+property via `Object.defineProperty()` when parsed values must persist.
 
 **Rationale:** `express-mongo-sanitize@2.2.0` reassigns `req.query`, but Express
 5 exposes it as a read-only getter. The package caused a runtime failure on
 every request even though TypeScript passed.
 
-**Consequences:** Middleware touching `req.query` must mutate its contents and
-must never replace the top-level object. Framework upgrades require boot and
-request tests, not only compilation.
+**Consequences:** Assigning directly to `req.query` remains invalid, while
+mutating a single getter result is not persistent. Framework upgrades require
+boot and request tests, not only compilation.
 
 **Status:** Adopted and implemented.
 

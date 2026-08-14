@@ -87,6 +87,17 @@ export async function searchJobs(
   query: SearchJobsQuery,
 ): Promise<SearchResult<IJob>> {
   const skip = (query.page - 1) * query.limit;
+  const postSearchFilter: Record<string, unknown> = {
+    status: JobStatus.PUBLISHED,
+    isDeleted: false,
+  };
+
+  if (query.employmentType) {
+    postSearchFilter.employmentType = query.employmentType;
+  }
+  if (query.experienceLevel) {
+    postSearchFilter.experienceLevel = query.experienceLevel;
+  }
 
   const compound = {
     must: [
@@ -102,40 +113,25 @@ export async function searchJobs(
       ...(query.location
         ? [{ text: { query: query.location, path: "location" } }]
         : []),
-      ...(query.employmentType
-        ? [{ equals: { path: "employmentType", value: query.employmentType } }]
-        : []),
-      ...(query.experienceLevel
-        ? [
-            {
-              equals: { path: "experienceLevel", value: query.experienceLevel },
-            },
-          ]
-        : []),
     ],
   };
 
-  const [results, countResult] = await Promise.all([
-    Job.aggregate([
-      { $search: { index: JOB_SEARCH_INDEX, compound } },
-      // Same reasoning as searchCandidates — status/isDeleted filtered via
-      // normal $match, not encoded into the Atlas Search query itself.
-      { $match: { status: JobStatus.PUBLISHED, isDeleted: false } },
-      { $skip: skip },
-      { $limit: query.limit },
-    ]),
-    Job.aggregate([
-      {
-        $searchMeta: {
-          index: JOB_SEARCH_INDEX,
-          compound,
-          count: { type: "total" },
-        },
+  const [facetedResult] = await Job.aggregate<{
+    results: IJob[];
+    count: Array<{ total: number }>;
+  }>([
+    { $search: { index: JOB_SEARCH_INDEX, compound } },
+    { $match: postSearchFilter },
+    {
+      $facet: {
+        results: [{ $skip: skip }, { $limit: query.limit }],
+        count: [{ $count: "total" }],
       },
-    ]),
+    },
   ]);
 
-  const totalCount: number = countResult[0]?.count?.total ?? 0;
+  const results = facetedResult?.results ?? [];
+  const totalCount = facetedResult?.count[0]?.total ?? 0;
 
   return {
     results,
