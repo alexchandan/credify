@@ -1,53 +1,184 @@
-<!-- use markdown preview extension or tools for better experience-->
+# Coding Standards
 
-# Coding Standards & Definition of Done
+This document describes the conventions the current Credify codebase follows and
+the checks expected for new work. See [Project Status](./PROJECT_STATUS.md) for
+known places where the repository does not yet meet these standards.
 
-## TypeScript Configuration
+## TypeScript
 
-The project's `tsconfig.json` has three strict flags on that shape how code must be written — these aren't optional style preferences, code that ignores them won't compile:
+Both applications use strict TypeScript, but their compiler settings differ.
 
-- **`exactOptionalPropertyTypes: true`** — `field?: string` means the property may be _omitted_, but if present, must be exactly `string` — `undefined` is not automatically a valid value to assign to it. Anywhere a field is intentionally cleared (e.g. `user.passwordResetTokenHash = undefined`), that field's type in the model interface must say `field?: Type | undefined` explicitly, not just `field?: Type`.
-- **`noUncheckedIndexedAccess: true`** — indexing into an array or a `Record`/plain object (`arr[i]`, `obj[key]`) returns `T | undefined`, not `T`. Always narrow before use (an `if` check, non-null assertion where genuinely guaranteed, or `.at()`).
-- **`verbatimModuleSyntax: true`** — imports used only as types must say so explicitly: `import type { Request } from 'express'`, not `import { Request } from 'express'`. Mixing type and value imports from the same module needs two separate import statements (one plain, one `import type`).
-- **Express 5** — `req.query` is a read-only getter with no setter. Middleware that tries to reassign it (`req.query = {...}`) will throw at runtime on every request. Only in-place mutation of its properties is safe (see ADR-016 for the concrete incident this caused).
+- The server enables `strict`, `exactOptionalPropertyTypes`,
+  `noUncheckedIndexedAccess`, and `verbatimModuleSyntax`.
+- The client enables `strict` through Next.js but does not currently enable the
+  server's additional strictness flags.
+- Use `import type` for type-only server imports.
+- Narrow indexed values before use. Do not assume `array[index]` or a record
+  lookup exists.
+- With `exactOptionalPropertyTypes`, omit an optional property instead of
+  assigning `undefined` unless its type explicitly permits `undefined`.
+- Avoid `any`. Prefer a precise interface, `unknown` plus narrowing, or a
+  library-provided type.
 
-## Code Style
+## Formatting and Naming
 
-- ESLint + Prettier are enforced via a Husky pre-commit hook (`lint-staged`). Code that doesn't pass lint/format cannot be committed.
-- Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/): `feat:`, `fix:`, `refactor:`, `docs:`, `chore:`, `test:`.
-  - Example: `feat(jobs): add publish/draft status toggle`
+- Prettier is the formatting authority; ESLint handles code-quality rules.
+- Use PascalCase for React components and Mongoose models, camelCase for
+  variables/functions, and UPPER_SNAKE_CASE for constants.
+- Name server modules by domain, for example `job.controller.ts`,
+  `job.service.ts`, and `job.validation.ts`.
+- Keep comments short and reserve them for intent or constraints that the code
+  cannot express clearly.
+- Commit messages follow Conventional Commits, such as
+  `fix(jobs): enforce member ownership`.
 
-## API Rules (non-negotiable, see API_CONTRACT.md)
+## Server Structure
 
-- Every controller uses `sendSuccess()` / `sendError()` — never raw `res.json()`.
-- Every async controller is wrapped in `catchAsync()` — no manual try/catch in controllers.
-- Errors are thrown as `AppError(statusCode, code, message)` — never a plain `throw new Error(...)` in domain logic, **except** for genuine programmer-invariant checks (a bug signal, not a user-facing condition) — see `Application.ts`'s `_statusChangedBy` guard for the one deliberate exception.
-- For Mongoose schema-level validation that should surface as a `400 VALIDATION_ERROR` (not a generic `500`), use `this.invalidate(path, message)` inside a `pre('validate')` hook — not `throw new Error(...)`, which `errorHandler.ts` can't distinguish from an unexpected bug.
-- New error codes must be added to `docs/API_CONTRACT.md` in the same PR that introduces them.
+Keep request handling layered:
 
-## Verification Rule
+1. **Route:** declares HTTP method, middleware, and controller.
+2. **Validation:** parses params, query, and body with Zod.
+3. **Controller:** translates HTTP input/output and delegates domain work.
+4. **Service or policy:** owns reusable business rules and authorization scope.
+5. **Model:** owns persistence constraints, indexes, and document hooks.
 
-**A clean `tsc --noEmit` does not mean the server works.** Runtime-only failures — an incompatible dependency, a Mongoose duplicate-index warning, a middleware that misbehaves under the actual Node/Express version in use — do not show up in a type-check. Before considering a module "done," boot the server and hit its endpoints with a real request (`curl` or equivalent), not just a passing compile. ADR-016 is a direct example of a bug that was invisible to `tsc` but broke 100% of requests at runtime.
+Controllers should stay thin. Do not put ownership logic only in the frontend or
+duplicate complex authorization rules across controllers.
 
-## Data Rules
+## API Conventions
 
-- Any new collection or field must be documented in `docs/DATABASE_SCHEMA.md` in the same PR.
-- Any non-obvious schema/architecture decision gets an entry in `docs/DECISIONS.md`.
-- Soft delete (`deletedAt`) is used instead of hard delete on all core domain collections (see ADR-005). Every query against these collections must explicitly exclude soft-deleted records.
-- Indexes are added at schema-design time for any field used in a filter/sort/lookup — not added reactively after noticing a slow query.
+- Prefix application endpoints with `/api/v1`; keep `/health` unversioned.
+- Use `sendSuccess()` for successful responses and the global error middleware
+  for failures. Do not create a second response envelope.
+- Wrap async controllers with `catchAsync()`.
+- Throw `AppError(statusCode, code, message)` for expected domain and request
+  failures. Plain `Error` is reserved for unexpected invariants.
+- Add every new public error code and endpoint to
+  [API Contract](./API_CONTRACT.md) in the same change.
+- Return `201` for newly created resources and `204` for successful responses
+  that intentionally have no body.
+- Paginated endpoints should return `page`, `limit`, `totalCount`, and
+  `totalPages` in the top-level `meta` object.
+- Validate MongoDB IDs before querying so malformed IDs become a stable `400`,
+  not a generic server error.
+- Avoid `z.coerce.boolean()` for query strings. Parse the literal strings
+  `"true"` and `"false"` explicitly.
 
-## Definition of Done (per feature/module)
+Express 5 exposes `req.query` through a getter. Middleware may sanitize its
+contents in place but must not assign a new object to `req.query`.
 
-A feature is not "done" until all of the following are true:
+## Authentication and Authorization
 
-- [ ] Input validated (Zod schema, shared between frontend and backend where possible)
-- [ ] Errors handled via `AppError` with a documented error code
-- [ ] Authorization checked (correct role + correct ownership/scope — not just "is logged in")
-- [ ] Integration test written (Supertest) covering at least the happy path and one failure case
-- [ ] Frontend has loading and error states, not just the happy path
-- [ ] Endpoint documented (OpenAPI/Swagger, once introduced in Phase 4)
-- [ ] No secrets, PII, or full request bodies written to logs
+- Treat authentication, role checks, company membership, ownership, and account
+  status as separate checks.
+- Perform authorization on the server for every protected operation.
+- Keep role policy definitions centralized and cover owner/member/admin
+  boundaries with tests.
+- Never log access tokens, refresh tokens, password fields, reset tokens, email
+  verification tokens, or full authorization headers.
+- A state-changing account operation must also update the client session state
+  when applicable.
 
-## Sequencing Rule
+## Validation and Data Integrity
 
-Per module: **model → controller → route → validation → test → frontend page → connect → test again.** Don't start the next module until the current one is deployed and clickable end-to-end. This keeps the project demoable at every milestone instead of 80% done across twelve directions at once.
+- Validate all externally supplied params, queries, and bodies with Zod before
+  the controller runs.
+- Keep request validation, TypeScript types, and Mongoose constraints aligned.
+- Use `this.invalidate(path, message)` in Mongoose validation hooks when a
+  schema violation should surface as a client validation error.
+- Add indexes for fields used in recurring filters, sorts, uniqueness checks,
+  or joins, and document them in [Database Schema](./DATABASE_SCHEMA.md).
+- Use transactions when an operation changes multiple documents that must stay
+  consistent, such as application submission and job counters.
+- Confirm session-aware queries and writes actually receive the transaction
+  session.
+- Hooks do not run uniformly across `save`, `insertMany`, and query updates.
+  Choose the write API deliberately and test hook-dependent behavior.
+
+## Deletion and Files
+
+- Respect each model's documented deletion behavior. Most user-facing domain
+  records use `isDeleted`; activity records are immutable and some auxiliary
+  records are physically deleted.
+- Every normal read for a soft-deleted model must exclude deleted documents.
+- When replacing or deleting a Cloudinary asset, coordinate database and remote
+  asset cleanup so the stored reference never points at a removed file.
+- Enforce upload MIME type and size on the server even if the client also checks
+  them.
+
+## Frontend Conventions
+
+- Only the root Next.js layout may render `<html>` and `<body>`.
+- Use the shared `apiClient` for authenticated API requests so refresh and
+  credential behavior stays consistent.
+- Wait for authentication restoration before redirecting from protected pages.
+- A protected page requires both an authentication check and the appropriate
+  role check.
+- Provide loading, error, empty, and success states for data-driven screens.
+- Keep the API base URL in `NEXT_PUBLIC_API_BASE_URL`; do not add new per-page
+  fallback ports.
+- Prefer reusable domain components over duplicating request and state logic in
+  route files.
+
+## Logging and Privacy
+
+- Include the request ID in server logs and user-facing unexpected-error
+  responses.
+- Configure redaction in every environment, especially production.
+- Log useful identifiers and outcomes, not whole request bodies or sensitive
+  profile data.
+- Use structured logger calls rather than `console.log` in application code.
+
+## Testing and Verification
+
+Test scope should match the change:
+
+- **Unit tests:** parsing, policies, and isolated business rules.
+- **Integration tests:** routes, authentication, database behavior, hooks, and
+  transactions.
+- **End-to-end tests:** high-value browser flows such as registration, sign-in,
+  job application, and recruiter review.
+
+The repository does not yet contain an automated test suite, so adding the test
+infrastructure is still an open project task. Until it exists, a clean type-check
+alone is not enough: boot affected applications and exercise the changed route or
+screen with a real request.
+
+Run the available checks from the repository root:
+
+```bash
+pnpm format:check
+pnpm lint
+pnpm type-check
+pnpm build
+```
+
+The current server `build` script runs `tsc --noEmit`; it validates types but
+does not create a production artifact or start command.
+
+## Documentation Responsibilities
+
+Update documentation in the same change when behavior changes:
+
+| Change                                          | Documentation          |
+| ----------------------------------------------- | ---------------------- |
+| Route, payload, response, status, or error code | `API_CONTRACT.md`      |
+| Model field, enum, index, hook, or relationship | `DATABASE_SCHEMA.md`   |
+| Non-obvious architectural or security choice    | `DECISIONS.md`         |
+| Environment variable or local workflow          | `ENVIRONMENT_SETUP.md` |
+| Feature readiness, limitation, or known defect  | `PROJECT_STATUS.md`    |
+| Product overview or common command              | Root `README.md`       |
+
+## Definition of Done
+
+- [ ] Inputs are validated and response/error behavior is documented.
+- [ ] Authentication, role, scope, ownership, and account state are enforced.
+- [ ] Persistence changes preserve indexes, hooks, transactions, and deletion
+      semantics.
+- [ ] Sensitive data is excluded from logs and responses.
+- [ ] The frontend covers loading, error, empty, and success states.
+- [ ] Focused automated tests cover the happy path and important failures, or
+      the missing test infrastructure is called out explicitly.
+- [ ] Formatting, linting, type-checking, and relevant builds pass.
+- [ ] The changed flow has been exercised at runtime.
+- [ ] All affected documentation is updated.

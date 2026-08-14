@@ -1,220 +1,389 @@
-<!-- use markdown preview extension or tools for better experience-->
-
 # Database Schema
 
-MongoDB via Mongoose. This doc is the source of truth for collection shapes, relationships, and indexing decisions — update it whenever a model changes, in the same PR.
+Credify uses MongoDB through Mongoose. This document describes the schema that
+is actually defined under `server/src/models`, including embedded documents,
+indexes, lifecycle hooks, and current implementation caveats.
 
-## Design Principles Applied Throughout
+## Conventions
 
-- **Identity vs. profile are separate.** `User` holds only auth-related fields. Domain data (name, skills, company) lives in role-specific profile collections.
-- **Embed vs. reference is decided per-field, not by default:**
-  - Embed when the data is always read together with its parent and doesn't need independent querying/pagination (e.g. education, experience inside `CandidateProfile`).
-  - Reference when the data grows unbounded, is queried independently, or needs its own indexes (e.g. `Application`, `SavedCandidate`).
-- **Soft delete everywhere it matters.** `deletedAt: Date | null` instead of hard deletes on `User`, `CandidateProfile`, `RecruiterProfile`, `Company`, and (once built) `Job`. Preserves history for applications, audit logs, and legal/data-retention reasons.
-- **Every collection with a filterable field has that field indexed at design time**, not added reactively after a slow query in production.
+- MongoDB references use `ObjectId` and Mongoose model names.
+- `timestamps: true` adds `createdAt` and `updatedAt` unless stated otherwise.
+- Identity is stored separately from candidate/recruiter domain profiles.
+- Bounded data that is always edited with its parent is embedded.
+- Independently queried or unbounded data uses its own collection.
+- Most core entities are soft-deleted; each query must explicitly apply the
+  corresponding active-record filter.
+- `unique` is a database index constraint, not a Mongoose validator. Services
+  translate expected duplicate-key failures into domain errors.
 
----
+## Relationship Summary
+
+```text
+User
+├── 1 CandidateProfile
+└── 1 RecruiterProfile ── 0..1 Company
+                              └── many Job
+
+CandidateProfile ── many Application ── 1 Job
+RecruiterProfile ── many SavedCandidate ── 1 CandidateProfile
+User ── many Notification
+User ── many ActivityLog (actor)
+CandidateProfile ── many AIReport ── 0..1 Job
+```
+
+The arrows describe application-level relationships. MongoDB does not enforce
+foreign-key existence automatically.
 
 ## `users`
 
-Identity only — no profile data.
+Model: `User`
 
-| Field                                                         | Type                                    | Notes                                                         |
-| ------------------------------------------------------------- | --------------------------------------- | ------------------------------------------------------------- |
-| `email`                                                       | string                                  | unique, lowercase, indexed                                    |
-| `passwordHash`                                                | string                                  | `select: false` — never returned by default                   |
-| `role`                                                        | enum: `candidate`, `recruiter`, `admin` |                                                               |
-| `isVerified`                                                  | boolean                                 | default `false`                                               |
-| `tokenVersion`                                                | number                                  | bumped to invalidate all refresh tokens ("logout everywhere") |
-| `emailVerificationTokenHash` / `emailVerificationTokenExpiry` | string / Date                           | hashed at rest, never store raw tokens                        |
-| `passwordResetTokenHash` / `passwordResetTokenExpiry`         | string / Date                           | hashed at rest                                                |
-| `deletedAt`                                                   | Date \| null                            | soft delete                                                   |
+| Field                          | Type                                  | Required/default          | Notes                                                                               |
+| ------------------------------ | ------------------------------------- | ------------------------- | ----------------------------------------------------------------------------------- |
+| `email`                        | string                                | Required                  | Trimmed, lowercased, 3-50 characters, email-pattern validation                      |
+| `passwordHash`                 | string                                | Required                  | `select: false`; raw passwords are assigned here and hashed by a `pre("save")` hook |
+| `role`                         | `candidate` \| `recruiter` \| `admin` | Default `candidate`       | Authentication/authorization role                                                   |
+| `isVerified`                   | boolean                               | Default `false`           | Email-verification state                                                            |
+| `tokenVersion`                 | number                                | Default `0`               | Compared by refresh flow; incrementing revokes existing refresh tokens              |
+| `emailVerificationTokenHash`   | string                                | Optional, `select: false` | SHA-256 hash; raw token is emailed                                                  |
+| `emailVerificationTokenExpiry` | Date                                  | Optional, `select: false` | Verification deadline                                                               |
+| `passwordResetTokenHash`       | string                                | Optional, `select: false` | SHA-256 hash; raw token is emailed                                                  |
+| `passwordResetTokenExpiry`     | Date                                  | Optional, `select: false` | Reset deadline                                                                      |
+| `deletedAt`                    | Date \| null                          | Default `null`            | User/account soft deletion and admin suspension                                     |
 
-**Indexes:** `email` (unique), `deletedAt`
+Indexes:
 
-**Relationships:** Referenced by `CandidateProfile.userId` and `RecruiterProfile.userId` (one-to-one, each).
+- `{ email: 1 }`, unique only for documents where `deletedAt: null`
+- `{ deletedAt: 1 }`
 
----
+Hooks/methods:
+
+- `pre("save")` hashes a modified `passwordHash` with bcrypt cost 12.
+- `comparePassword(password)` compares a candidate password with the stored
+  hash.
+
+Relationships:
+
+- One active user normally has one role-specific profile.
+- `Notification.userId`, `ActivityLog.actorId`, and `AIReport.requestedBy`
+  reference this model.
 
 ## `candidateProfiles`
 
-| Field            | Type                                                                 | Notes                                               |
-| ---------------- | -------------------------------------------------------------------- | --------------------------------------------------- |
-| `userId`         | ObjectId → User                                                      | unique — one profile per user                       |
-| `fullName`       | string                                                               | required                                            |
-| `headline`       | string                                                               | max 150 chars                                       |
-| `skills`         | string[]                                                             | normalized to lowercase/trimmed on write            |
-| `location`       | string                                                               |                                                     |
-| `availability`   | enum: `immediate`, `within_2_weeks`, `within_1_month`, `not_looking` |                                                     |
-| `resumeUrl`      | string                                                               | Cloudinary URL                                      |
-| `education`      | IEducation[]                                                         | **embedded**, `_id: false`                          |
-| `experience`     | IExperience[]                                                        | **embedded**, `_id: false`                          |
-| `projects`       | IProject[]                                                           | **embedded**, `_id: false`                          |
-| `certifications` | ICertification[]                                                     | **embedded**, `_id: false`                          |
-| `socialLinks`    | object                                                               | **embedded** — linkedIn, github, portfolio, twitter |
-| `deletedAt`      | Date \| null                                                         | soft delete                                         |
+Model: `CandidateProfile`
 
-**Indexes:** `userId` (unique), `skills` (multikey), `location`, `availability`, `deletedAt`
+| Field              | Type              | Required/default      | Notes                                                       |
+| ------------------ | ----------------- | --------------------- | ----------------------------------------------------------- |
+| `userId`           | ObjectId -> User  | Required, unique      | One-to-one identity link                                    |
+| `fullName`         | string            | Required              | Trimmed                                                     |
+| `headline`         | string            | Optional              | Trimmed, persisted maximum 200; API currently limits to 150 |
+| `skills`           | string[]          | Default `[]`          | Each value is trimmed and lowercased on assignment          |
+| `location`         | string            | Optional              | Trimmed                                                     |
+| `availability`     | Availability enum | Default `not_looking` | See values below                                            |
+| `resumeUrl`        | string            | Optional              | Cloudinary secure URL                                       |
+| `resumePublicId`   | string            | Optional              | Cloudinary deletion/replacement identifier                  |
+| `resumeUploadedAt` | Date              | Optional              | Time of latest successful upload                            |
+| `education`        | Education[]       | Default `[]`          | Embedded, no subdocument `_id`                              |
+| `experience`       | Experience[]      | Default `[]`          | Embedded, no subdocument `_id`                              |
+| `projects`         | Project[]         | Default `[]`          | Embedded, no subdocument `_id`                              |
+| `certifications`   | Certification[]   | Default `[]`          | Embedded, no subdocument `_id`                              |
+| `socialLinks`      | SocialLinks       | Default `{}`          | Embedded, no subdocument `_id`                              |
+| `deletedAt`        | Date \| null      | Default `null`        | Profile soft deletion                                       |
 
-**Why embedded sub-documents:** education/experience/projects/certifications are always displayed and edited together with the profile as a whole — they never need independent pagination or cross-candidate querying. Embedding avoids unnecessary joins ($lookup) on every profile read.
+Availability values:
 
----
+- `immediate`
+- `within_two_weeks`
+- `within_one_month`
+- `not_looking`
+
+Embedded shapes:
+
+| Shape         | Fields                                                                               |
+| ------------- | ------------------------------------------------------------------------------------ |
+| Education     | `institution`, `degree`, `fieldOfStudy?`, `startDate`, `endDate?`, `grade?`          |
+| Experience    | `company`, `title`, `startDate`, `endDate?`, `isCurrent`, `description?` (max 2,000) |
+| Project       | `title`, `description?` (max 2,000), `techStack[]`, `link?`                          |
+| Certification | `name`, `issuingOrg`, `issueDate`, `expiryDate?`, `credentialUrl?`                   |
+| SocialLinks   | `linkedIn?`, `github?`, `portfolio?`, `twitter?`                                     |
+
+Indexes:
+
+- Inline unique index on `userId`
+- `{ skills: 1 }` (multikey)
+- `{ location: 1 }`
+- `{ availability: 1 }`
+- `{ deletedAt: 1 }`
 
 ## `recruiterProfiles`
 
-| Field         | Type                                     | Notes                                                                 |
-| ------------- | ---------------------------------------- | --------------------------------------------------------------------- |
-| `userId`      | ObjectId → User                          | unique — one profile per user                                         |
-| `fullName`    | string                                   | required                                                              |
-| `title`       | string                                   | job title, optional                                                   |
-| `companyId`   | ObjectId → Company \| null               | null until they create/join a company                                 |
-| `companyRole` | enum: `owner`, `admin`, `member` \| null | must be null iff `companyId` is null (enforced via `pre('validate')`) |
-| `deletedAt`   | Date \| null                             | soft delete                                                           |
+Model: `RecruiterProfile`
 
-**Indexes:** `userId` (unique), `companyId`, `deletedAt`
+| Field         | Type                        | Required/default | Notes                                      |
+| ------------- | --------------------------- | ---------------- | ------------------------------------------ |
+| `userId`      | ObjectId -> User            | Required, unique | One-to-one identity link                   |
+| `fullName`    | string                      | Required         | Trimmed                                    |
+| `title`       | string                      | Optional         | Trimmed                                    |
+| `companyId`   | ObjectId -> Company \| null | Default `null`   | A recruiter belongs to at most one company |
+| `companyRole` | CompanyRole \| null         | Default `null`   | `owner`, `admin`, or `member`              |
+| `deletedAt`   | Date \| null                | Default `null`   | Profile soft deletion                      |
 
-**Relationship model:** One recruiter belongs to **at most one company at a time** (see Decision Record ADR-004). Recruiters can switch companies over time by updating `companyId`/`companyRole` — this does **not** retroactively change authorship on jobs they already created (see `Job.createdBy`, once that model is built).
+The `pre("validate")` hook enforces that `companyId` and `companyRole` are set
+or cleared together.
 
----
+Indexes:
+
+- Inline unique index on `userId`
+- `{ companyId: 1 }`
+- `{ deletedAt: 1 }`
+
+`companyId` is the source of truth for membership. `Company` does not duplicate
+membership in an array.
 
 ## `companies`
 
-| Field         | Type                                                 | Notes                                                            |
-| ------------- | ---------------------------------------------------- | ---------------------------------------------------------------- |
-| `name`        | string                                               | required                                                         |
-| `slug`        | string                                               | unique, lowercase — used in public URLs (`/companies/acme-corp`) |
-| `description` | string                                               | max 3000 chars                                                   |
-| `industry`    | string                                               |                                                                  |
-| `logoUrl`     | string                                               | Cloudinary URL                                                   |
-| `website`     | string                                               |                                                                  |
-| `size`        | enum: `1-10`, `11-50`, `51-200`, `201-1000`, `1000+` |                                                                  |
-| `createdBy`   | ObjectId → RecruiterProfile                          | permanent record of who created the company                      |
-| `deletedAt`   | Date \| null                                         | soft delete                                                      |
+Model: `Company`
 
-**Indexes:** `slug` (unique), `name` (text index — fallback search before Atlas Search is introduced), `deletedAt`
+| Field          | Type                         | Required/default | Notes                                             |
+| -------------- | ---------------------------- | ---------------- | ------------------------------------------------- |
+| `name`         | string                       | Required         | Trimmed, 2-100 characters                         |
+| `slug`         | string                       | Required         | Lowercased, trimmed, generated at creation        |
+| `description`  | string                       | Optional         | Trimmed, maximum 3,000                            |
+| `industry`     | string                       | Optional         | Trimmed                                           |
+| `logoUrl`      | string                       | Optional         | Cloudinary secure URL                             |
+| `logoPublicId` | string                       | Optional         | Cloudinary replacement/deletion identifier        |
+| `websiteUrl`   | string                       | Optional         | Trimmed; API validates URL syntax                 |
+| `size`         | CompanySize                  | Optional         | `1-10`, `11-50`, `51-200`, `201-1000`, or `1000+` |
+| `createdBy`    | ObjectId -> RecruiterProfile | Required         | Recruiter profile that created the company        |
+| `deletedAt`    | Date \| null                 | Default `null`   | Company soft deletion                             |
 
-**Relationship model:** One company has many `RecruiterProfile`s (queried via `RecruiterProfile.find({ companyId })`, not via an array on `Company` — see ADR-003 for why).
+Indexes:
 
----
+- `{ slug: 1 }`, unique only where `deletedAt: null`
+- `{ name: "text" }`
+- `{ deletedAt: 1 }`
+
+The generic company update does not regenerate `slug`, preserving existing
+public links after a display-name change.
 
 ## `jobs`
 
-| Field                     | Type                                                     | Notes                                                                                  |
-| ------------------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `companyId`               | ObjectId → Company                                       | required                                                                               |
-| `createdBy`               | ObjectId → RecruiterProfile                              | `immutable` — permanent authorship, independent of the recruiter's _current_ company   |
-| `title`                   | string                                                   | required, max 150 chars                                                                |
-| `description`             | string                                                   | required, max 10,000 chars                                                             |
-| `status`                  | enum: `draft`, `published`, `closed`                     | default `draft`                                                                        |
-| `employmentType`          | enum: `full_time`, `part_time`, `contract`, `internship` | required                                                                               |
-| `experienceLevel`         | enum: `entry`, `mid`, `senior`, `lead`                   | required                                                                               |
-| `skillsRequired`          | string[]                                                 | normalized to lowercase/trimmed on write                                               |
-| `location`                | string                                                   |                                                                                        |
-| `isRemote`                | boolean                                                  | default `false`                                                                        |
-| `salaryRange`             | object \| undefined                                      | **embedded** — min, max, currency; optional (recruiter may not disclose)               |
-| `publishedAt`             | Date \| null                                             | auto-stamped the moment `status` becomes `published`                                   |
-| `applicationCount`        | number                                                   | **denormalized counter** — avoids a COUNT query against `applications` on every render |
-| `isDeleted` / `deletedAt` | boolean / Date \| null                                   | soft delete                                                                            |
+Model: `Job`
 
-**Indexes:** `(companyId, status)`, `(status, publishedAt desc)`, `skillsRequired` (multikey), `location`, `createdBy`, `isDeleted`, text index on `(title, description)`
+| Field              | Type                         | Required/default    | Notes                                                                                 |
+| ------------------ | ---------------------------- | ------------------- | ------------------------------------------------------------------------------------- |
+| `companyId`        | ObjectId -> Company          | Required            | Owning company                                                                        |
+| `createdBy`        | ObjectId -> RecruiterProfile | Required, immutable | Permanent author record                                                               |
+| `title`            | string                       | Required            | Trimmed, maximum 150                                                                  |
+| `description`      | string                       | Required            | Trimmed, maximum 1,000                                                                |
+| `status`           | JobStatus                    | Default `draft`     | `draft`, `published`, or `closed`                                                     |
+| `employmentType`   | EmploymentType               | Required            | `full_time`, `part_time`, `contract`, or `internship`                                 |
+| `experienceLevel`  | ExperienceLevel              | Required            | `entry`, `mid`, `senior`, or `lead`                                                   |
+| `skillsRequired`   | string[]                     | Default `[]`        | Trimmed and lowercased on assignment                                                  |
+| `location`         | string[]                     | Default `[]`        | Each location is trimmed and lowercased                                               |
+| `isRemote`         | boolean                      | Default `false`     | Remote-work flag                                                                      |
+| `salaryRange`      | SalaryRange                  | Optional            | Embedded `{ min?, max?, currency }`; non-negative numbers; currency defaults to `INR` |
+| `publishedAt`      | Date \| null                 | Default `null`      | Stamped on first transition to `published`                                            |
+| `applicationCount` | number                       | Default `0`         | Denormalized, non-negative application count                                          |
+| `isDeleted`        | boolean                      | Default `false`     | Current persisted soft-delete flag                                                    |
 
-**Relationships:** Belongs to one `Company` and one `RecruiterProfile` (author). Has many `Application`s.
+Indexes:
 
-**Business rule (enforced in service layer, not schema):** the recruiter in `createdBy` must belong to `companyId` at creation time — see the permission/policy layer.
+- `{ companyId: 1, status: 1 }`
+- `{ status: 1, publishedAt: -1 }`
+- `{ skillsRequired: 1 }` (multikey)
+- `{ location: 1 }`
+- `{ createdBy: 1 }`
+- `{ isDeleted: 1 }`
+- Text index on `{ title: "text", description: "text" }`
 
----
+Implementation caveat: `IJob` and deletion services currently refer to
+`deletedAt`, but `deletedAt` is absent from the Mongoose schema. With Mongoose's
+strict schema behavior, assigning it does not persist it. `isDeleted` is the
+effective deletion field until the schema is fixed; see
+[Project Status](./PROJECT_STATUS.md).
 
 ## `applications`
 
-| Field               | Type                                                                             | Notes                                                                                                            |
-| ------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `candidateId`       | ObjectId → CandidateProfile                                                      | required                                                                                                         |
-| `jobId`             | ObjectId → Job                                                                   | required, `immutable`                                                                                            |
-| `companyId`         | ObjectId → Company                                                               | **denormalized from Job** — enables cheap "all applications across my company" queries without a `$lookup`       |
-| `status`            | enum: `applied`, `under_review`, `shortlisted`, `rejected`, `hired`, `withdrawn` | default `applied`                                                                                                |
-| `resumeSnapshotUrl` | string                                                                           | required — resume as it existed **at the moment of applying**, not a live link to the candidate's current resume |
-| `coverLetter`       | string                                                                           | optional, max 3000 chars                                                                                         |
-| `statusHistory`     | IStatusHistoryEntry[]                                                            | **embedded**, append-only audit log of every status transition (status, changedAt, changedBy)                    |
+Model: `Application`
 
-**Indexes:** `(candidateId, jobId)` unique — one application per candidate per job; `(jobId, status)`; `(candidateId, createdAt desc)`; `(companyId, status)`
+| Field               | Type                         | Required/default    | Notes                                 |
+| ------------------- | ---------------------------- | ------------------- | ------------------------------------- |
+| `candidateId`       | ObjectId -> CandidateProfile | Required            | Candidate profile owner               |
+| `jobId`             | ObjectId -> Job              | Required, immutable | Application target                    |
+| `companyId`         | ObjectId -> Company          | Required, immutable | Denormalized for company-wide queries |
+| `status`            | ApplicationStatus            | Default `applied`   | See lifecycle values below            |
+| `resumeSnapshotUrl` | string                       | Required            | Resume URL copied at application time |
+| `coverLetter`       | string                       | Optional            | Trimmed, maximum 3,000                |
+| `statusHistory`     | StatusHistoryEntry[]         | Default `[]`        | Embedded status audit history         |
 
-**Relationships:** Belongs to one `CandidateProfile` and one `Job`.
+Status values:
 
-**No `isDeleted`/soft delete on this collection** — withdrawal is a `status` value (`withdrawn`), not a deletion. The application's existence is itself the audit trail.
+- `applied`
+- `under_review`
+- `shortlisted`
+- `rejected`
+- `hired`
+- `withdrawn`
 
-**Requires a transaction** (see ADR-007): creating an application must atomically (1) insert the `Application`, (2) increment `Job.applicationCount`, (3) create a `Notification` for the recruiter.
+Each status-history entry contains:
 
----
+| Field       | Type              | Notes                                       |
+| ----------- | ----------------- | ------------------------------------------- |
+| `status`    | ApplicationStatus | State recorded by the change                |
+| `changedAt` | Date              | Defaults to current time                    |
+| `changedBy` | ObjectId -> User  | Candidate or recruiter user that changed it |
+
+Indexes:
+
+- `{ candidateId: 1, jobId: 1 }`, unique
+- `{ jobId: 1, status: 1 }`
+- `{ candidateId: 1, createdAt: -1 }`
+- `{ companyId: 1, status: 1 }`
+
+A `pre("save")` hook appends status history whenever a new application is
+saved or its status changes. The service must set the transient
+`_statusChangedBy` value before saving; absence is treated as a programmer
+invariant failure.
+
+Applications are not soft-deleted. Candidate withdrawal is represented by the
+`withdrawn` status, preserving the application audit trail.
 
 ## `savedCandidates`
 
-| Field         | Type                        | Notes                                                    |
-| ------------- | --------------------------- | -------------------------------------------------------- |
-| `recruiterId` | ObjectId → RecruiterProfile | required                                                 |
-| `candidateId` | ObjectId → CandidateProfile | required                                                 |
-| `note`        | string                      | optional, max 1000 chars — private note to the recruiter |
+Model: `SavedCandidate`
 
-**Indexes:** `(recruiterId, candidateId)` unique; `(recruiterId, createdAt desc)`
+| Field         | Type                         | Required/default | Notes                                               |
+| ------------- | ---------------------------- | ---------------- | --------------------------------------------------- |
+| `recruiterId` | ObjectId -> RecruiterProfile | Required         | Owning recruiter; records are private per recruiter |
+| `candidateId` | ObjectId -> CandidateProfile | Required         | Saved candidate                                     |
+| `note`        | string                       | Optional         | Trimmed, maximum 1,000                              |
 
-**Relationships:** Scoped to the individual recruiter, not shared company-wide (see ADR-008).
+Indexes:
 
----
+- `{ recruiterId: 1, candidateId: 1 }`, unique
+- `{ recruiterId: 1, createdAt: -1 }`
+
+Unsaving hard-deletes this relationship record; it does not delete the
+candidate.
 
 ## `notifications`
 
-| Field               | Type                                                                                           | Notes                                               |
-| ------------------- | ---------------------------------------------------------------------------------------------- | --------------------------------------------------- |
-| `userId`            | ObjectId → User                                                                                | required — the recipient                            |
-| `type`              | enum: `application_received`, `application_status_changed`, `job_published`, `candidate_saved` |                                                     |
-| `message`           | string                                                                                         | required, max 300 chars                             |
-| `relatedEntityType` | enum: `Job`, `Application`, `CandidateProfile`                                                 | optional, polymorphic ref discriminator             |
-| `relatedEntityId`   | ObjectId                                                                                       | optional, resolved via `refPath: relatedEntityType` |
-| `isRead`            | boolean                                                                                        | default `false`                                     |
-| `readAt`            | Date \| null                                                                                   | auto-stamped when `isRead` flips to `true`          |
+Model: `Notification`
 
-**Indexes:** `(userId, isRead, createdAt desc)` — the core "unread notifications, newest first" dashboard query; `(userId, createdAt desc)` for full history
+| Field               | Type                   | Required/default | Notes                                       |
+| ------------------- | ---------------------- | ---------------- | ------------------------------------------- |
+| `userId`            | ObjectId -> User       | Required         | Recipient                                   |
+| `type`              | NotificationType       | Required         | See values below                            |
+| `message`           | string                 | Required         | Trimmed, maximum 300                        |
+| `relatedEntityType` | RelatedEntityType      | Optional         | `Job`, `Application`, or `CandidateProfile` |
+| `relatedEntityId`   | ObjectId via `refPath` | Optional         | Resolves using `relatedEntityType`          |
+| `isRead`            | boolean                | Default `false`  | Read state                                  |
+| `readAt`            | Date \| null           | Default `null`   | Set by save hook or bulk read action        |
 
-**Relationships:** Polymorphic reference to whatever triggered it (see ADR-009).
+Notification types:
 
----
+- `application_received`
+- `application_status_changed`
+- `job_published`
+- `candidate_saved`
+
+Only the first two types are currently created by services.
+
+Indexes:
+
+- `{ userId: 1, isRead: 1, createdAt: -1 }`
+- `{ userId: 1, createdAt: -1 }`
+
+When an individual document becomes read, `pre("save")` stamps `readAt` if it
+is absent. The bulk mark-all service sets both fields directly because update
+queries do not run document save hooks.
 
 ## `activityLogs`
 
-| Field        | Type                                                                             | Notes                                                     |
-| ------------ | -------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| `actorId`    | ObjectId → User                                                                  | required, `immutable` — who performed the action          |
-| `action`     | enum (e.g. `job_published`, `user_moderated`, `application_status_changed`, ...) | required, `immutable`                                     |
-| `targetType` | enum: `User`, `Company`, `Job`, `Application`, `RecruiterProfile`                | required, `immutable`, polymorphic discriminator          |
-| `targetId`   | ObjectId                                                                         | required, `immutable`, resolved via `refPath: targetType` |
-| `metadata`   | Mixed                                                                            | optional, `immutable` — flexible context per action type  |
-| `ipAddress`  | string                                                                           | optional, `immutable`                                     |
+Model: `ActivityLog`
 
-**Indexes:** `(actorId, createdAt desc)`; `(targetType, targetId, createdAt desc)`; `(action, createdAt desc)`
+| Field        | Type                   | Required/default    | Notes                       |
+| ------------ | ---------------------- | ------------------- | --------------------------- |
+| `actorId`    | ObjectId -> User       | Required, immutable | Actor that caused the event |
+| `action`     | ActivityAction         | Required, immutable | Audit action enum           |
+| `targetType` | ActivityTargetType     | Required, immutable | Mongoose model name         |
+| `targetId`   | ObjectId via `refPath` | Required, immutable | Resolves using `targetType` |
+| `metadata`   | Mixed                  | Optional, immutable | Action-specific context     |
+| `ipAddress`  | string                 | Optional, immutable | Optional actor IP           |
+| `createdAt`  | Date                   | Automatic           | No `updatedAt` field        |
 
-**Immutability enforced at the schema level** — a `pre` hook throws on any `findOneAndUpdate`/`updateOne`/`updateMany` against this collection (see ADR-010). No `deletedAt` — this collection isn't user-deletable at all.
+Action values currently modeled:
 
----
+- `user_registered`
+- `user_moderated`
+- `company_created`
+- `company_updated`
+- `company_deleted`
+- `job_published`
+- `job_closed`
+- `job_deleted`
+- `application_status_changed`
+- `recruiter_removed_from_company`
+
+Target values are `User`, `Company`, `Job`, `Application`, and
+`RecruiterProfile`.
+
+Indexes:
+
+- `{ actorId: 1, createdAt: -1 }`
+- `{ targetType: 1, targetId: 1, createdAt: -1 }`
+- `{ action: 1, createdAt: -1 }`
+
+The schema blocks `findOneAndUpdate`, `updateOne`, and `updateMany`. Fields are
+also declared immutable. Current services write activity logs only for admin
+user moderation and admin company/job deletion.
 
 ## `aiReports`
 
-_Schema designed in Phase 1 for consistency; unused by any service or route until Phase 5, per the "AI features last" sequencing rule._
+Model: `AIReport`
 
-| Field         | Type                                                                            | Notes                                                                            |
-| ------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| `candidateId` | ObjectId → CandidateProfile                                                     | required                                                                         |
-| `jobId`       | ObjectId → Job                                                                  | required **only** for `candidate_match` reports (enforced via `pre('validate')`) |
-| `type`        | enum: `resume_parse`, `resume_review`, `candidate_match`, `profile_improvement` | required, `immutable`                                                            |
-| `status`      | enum: `pending`, `completed`, `failed`                                          | default `pending` — reflects the BullMQ job lifecycle                            |
-| `result`      | Mixed                                                                           | optional — shape varies per `type`                                               |
-| `error`       | string                                                                          | optional — failure detail, kept separate from `result`                           |
-| `requestedBy` | ObjectId → User                                                                 | required, `immutable` — candidate themself, or a recruiter (for matching)        |
+| Field         | Type                         | Required/default    | Notes                                                                 |
+| ------------- | ---------------------------- | ------------------- | --------------------------------------------------------------------- |
+| `candidateId` | ObjectId -> CandidateProfile | Required            | Report subject                                                        |
+| `jobId`       | ObjectId -> Job              | Conditional         | Required only for `candidate_match`; forbidden for other report types |
+| `type`        | AIReportType                 | Required, immutable | See values below                                                      |
+| `status`      | AIReportStatus               | Default `pending`   | `pending`, `completed`, or `failed`                                   |
+| `result`      | Mixed                        | Optional            | Type-specific result payload                                          |
+| `error`       | string                       | Optional            | Worker/provider failure detail                                        |
+| `requestedBy` | ObjectId -> User             | Required, immutable | User that requested the report                                        |
 
-**Indexes:** `(candidateId, type, createdAt desc)`; `(jobId, type)`; `status`
+Report types:
 
-**Relationships:** Belongs to one `CandidateProfile`; optionally one `Job`.
+- `resume_parse`
+- `resume_review`
+- `candidate_match`
+- `profile_improvement`
 
----
+Indexes:
 
-## All Core Collections: Status
+- `{ candidateId: 1, type: 1, createdAt: -1 }`
+- `{ jobId: 1, type: 1 }`
+- `{ status: 1 }`
 
-Every collection from the original design table is now modeled: `users`, `candidateProfiles`, `recruiterProfiles`, `companies`, `jobs`, `applications`, `savedCandidates`, `notifications`, `activityLogs`, `aiReports`. Phase 1 schema design is complete.
+The schema is present, but no service, controller, route, queue worker, AI
+provider, or frontend workflow uses it yet.
+
+## Deletion Behavior
+
+| Model            | Current deletion representation                                   |
+| ---------------- | ----------------------------------------------------------------- |
+| User             | `deletedAt`                                                       |
+| CandidateProfile | `deletedAt`                                                       |
+| RecruiterProfile | `deletedAt`                                                       |
+| Company          | `deletedAt`                                                       |
+| Job              | `isDeleted`; intended `deletedAt` assignment is not persisted yet |
+| Application      | Lifecycle status; no delete endpoint                              |
+| SavedCandidate   | Hard-deleted relationship record                                  |
+| Notification     | No delete endpoint                                                |
+| ActivityLog      | Immutable/no delete endpoint                                      |
+| AIReport         | No delete endpoint                                                |
+
+Soft-delete scoping is explicit in service queries rather than automatic query
+middleware. Any new query must deliberately decide whether deleted records are
+included.

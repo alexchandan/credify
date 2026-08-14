@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import {
   User as UserIcon,
   Sparkles,
@@ -20,7 +19,7 @@ import {
 } from "lucide-react";
 import { apiRequest, ApiError } from "@/lib/apiClient";
 import { getErrorMessage } from "@/lib/formErrors";
-import { useAuth, type AuthUser } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import {
   type CandidateProfile,
   type Education,
@@ -857,6 +856,7 @@ function AccountSettingsSection() {
 }
 
 function ChangePasswordForm() {
+  const { changePassword } = useAuth();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [showPasswords, setShowPasswords] = useState(false);
@@ -870,15 +870,7 @@ function ChangePasswordForm() {
     setSuccess(false);
     setIsSubmitting(true);
     try {
-      const result = await apiRequest<{ accessToken: string; user: AuthUser }>(
-        "/auth/change-password",
-        {
-          method: "POST",
-          body: { currentPassword, newPassword },
-        },
-      );
-      // Keeps THIS session logged in with the fresh token, while every
-      // other session was just invalidated server-side.
+      await changePassword(currentPassword, newPassword);
       setSuccess(true);
       setCurrentPassword("");
       setNewPassword("");
@@ -945,6 +937,7 @@ function ChangePasswordForm() {
 }
 
 function DeleteAccountForm() {
+  const { deleteAccount } = useAuth();
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -955,11 +948,8 @@ function DeleteAccountForm() {
     setError(null);
     setIsSubmitting(true);
     try {
-      await apiRequest("/auth/delete-account", {
-        method: "DELETE",
-        body: { password },
-      });
-      router.push("/");
+      await deleteAccount(password);
+      router.replace("/");
     } catch (err) {
       setError(getErrorMessage(err));
       setIsSubmitting(false);

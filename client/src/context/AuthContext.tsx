@@ -44,10 +44,15 @@ interface AuthContextValue {
   user: AuthUser | null;
   /** True only during the initial mount-time session-restore attempt. */
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<AuthUser>;
   register: (input: RegisterInput) => Promise<RegisterResult>;
   logout: () => Promise<void>;
   logoutEverywhere: () => Promise<void>;
+  changePassword: (
+    currentPassword: string,
+    newPassword: string,
+  ) => Promise<void>;
+  deleteAccount: (password: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -120,6 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
     tokenRef.current = result.data.accessToken;
     setUser(result.data.user);
+    return result.data.user;
   }, []);
 
   const register = useCallback(async (input: RegisterInput) => {
@@ -147,9 +153,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [clearSession]);
 
+  const changePassword = useCallback(
+    async (currentPassword: string, newPassword: string) => {
+      const result = await apiRequest<LoginResult>("/auth/change-password", {
+        method: "POST",
+        body: { currentPassword, newPassword },
+      });
+      tokenRef.current = result.data.accessToken;
+      setUser(result.data.user);
+    },
+    [],
+  );
+
+  const deleteAccount = useCallback(
+    async (password: string) => {
+      await apiRequest("/auth/delete-account", {
+        method: "DELETE",
+        body: { password },
+      });
+      clearSession();
+    },
+    [clearSession],
+  );
+
   return (
     <AuthContext.Provider
-      value={{ user, isLoading, login, register, logout, logoutEverywhere }}
+      value={{
+        user,
+        isLoading,
+        login,
+        register,
+        logout,
+        logoutEverywhere,
+        changePassword,
+        deleteAccount,
+      }}
     >
       {children}
     </AuthContext.Provider>

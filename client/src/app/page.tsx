@@ -8,7 +8,6 @@ export default function Home() {
       <Hero />
       <PopularSkills />
       <FeaturedJobs />
-      <div className="h-16" />
     </>
   );
 }

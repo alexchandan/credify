@@ -1,0 +1,161 @@
+# Project Status
+
+**Snapshot date:** 2026-08-14
+
+This is a point-in-time implementation and risk inventory. It complements the
+normative [API Contract](./API_CONTRACT.md), [Database Schema](./DATABASE_SCHEMA.md),
+and [Architecture Decisions](./DECISIONS.md). Update it when a listed gap is
+fixed or a major capability changes readiness.
+
+## Current Shape
+
+Credify is a pnpm monorepo with:
+
+- a Next.js 16 / React 19 client in `client/`;
+- an Express 5 / Mongoose 9 API in `server/`;
+- MongoDB Atlas Search for candidate and job discovery;
+- Cloudinary-backed resume and company-logo uploads; and
+- Resend-backed verification and password-reset email.
+
+The backend is substantially broader than the client. The API currently mounts
+54 versioned endpoints across auth, candidates, recruiters, companies, jobs,
+applications, search, saved candidates, notifications, dashboards, and admin
+modules, plus service discovery and health routes.
+
+## Feature Readiness
+
+| Area                                                   | Backend     | Frontend        | Notes                                                                                  |
+| ------------------------------------------------------ | ----------- | --------------- | -------------------------------------------------------------------------------------- |
+| Registration, verification, sign-in, refresh, sign-out | Implemented | Implemented     | Email verification, refresh-cookie restoration, and shared auth state are wired.       |
+| Password recovery                                      | Implemented | Implemented     | Includes request and token reset pages.                                                |
+| Password/account settings                              | Implemented | Implemented     | Password changes install the new token; deletion clears the client session.            |
+| Candidate profile and resume                           | Implemented | Implemented     | Profile edit and PDF upload exist. Route protection is incomplete.                     |
+| Recruiter profile                                      | Implemented | Not implemented | API supports self profile and company linkage.                                         |
+| Company management                                     | Implemented | Not implemented | Owner/member policy exists; deletion cascade is unresolved.                            |
+| Jobs                                                   | Implemented | Partial         | Public job browsing, filtering, details, and pagination exist; recruiter UI is absent. |
+| Applications                                           | Implemented | Partial         | Candidate submission exists; history, withdrawal, review, and status UI are absent.    |
+| Candidate/job search                                   | Implemented | Partial         | Public job search is wired; candidate search has no UI. Atlas indexes are required.    |
+| Saved candidates                                       | Implemented | Not implemented | Recruiter API only.                                                                    |
+| Notifications                                          | Implemented | Count only      | Header shows unread count; feed and read actions have no UI.                           |
+| Dashboards                                             | Implemented | Not implemented | Candidate, recruiter, and admin aggregates exist.                                      |
+| Administration                                         | Implemented | Not implemented | User moderation and company/job removal exist.                                         |
+| AI reports                                             | Model only  | Not implemented | No generation provider, queue, endpoints, or UI.                                       |
+
+## Client Routes
+
+The current page routes are:
+
+- `/`
+- `/login`
+- `/register`
+- `/check-email`
+- `/verify-email`
+- `/forgot-password`
+- `/reset-password`
+- `/unauthorized`
+- `/jobs`
+- `/jobs/:id`
+- `/candidate/profile`
+
+## Verification Baseline
+
+The following checks were performed while this documentation snapshot was
+prepared:
+
+| Check                       | Result                | Detail                                                                                                                                             |
+| --------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Workspace type-check        | Pass                  | Both client and server TypeScript checks pass.                                                                                                     |
+| Client production build     | Pass                  | Next.js production compilation succeeds.                                                                                                           |
+| Client lint                 | Pass                  | ESLint completes without errors or warnings.                                                                                                       |
+| Server lint                 | Blocked locally       | The installed `@eslint/js` link is stale/broken even though manifests declare it. Reinstall dependencies before treating this as a source failure. |
+| Prettier                    | Pass for updated docs | Documentation was formatted with the repository Prettier configuration.                                                                            |
+| Automated tests             | Unavailable           | No test suite is currently implemented.                                                                                                            |
+| Live API/Atlas verification | Not performed         | Avoided external database mutations and automatic index creation during the docs audit.                                                            |
+
+## Priority Risks
+
+### P1: Authorization and Account State
+
+1. **Job management scope is broader than the stated member policy.**
+   `canManageJob` allows any recruiter currently belonging to the company to
+   edit, publish, close, or delete any company job. If members should manage
+   only their own jobs while owners manage all jobs, the policy must also check
+   `createdBy` and recruiter role.
+2. **Suspension is not immediate for access tokens.**
+   Access-token middleware verifies the JWT without loading current user state
+   or checking `tokenVersion`. Suspension and global logout block refresh, but
+   an issued access token remains usable until it expires.
+3. **Suspended users can leave active profiles visible.**
+   Admin moderation soft-deletes/restores the `User` document but does not
+   synchronize candidate/recruiter profile visibility. Public profile and
+   search queries can therefore expose a suspended user's profile.
+4. **Seeded candidate passwords bypass hashing.**
+   The seed script creates candidate users with `insertMany()`, which skips the
+   Mongoose `save` password hook. Those values may be stored unhashed and the
+   documented shared login may fail.
+5. **The candidate page lacks its claimed route guard.**
+   `/candidate/profile` assumes a `(candidate)/layout.tsx` role wrapper that is
+   not present. It can render for the wrong session state and relies on the API
+   to reject the request.
+
+### P1: Data and File Integrity
+
+1. **Resume snapshots are mutable in practice.**
+   Applications store the candidate's current resume URL, but replacing the
+   resume deletes the previous Cloudinary asset. Older applications can then
+   point to a missing file instead of preserving the submitted resume.
+2. **Job deletion fields disagree.**
+   Job services assign both `isDeleted` and `deletedAt`, but `deletedAt` is only
+   declared in the TypeScript interface, not the Mongoose schema. The timestamp
+   is therefore not persisted under the schema's strict behavior.
+3. **Production log redaction is disabled.**
+   The logger's redaction configuration is nested inside the non-production
+   branch. Production logs should retain sensitive-field redaction even when
+   pretty transport is disabled.
+
+### P2: API Correctness and Lifecycle
+
+1. Boolean query filters use `z.coerce.boolean()`. The string `"false"` is
+   truthy in JavaScript and can be parsed as `true` for job and notification
+   filters.
+2. Atlas Search result counts are computed before later `deletedAt`,
+   `isDeleted`, and published-status filters, so pagination totals can exceed
+   visible results.
+3. Some service queries accept unvalidated ObjectId strings. A malformed ID can
+   surface as a Mongoose cast error and become a `500` instead of a stable
+   client error.
+4. Company soft deletion does not close/delete company jobs, remove recruiter
+   membership, or prevent all associated data from appearing through every
+   read path.
+5. Two auth pages fall back to API port `8080`, while the rest of the client
+   falls back to `5000`. Setting `NEXT_PUBLIC_API_BASE_URL` masks the mismatch.
+
+## Delivery Gaps
+
+- There are no unit, API integration, or browser end-to-end tests.
+- There is no CI workflow, container definition, or deployment configuration.
+- The server has no emitted production build or `start` script; its `build`
+  command is a type-check.
+- Most API modules have no corresponding client workflow.
+- OpenAPI/Swagger output is not generated from the written API contract.
+- Atlas Search pipelines and index creation have not been exercised against a
+  production-like dataset as part of this audit.
+- Activity logging covers selected admin actions, not every action represented
+  by the activity-log model.
+- AI reports remain a persistence schema without processing infrastructure.
+
+## Recommended Work Order
+
+1. Fix access control and session invalidation, then add authorization tests.
+2. Repair seed password hashing, resume snapshot retention, and job deletion
+   persistence.
+3. Add test infrastructure around auth, job policy, applications, and account
+   moderation.
+4. Add the missing candidate route guard and protected-route tests.
+5. Correct boolean parsing, ObjectId validation, search totals, and deletion
+   cascades.
+6. Define a real server production build/start path and add CI.
+7. Build the missing recruiter, job, application, notification, dashboard, and
+   admin client flows.
+8. Add AI processing only after its provider, privacy, cost, retry, and data
+   retention decisions are explicit.

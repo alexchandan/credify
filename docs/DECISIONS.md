@@ -1,199 +1,300 @@
-<!-- use markdown preview extension or tools for better experience-->
+# Architecture Decision Records
 
-# Architecture Decision Records (ADRs)
+These records capture durable design choices and their reasoning. Temporary
+bugs, incomplete screens, and remediation work belong in
+[Project Status](./PROJECT_STATUS.md), not in an ADR.
 
-Short records of non-obvious decisions and the reasoning behind them, so they aren't accidentally re-litigated or reversed without cause later. Add a new entry any time a real "which way do we go" decision gets made.
+Each record uses: decision, rationale, consequences, and status.
 
-Format: **Decision → Why → Alternatives considered → Status**
+## ADR-001: Use a standalone Express API
 
----
+**Decision:** The backend is a standalone Express/TypeScript application. The
+Next.js client communicates with it over a versioned REST API.
 
-## ADR-001: Separate Express backend instead of Next.js API routes
+**Rationale:** A separate API can serve future clients, keeps domain and data
+access independent from the web rendering framework, and supports long-running
+or background workflows without coupling them to Next.js route handlers.
 
-**Decision:** Backend is a standalone Express + TypeScript API, fully separate from the Next.js frontend, communicating over REST.
-
-**Why:** The project's explicit goal is to demonstrate enterprise-level, scalable architecture — not to ship an MVP as fast as possible. A separate API is reusable across future clients (mobile app, partner integrations), easier to test in isolation (Supertest vs. mocking Next.js server actions), and isn't constrained by serverless function execution limits for longer-running work like AI calls.
-
-**Alternatives considered:** Next.js fullstack (API routes/Server Actions) — rejected as the right call for a fast MVP, but undercuts the stated architecture goal. A BFF hybrid (Next.js thin layer calling a separate service) — rejected as unnecessary complexity for this project's scale.
-
-**Status:** Adopted.
-
----
-
-## ADR-002: User identity and profile data are separate collections
-
-**Decision:** `User` holds only auth fields (email, passwordHash, role, tokenVersion). `CandidateProfile` and `RecruiterProfile` hold all domain/profile data, referencing `User` via `userId`.
-
-**Why:** Conflating identity with profile data is the most common schema mistake in projects like this — it leads to bloated auth queries, awkward role-switching, and messy validation (auth rules vs. profile rules mixed in one schema).
-
-**Alternatives considered:** Single `User` collection with a `role`-dependent shape (discriminators) — rejected as harder to reason about and query cleanly for two quite different domain shapes.
+**Consequences:** Client/server contracts must be documented and kept in sync.
+Cross-origin cookies and CORS require deliberate deployment configuration.
 
 **Status:** Adopted.
 
----
+## ADR-002: Separate identity from role profiles
 
-## ADR-003: Company membership is queried via `RecruiterProfile.companyId`, not a `members[]` array on `Company`
+**Decision:** `User` stores authentication identity. `CandidateProfile` and
+`RecruiterProfile` store role-specific domain data and reference `User` by
+`userId`.
 
-**Decision:** `RecruiterProfile` stores `companyId` (a reference). `Company` does not maintain a `members` array.
+**Rationale:** Authentication queries remain small and domain validation does
+not become conditional on a large role-dependent user document.
 
-**Why:** Maintaining membership in two places (an array on `Company` and a reference on `RecruiterProfile`) creates a synchronization problem — one could be updated without the other, causing drift. A single source of truth queried via an indexed `find({ companyId })` is simpler and always consistent.
+**Consequences:** Registration and account deletion must update two documents
+atomically. Services must resolve the appropriate profile when authorization
+or domain data is needed.
 
-**Alternatives considered:** Array of recruiter references on `Company` — rejected due to the drift risk and because Mongo arrays don't scale well as a company's recruiter headcount grows.
+**Status:** Adopted and implemented.
 
-**Status:** Adopted.
+## ADR-003: Store company membership on recruiter profiles
 
----
+**Decision:** `RecruiterProfile.companyId` is the source of truth for company
+membership. `Company` does not store a `members[]` array.
 
-## ADR-004: One recruiter belongs to at most one company at a time
+**Rationale:** Storing the same membership in two places creates synchronization
+drift. The indexed recruiter field supports company membership queries without
+an ever-growing embedded array.
 
-**Decision:** `RecruiterProfile.companyId` is a single reference (or `null`), not an array. Recruiters can switch companies over time by updating this field, but cannot belong to two companies simultaneously.
+**Consequences:** Listing members queries `RecruiterProfile`. Company deletion
+and membership lifecycle actions must explicitly update recruiter profiles.
 
-**Why:** The project spec describes in-house recruiters hiring for a single employer — not staffing/agency recruiters managing multiple clients. This matches every feature described (job creation, candidate search, dashboards are all single-company-context). Supporting multi-company recruiters would require an "acting as which company" context switcher across nearly every screen — real added complexity solving a problem the project doesn't have.
+**Status:** Adopted. Membership invitation, removal, and ownership-transfer
+APIs are not implemented yet.
 
-**Consequence:** `Job.createdBy` (once built) must be an independent, permanent reference — it must not be derived from the recruiter's _current_ `companyId`, since that can change after the job was created.
+## ADR-004: Limit a recruiter to one company
 
-**Alternatives considered:** Many-to-many via a `CompanyMembership` join collection — rejected for now as unneeded complexity, but noted as the additive (non-breaking) path if agency support is ever required later.
+**Decision:** A recruiter has either one `companyId` or `null`, not a list of
+companies.
 
-**Status:** Adopted.
+**Rationale:** Credify currently models in-house recruiters rather than agency
+recruiters. Multi-company membership would require company context switching
+throughout jobs, applications, saved candidates, and dashboards.
 
----
-
-## ADR-005: Soft delete instead of hard delete on core entities
-
-**Decision:** `User`, `CandidateProfile`, `RecruiterProfile`, `Company` (and `Job`, `Application` once built) use a `deletedAt: Date | null` field instead of being physically removed from the database.
-
-**Why:** Recruitment platforms need to preserve history — a closed job's past applications, a company's historical postings, audit trails — even after a user requests deletion of their own record. Hard deletes also risk orphaned references (a `Job` pointing to a deleted `Company`).
-
-**Consequence:** Every query that should exclude deleted records must explicitly filter `deletedAt: null` — this is not automatic and needs a consistent query helper/middleware once services are built, to avoid accidentally leaking soft-deleted records.
-
-**Alternatives considered:** Hard delete with cascading cleanup — rejected due to data-loss risk and legal/audit concerns around candidate PII retention.
-
-**Status:** Adopted. **Open follow-up:** decide the query-scoping mechanism (Mongoose query middleware vs. explicit filters in every service call) before Phase 3 services are written.
-
----
-
-## ADR-006: `skills` field is normalized (lowercase, trimmed) at write time
-
-**Decision:** `CandidateProfile.skills` uses a Mongoose `set` transform to lowercase and trim every value before it's saved.
-
-**Why:** Without normalization, `"React"`, `"react "`, and `"REACT"` are stored as distinct strings, silently breaking any skill-based search or matching feature.
-
-**Status:** Adopted. Same transform is applied to `Job.skillsRequired`, since these two fields are what future matching/search features join against — they must normalize identically or matches will silently fail.
-
----
-
-## ADR-007: Application creation is a multi-document transaction
-
-**Decision:** Creating an `Application` must atomically (1) insert the `Application` document, (2) increment `Job.applicationCount`, and (3) create a `Notification` for the recruiter — wrapped in `session.withTransaction()`.
-
-**Why:** These three writes are logically one operation. If the notification write failed silently after the application was created, a recruiter would never learn about a real application. If the counter increment failed, job cards would show inaccurate application counts indefinitely. MongoDB transactions (available on Atlas via its replica-set-backed clusters) exist specifically for this.
-
-**Consequence:** `Job.applicationCount` is a denormalized counter, not computed live — it trades a small risk of drift (only if a transaction is bypassed) for avoiding a `COUNT` query against `applications` on every job card render.
-
-**Status:** Adopted. To be implemented in the Phase 3 Application service.
-
----
-
-## ADR-008: `SavedCandidate` is scoped per-recruiter, not shared company-wide
-
-**Decision:** A saved candidate is private to the recruiter who saved them (`recruiterId` + `candidateId`, unique). There is no company-wide shared shortlist.
-
-**Why:** The original feature spec lists "Save Candidates" under the _Recruiter_ module, not the _Company_ module — implying a personal shortlist, not team-shared. This keeps the initial feature simple and matches what was actually specified.
-
-**Consequence:** If team-shared shortlists are wanted later, that's a genuine new feature (query by `companyId` instead of `recruiterId`, plus a UI to show "saved by [teammate]") — not a bug fix to the current design. Flagging this now so the distinction isn't lost later.
+**Consequences:** `Job.createdBy` is an immutable author reference independent
+of the recruiter's current `companyId`. Leaving a company removes management
+access granted by current membership.
 
 **Status:** Adopted.
 
----
+## ADR-005: Use explicit soft deletion for core entities
 
-## ADR-009: Notifications and ActivityLog use polymorphic references (`relatedEntityType`/`relatedEntityId`)
+**Decision:** Users, candidate profiles, recruiter profiles, and companies use
+`deletedAt`. Jobs currently use `isDeleted`; a `deletedAt` migration is intended
+but incomplete. Applications use lifecycle status, and saved-candidate
+relationships are hard-deleted.
 
-**Decision:** Rather than adding a separate optional reference field to `Notification`/`ActivityLog` for every entity type that might trigger one (`jobId?`, `applicationId?`, `companyId?`...), both collections use a single `{ type, id }` pair with a dynamic `refPath`.
+**Rationale:** Historical applications, authorship, audit data, and references
+should survive account/company/job removal.
 
-**Why:** New notification- and log-triggering features will keep getting added over the project's life (AI features, admin actions, etc.). A rigid schema with one optional field per entity type would require a schema change for every new trigger. The polymorphic pair handles any future entity type without modification.
+**Consequences:** Active-record filtering is explicit in every service query.
+There is no global Mongoose query middleware. Each new query must make a
+deliberate deletion-scope decision.
 
-**Trade-off accepted:** Slightly less type-safety at the schema level (Mongoose can't statically know which model a given `relatedEntityId` points to) — acceptable given how much schema churn it avoids.
+**Status:** Adopted with known consistency gaps documented in
+[Project Status](./PROJECT_STATUS.md).
 
-**Status:** Adopted.
+## ADR-006: Normalize searchable string arrays on write
 
----
+**Decision:** Candidate skills, job-required skills, and job locations are
+trimmed and lowercased by Mongoose setters.
 
-## ADR-010: `ActivityLog` entries are immutable — updates are blocked at the schema level
+**Rationale:** Normalization prevents case/whitespace variants from breaking
+exact filters and future matching logic.
 
-**Decision:** A `pre` hook on `findOneAndUpdate`/`updateOne`/`updateMany` throws unconditionally for the `ActivityLog` model. Entries can only ever be inserted, never modified. There is no `deletedAt` — this collection isn't user-deletable through the app at all.
+**Consequences:** Stored values are display-neutral canonical values. UI code
+may format them for presentation.
 
-**Why:** The entire value of an audit log collection depends on entries being tamper-proof after the fact. Relying on "nobody will call `.update()` on this collection" as an informal convention is exactly the kind of thing that gets violated accidentally during a rushed bug fix six months in. Enforcing it at the schema level makes the invariant structural, not just a convention.
+**Status:** Adopted and implemented.
 
-**Status:** Adopted.
+## ADR-007: Create applications transactionally
 
----
+**Decision:** Applying to a job atomically creates the application, increments
+`Job.applicationCount`, and creates a recruiter notification with
+`session.withTransaction()`.
 
-## ADR-011: `Application.resumeSnapshotUrl` captures the resume at time of application, not a live reference
+**Rationale:** The writes represent one business action. Partial completion
+would create counter drift or applications recruiters never learn about.
 
-**Decision:** When a candidate applies, the resume URL is copied onto the `Application` document itself, rather than the application simply linking back to `CandidateProfile.resumeUrl`.
+**Consequences:** Development and production MongoDB must support transactions,
+which requires a replica set. Application-count updates outside this service
+can still cause drift and should be avoided.
 
-**Why:** If a candidate updates their resume after applying to a job, a recruiter reviewing that application later should see the resume that was actually submitted for that specific application — not a resume that's silently changed underneath them. This is a data-integrity decision, not just a convenience.
+**Status:** Adopted and implemented.
 
-**Status:** Adopted.
+## ADR-008: Keep saved candidates private per recruiter
 
----
+**Decision:** `SavedCandidate` is unique by `(recruiterId, candidateId)` and is
+not shared company-wide.
 
-## ADR-012: `AIReport` is schema-designed in Phase 1 but unused until Phase 5
+**Rationale:** The initial product requirement is a recruiter's personal
+shortlist, with an optional private note.
 
-**Decision:** The `AIReport` model was fully designed alongside the rest of Phase 1's core collections, including its `pending/completed/failed` status lifecycle anticipating the BullMQ queue introduced in Phase 4 — but no service, controller, or route touches it until Phase 5.
+**Consequences:** Team shortlists would be a new feature with different
+ownership and query semantics, not a transparent schema tweak.
 
-**Why:** Designing the shape now, while the rest of the schema and its patterns (polymorphic refs, denormalized counters, transaction-backed writes) are fresh, produces a more consistent result than improvising it later under the time pressure of "just get the AI feature working." This does not violate the "AI features built last" sequencing rule — no AI code is being written yet, only the data shape it will eventually use.
+**Status:** Adopted and implemented.
 
-**Status:** Adopted.
+## ADR-009: Use polymorphic entity references for event records
 
----
+**Decision:** Notifications store `relatedEntityType` and `relatedEntityId`.
+Activity logs store the equivalent `targetType` and `targetId`. Both IDs use a
+Mongoose `refPath`.
 
-## ADR-013: Email verification and password reset use link-based tokens, not OTP
+**Rationale:** Event records can refer to different domain models without
+adding a new optional foreign-key field for every new event type.
 
-**Decision:** `register()` and `forgotPassword()` generate a 32-byte random raw token, store only its SHA-256 hash on the `User` document, and the raw token is delivered via a link (`?token=<raw>`) rather than a typed numeric code.
+**Consequences:** The database cannot statically guarantee that the selected
+type and ID refer to a real matching model. Services must create consistent
+pairs.
 
-**Why:** A 32-byte random token has no brute-forceable structure, so a fast deterministic hash (SHA-256) is sufficient for lookup — no rate limiting or short expiry is strictly required for security, unlike a 6-digit OTP which needs both. This matches Credify's standard web signup flow; OTP was considered but is a better fit for phone-first or mobile-heavy products, which isn't this project's shape.
+**Status:** Adopted and implemented.
 
-**Status:** Adopted. Email verification tokens expire in 24h, reset tokens in 1h (shorter, since a leaked reset link is more sensitive).
+## ADR-010: Treat activity logs as immutable
 
----
+**Decision:** Activity fields are immutable, no `updatedAt` is generated, and
+the schema rejects `findOneAndUpdate`, `updateOne`, and `updateMany`.
 
-## ADR-014: Refresh token rotation does not include single-use reuse detection
+**Rationale:** Audit records lose their value when application code can rewrite
+history after an action occurs.
 
-**Decision:** `refreshTokens()` issues a new access + refresh token pair on every call and validates the old one via `tokenVersion`, but does **not** blacklist the specific refresh token that was just used.
+**Consequences:** Corrections require a new compensating event rather than
+editing the old event. Activity creation is currently instrumented only for
+selected admin actions.
 
-**Why:** True single-use rotation (where presenting an already-used refresh token revokes the entire session as a theft signal) requires persisting every issued token or its ID somewhere queryable — this doesn't exist yet. What's built today correctly implements "logout everywhere" (via `tokenVersion`), which was the explicit requirement from the original auth-flow design — but it's a real, acknowledged gap versus best-practice refresh rotation.
+**Status:** Adopted; instrumentation coverage is incomplete.
 
-**Status:** Adopted as an interim implementation. **Follow-up:** revisit once Redis is introduced in Phase 4 — a short-TTL store of valid/used refresh token IDs would close this gap.
+## ADR-011: Snapshot the resume on application
 
----
+**Decision:** `Application.resumeSnapshotUrl` copies the candidate's current
+resume URL when they apply.
 
-## ADR-015: The `policies/` layer queries the database fresh on every check — no caching
+**Rationale:** A recruiter reviewing an old application should see the resume
+that was submitted, not a later replacement on the candidate profile.
 
-**Decision:** `canManageJob`, `canViewApplication`, etc. all re-fetch the actor's current `RecruiterProfile`/`CandidateProfile` on every call, rather than trusting anything cached in the JWT.
+**Consequences:** Replacing a candidate's current Cloudinary asset must not
+invalidate historical application URLs. The current upload replacement flow
+deletes the previous asset, so long-term snapshot durability needs review.
 
-**Why:** Per ADR-004, a recruiter's `companyId` can change after a job was created. Caching company membership in the JWT (which lives for up to 30 days via the refresh token) would mean a recruiter who left a company could retain edit access to that company's jobs for the life of their token. Always querying fresh trades a small amount of DB load per protected write for permissions that are never stale.
+**Status:** Data-model decision implemented; storage-retention behavior remains
+an open product/data-integrity issue.
 
-**Status:** Adopted. **Open follow-up:** if this becomes a throughput bottleneck, a short-TTL Redis cache on `RecruiterProfile.companyId` (invalidated on company change) is the natural fix — not reintroducing it into the JWT.
+## ADR-012: Design AI report persistence before AI execution
 
----
+**Decision:** Keep a typed `AIReport` model with `pending`, `completed`, and
+`failed` states before introducing an AI provider or background worker.
 
-## ADR-016: `express-mongo-sanitize` was replaced with a custom middleware
+**Rationale:** A stable persistence lifecycle separates report requests and
+history from any future provider/queue choice.
 
-**Decision:** The `express-mongo-sanitize` npm package was removed and replaced with an equivalent hand-written `mongoSanitize()` middleware (`src/middlewares/mongoSanitize.ts`).
+**Consequences:** The model is intentionally unused until request policies,
+provider selection, queueing, cost controls, and result schemas are designed.
 
-**Why:** `express-mongo-sanitize@2.2.0` is incompatible with Express 5 — it reassigns `req.query = <cleaned object>`, but Express 5 made `req.query` a read-only getter with no setter, so this throws `TypeError: Cannot set property query...` on **every single request**, regardless of whether the request even has a query string. This was discovered via direct boot-testing (`curl` against a running instance), not just a type-check — the project type-checked cleanly while being completely non-functional at runtime. No updated version of the package exists to fix this as of this writing.
+**Status:** Schema adopted; execution and API work not started.
 
-The replacement performs the same operator-stripping logic (`$`-prefixed keys, dotted paths) but only ever **mutates** `req.body`/`req.query`/`req.params` in place — deleting/rewriting keys on the existing object — never reassigning the top-level property. In-place mutation of `req.query`'s contents remains legal under Express 5; only replacing the reference itself is blocked.
+## ADR-013: Use link tokens for email verification and password reset
 
-**Status:** Adopted. **Lesson for the project going forward:** a clean `tsc` compile does not guarantee a working server — dependencies with runtime assumptions about the framework version need an actual boot + request test, not just a type-check, especially after a major framework version bump (this project is on Express 5, which most third-party Express middleware in the wild still targets Express 4 for).
+**Decision:** Generate 32 random bytes, email the raw token in a link, and store
+only its SHA-256 hash.
 
----
+**Rationale:** High-entropy link tokens do not have the brute-force constraints
+of short numeric OTPs and keep usable tokens out of the database.
 
-## ADR-017: `User.email` and `Company.slug` had duplicate index definitions
+**Consequences:** Verification links expire after 24 hours. Password-reset
+links expire after 30 minutes. Email delivery failures are logged while the
+triggering database action remains successful.
 
-**Decision:** Removed the redundant explicit `schema.index({ email: 1 }, { unique: true })` / `schema.index({ slug: 1 }, { unique: true })` calls.
+**Status:** Adopted and implemented.
 
-**Why:** Both fields already declare `unique: true` directly in their field definition, which itself creates a unique index. Adding a second, separate `.index()` call for the same field creates a genuine duplicate index in MongoDB — caught via a Mongoose startup warning during boot-testing, not by `tsc`.
+## ADR-014: Rotate refresh tokens without reuse detection for now
 
-**Status:** Fixed. **Pattern to watch for going forward:** whenever a field already has `unique: true` set inline, don't add a second explicit `schema.index()` for the same field unless it's part of a genuinely different compound index.
+**Decision:** Every refresh returns a new access/refresh pair and validates the
+user's `tokenVersion`, but consumed refresh tokens are not stored or
+blacklisted.
+
+**Rationale:** Single-use reuse detection needs a persisted token/JTI store.
+That infrastructure does not exist yet.
+
+**Consequences:** A copied still-valid refresh token can be replayed until
+expiry or `tokenVersion` changes. `tokenVersion` invalidates refresh tokens,
+not already-issued 15-minute access tokens.
+
+**Status:** Interim decision adopted. Revisit when a Redis or database-backed
+session store is introduced.
+
+## ADR-015: Query current profile membership in resource policies
+
+**Decision:** Resource policies fetch the current candidate/recruiter profile
+instead of embedding company membership in long-lived tokens.
+
+**Rationale:** A recruiter who leaves a company must lose company-scoped access
+without waiting for a refresh token to expire.
+
+**Consequences:** Protected resource operations incur a profile query. Policies
+currently do not also query `User.deletedAt`, so active access tokens for a
+suspended user remain a known gap.
+
+**Status:** Adopted with an active-user-check follow-up.
+
+## ADR-016: Replace `express-mongo-sanitize` for Express 5
+
+**Decision:** Use the local `mongoSanitize()` middleware, which recursively
+deletes `$`-prefixed and dotted keys by mutating request containers in place.
+
+**Rationale:** `express-mongo-sanitize@2.2.0` reassigns `req.query`, but Express
+5 exposes it as a read-only getter. The package caused a runtime failure on
+every request even though TypeScript passed.
+
+**Consequences:** Middleware touching `req.query` must mutate its contents and
+must never replace the top-level object. Framework upgrades require boot and
+request tests, not only compilation.
+
+**Status:** Adopted and implemented.
+
+## ADR-017: Use partial unique indexes for soft-deletable identifiers
+
+**Decision:** `User.email` and `Company.slug` use explicit unique indexes with
+`partialFilterExpression: { deletedAt: null }` instead of inline
+`unique: true`.
+
+**Rationale:** Soft-deleted accounts/companies should not permanently reserve
+an email or slug, and duplicate inline plus explicit indexes caused Mongoose
+warnings.
+
+**Consequences:** Services query active records before creation for a friendly
+error, but the partial unique index remains the concurrency-safe guarantee.
+
+**Status:** Adopted and implemented.
+
+## ADR-018: Keep access tokens in memory on the client
+
+**Decision:** The browser client stores the access token in an `AuthProvider`
+ref, while the refresh token remains in an HTTP-only cookie.
+
+**Rationale:** JavaScript cannot read the refresh credential, and the access
+token is not persisted in local/session storage. A silent refresh plus
+`GET /auth/me` restores identity after reload.
+
+**Consequences:** Protected requests must go through the shared API client.
+The client coalesces concurrent refresh attempts. Route components must wait
+for initial session restoration before issuing protected requests.
+
+**Status:** Adopted; route guarding and a few account-state integrations remain
+incomplete.
+
+## ADR-019: Stream uploads from memory to Cloudinary
+
+**Decision:** Multer uses memory storage. Resume and logo buffers are streamed
+to Cloudinary without writing temporary files to the application server.
+
+**Rationale:** The server remains stateless and avoids local filesystem cleanup
+or assumptions that do not hold in container/serverless environments.
+
+**Consequences:** Strict upload limits are required to bound memory usage: 5
+MiB for resumes and 2 MiB for logos. Replacement uploads save the new asset
+before attempting best-effort deletion of the old one.
+
+**Status:** Adopted and implemented.
+
+## ADR-020: Use Atlas Search for fuzzy discovery
+
+**Decision:** Job and candidate fuzzy search use Atlas `$search` pipelines and
+explicitly named `job_search` and `candidate_search` indexes.
+
+**Rationale:** Fuzzy multi-field relevance search exceeds what normal MongoDB
+text indexes provide while keeping data in the existing Atlas deployment.
+
+**Consequences:** Search index creation is a separate infrastructure step via
+`pnpm --dir server search:setup`. Search does not work on a plain MongoDB
+deployment without Atlas Search support.
+
+**Status:** Implemented by inspection; live Atlas verification and filtered
+count correction are pending.
