@@ -1,7 +1,14 @@
 import type { NextConfig } from "next";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5000/api/v1";
+const API_PROXY_TARGET = (
+  process.env.API_PROXY_TARGET ?? "http://localhost:5000/api/v1"
+).replace(/\/$/, "");
+
+try {
+  new URL(API_PROXY_TARGET);
+} catch {
+  throw new Error("API_PROXY_TARGET must be an absolute URL");
+}
 
 const nextConfig: NextConfig = {
   images: {
@@ -16,28 +23,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/v1/:path*",
-        destination: `${API_BASE_URL}/:path*`,
-      },
-    ];
-  },
-  async headers() {
-    return [
-      {
-        source: "/api/v1/:path*",
-        headers: [
-          {
-            key: "Access-Control-Allow-Origin",
-            value: "*",
-          },
-          {
-            key: "Access-Control-Allow-Methods",
-            value: "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-          },
-          {
-            key: "Access-Control-Allow-Headers",
-            value: "Content-Type, Authorization",
-          },
-        ],
+        destination: `${API_PROXY_TARGET}/:path*`,
       },
     ];
   },

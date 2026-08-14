@@ -9,7 +9,7 @@ import { useAuth, type AuthUser } from "@/context/AuthContext";
 import { getErrorMessage } from "@/lib/formErrors";
 
 function roleHome(user: AuthUser): string {
-  return user.role === "candidate" ? "/candidate/profile" : "/";
+  return user.role === "candidate" ? "/candidate/dashboard" : "/";
 }
 
 function safeReturnPath(fallback: string): string {

@@ -7,11 +7,13 @@
     "prepare": "husky",
     "dev": "pnpm -r dev",
     "build": "pnpm -r build",
+    "test": "pnpm --dir server test",
     "lint": "pnpm -r lint",
     "lint:fix": "pnpm -r lint:fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "type-check": "pnpm -r type-check"
+    "type-check": "pnpm -r type-check",
+    "verify": "pnpm lint && pnpm type-check && pnpm test && pnpm format:check && pnpm build"
   },
   "lint-staged": {
     "client/**/*.{ts,tsx,js,jsx}": [
@@ -26,12 +28,10 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "devEngines": {
-    "packageManager": {
-      "name": "pnpm",
-      "version": "^11.9.0",
-      "onFail": "download"
-    }
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=22.13.0",
+    "pnpm": ">=11.9.0 <12"
   },
   "type": "module",
   "devDependencies": {

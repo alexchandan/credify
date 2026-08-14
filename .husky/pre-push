@@ -24,6 +24,9 @@ pnpm lint
 echo "🔎 Type checking..."
 pnpm type-check
 
+echo "🧪 Running tests..."
+pnpm test
+
 echo "🏗️ Building workspace..."
 pnpm build
 

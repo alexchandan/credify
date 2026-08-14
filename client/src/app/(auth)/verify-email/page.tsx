@@ -5,9 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle2, Loader2, XCircle } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5000/api/v1";
+import { API_BASE_URL as API_BASE } from "@/lib/apiBaseUrl";
 
 type Status = "pending" | "success" | "error";
 

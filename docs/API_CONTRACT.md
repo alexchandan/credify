@@ -295,11 +295,55 @@ contract.
 
 ### Dashboards: `/api/v1/dashboard`
 
-| Method | Path         | Access    | Result                                                                             |
-| ------ | ------------ | --------- | ---------------------------------------------------------------------------------- |
-| `GET`  | `/candidate` | Candidate | Profile completion, resume state, application counts/history, recent notifications |
-| `GET`  | `/recruiter` | Recruiter | Company state, job/application counts, saved count, recent applications            |
-| `GET`  | `/admin`     | Admin     | User/profile/company/job/application totals                                        |
+| Method | Path         | Access    | Result                                                                                                         |
+| ------ | ------------ | --------- | -------------------------------------------------------------------------------------------------------------- |
+| `GET`  | `/candidate` | Candidate | Profile completion, resume state, application counts/history, unread count, and five most recent notifications |
+| `GET`  | `/recruiter` | Recruiter | Company state, job/application counts, saved count, recent applications                                        |
+| `GET`  | `/admin`     | Admin     | User/profile/company/job/application totals                                                                    |
+
+The candidate response `data` has this shape:
+
+```json
+{
+  "profileCompletionPercent": 67,
+  "resumeStatus": {
+    "hasResume": true,
+    "resumeUrl": "https://cdn.example/resume.pdf",
+    "uploadedAt": "2026-08-14T08:30:00.000Z"
+  },
+  "applications": {
+    "total": 4,
+    "byStatus": { "applied": 2, "under_review": 1, "shortlisted": 1 }
+  },
+  "recentApplications": [
+    {
+      "_id": "<application-id>",
+      "jobId": "<job-id>",
+      "status": "under_review",
+      "createdAt": "2026-08-13T08:30:00.000Z",
+      "jobTitle": "Backend Engineer"
+    }
+  ],
+  "recentNotifications": [
+    {
+      "_id": "<notification-id>",
+      "type": "application_status_changed",
+      "message": "Your application moved to under review",
+      "relatedEntityType": "Application",
+      "relatedEntityId": "<application-id>",
+      "isRead": false,
+      "readAt": null,
+      "createdAt": "2026-08-13T09:00:00.000Z"
+    }
+  ],
+  "unreadNotificationsCount": 1
+}
+```
+
+`applications.byStatus` is sparse: statuses with no applications are omitted.
+Clients should treat missing keys as zero. `jobTitle` can be `null` when the
+referenced job no longer exists. `resumeStatus.resumeUrl` and `uploadedAt` are
+`null` when no resume is stored.
 
 ### Administration: `/api/v1/admin`
 

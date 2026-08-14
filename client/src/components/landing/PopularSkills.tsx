@@ -3,9 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Cloud, Code2, Database, Palette } from "lucide-react";
-
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5000/api/v1";
+import { API_BASE_URL as API_BASE } from "@/lib/apiBaseUrl";
 
 interface ApiListMeta {
   totalCount: number;

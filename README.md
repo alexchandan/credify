@@ -7,10 +7,11 @@ administration into one product.
 
 The backend already implements most of the core recruitment API. The frontend
 currently covers the public landing page, authentication flows, public job
-browsing and details, candidate application submission, and candidate profile
-management. Recruiter, administrator, application-history, and dashboard
-interfaces are still being built. AI report storage has been designed, but no
-AI provider or user-facing AI workflow is connected yet.
+browsing and details, candidate application submission, candidate profile
+management, and a role-protected candidate dashboard. Recruiter,
+administrator, and application-history interfaces are still being built. AI
+report storage has been designed, but no AI provider or user-facing AI workflow
+is connected yet.
 
 ## Current Implementation
 
@@ -25,12 +26,12 @@ AI provider or user-facing AI workflow is connected yet.
 | Applications       | Backend and candidate submission frontend       | Candidates can apply from job details; history, recruiter review, withdrawal, and status management remain API-only                                                                            |
 | Search             | Backend implemented, Atlas verification pending | Fuzzy Atlas Search for jobs and candidates plus one-time index setup script                                                                                                                    |
 | Saved candidates   | Backend implemented                             | Recruiter-specific saved lists and notes                                                                                                                                                       |
-| Notifications      | Backend implemented                             | Paginated notification feed, unread counts, mark one/all as read                                                                                                                               |
-| Dashboards         | Backend implemented                             | Candidate, recruiter, and administrator summary endpoints                                                                                                                                      |
+| Notifications      | Backend and candidate dashboard                 | Paginated notification feed, unread counts, and mark-one/all APIs; the candidate dashboard shows recent updates and supports marking all read                                                  |
+| Dashboards         | Candidate frontend and backend                  | Responsive candidate overview with application pipeline, profile/resume readiness, notifications, and new jobs; recruiter and administrator summary endpoints remain API-only                  |
 | Administration     | Backend implemented                             | User moderation, company/job listings, company/job deletion, and partial activity logging                                                                                                      |
-| Frontend           | In progress                                     | Responsive light/dark interface, landing/header, authentication, public job board/details, candidate application submission, and candidate profile                                             |
+| Frontend           | In progress                                     | Responsive light/dark interface, landing/header, authentication, public job board/details, candidate application submission, profile, and dashboard                                            |
 | AI features        | Schema only                                     | `AIReport` model and lifecycle; no queue, provider, service, route, or UI yet                                                                                                                  |
-| Automated tests    | Minimal                                         | Query middleware and candidate profile payloads have focused regression tests; broader unit, integration, and end-to-end coverage is still needed                                              |
+| Automated tests    | Minimal                                         | Query middleware, candidate profile payloads, and dashboard aggregation helpers have focused regression tests; broader integration and end-to-end coverage is still needed                     |
 
 ## Technology Stack
 
@@ -172,27 +173,29 @@ complete current route and error-code reference.
 
 The following pages currently exist:
 
-| Route                | Purpose                                                   |
-| -------------------- | --------------------------------------------------------- |
-| `/`                  | Public landing page with job and skill previews           |
-| `/login`             | Email/password login                                      |
-| `/register`          | Candidate or recruiter registration                       |
-| `/check-email`       | Verification-email confirmation and resend action         |
-| `/verify-email`      | Email verification link handler                           |
-| `/forgot-password`   | Password-reset request                                    |
-| `/reset-password`    | Password-reset link handler                               |
-| `/unauthorized`      | Access-denied state                                       |
-| `/jobs`              | Public job search, filters, and pagination                |
-| `/jobs/:id`          | Public job details and candidate application submission   |
-| `/candidate/profile` | Candidate profile, resume, password, and account settings |
+| Route                  | Purpose                                                                                   |
+| ---------------------- | ----------------------------------------------------------------------------------------- |
+| `/`                    | Public landing page with job and skill previews                                           |
+| `/login`               | Email/password login                                                                      |
+| `/register`            | Candidate or recruiter registration                                                       |
+| `/check-email`         | Verification-email confirmation and resend action                                         |
+| `/verify-email`        | Email verification link handler                                                           |
+| `/forgot-password`     | Password-reset request                                                                    |
+| `/reset-password`      | Password-reset link handler                                                               |
+| `/unauthorized`        | Access-denied state                                                                       |
+| `/jobs`                | Public job search, filters, and pagination                                                |
+| `/jobs/:id`            | Public job details and candidate application submission                                   |
+| `/candidate/dashboard` | Candidate search overview, profile readiness, applications, resume, updates, and new jobs |
+| `/candidate/profile`   | Candidate profile, resume, password, and account settings                                 |
 
-Recruiter management, candidate application history, dashboards, notifications,
-and administrator pages do not have frontend implementations yet.
+Recruiter management, candidate application history, full notification feeds,
+recruiter/admin dashboards, and administrator pages do not have frontend
+implementations yet.
 
 ## Prerequisites
 
-- Node.js 20.9 or newer
-- pnpm 11.9 or a compatible pnpm 11 release
+- Node.js 22.13 or newer
+- pnpm 11.9
 - A MongoDB Atlas deployment (transactions require a replica set)
 - Cloudinary credentials for avatar, resume, and company-logo uploads
 - A Resend API key and verified sender for email flows
@@ -234,10 +237,15 @@ uses normal MongoDB queries and indexes.
    EMAIL_FROM="Credify <onboarding@your-domain.example>"
    ```
 
-4. Create `client/.env.local`:
+4. Create `client/.env.local` from the tracked template:
+
+   ```bash
+   cp client/.env.example client/.env.local
+   ```
 
    ```dotenv
-   NEXT_PUBLIC_API_BASE_URL=http://localhost:5000/api/v1
+   NEXT_PUBLIC_API_BASE_URL=/api/v1
+   API_PROXY_TARGET=http://localhost:5000/api/v1
    ```
 
 5. Start both workspaces:
@@ -297,16 +305,18 @@ Run these from the repository root:
 | Command             | Purpose                                       |
 | ------------------- | --------------------------------------------- |
 | `pnpm dev`          | Start client and server development processes |
-| `pnpm build`        | Run each package's current build command      |
+| `pnpm build`        | Build the Next.js client and compiled API     |
+| `pnpm test`         | Run the server test suite                     |
 | `pnpm type-check`   | Type-check both workspaces                    |
 | `pnpm lint`         | Lint both workspaces                          |
 | `pnpm lint:fix`     | Apply ESLint fixes                            |
 | `pnpm format`       | Format the repository with Prettier           |
 | `pnpm format:check` | Check formatting without modifying files      |
+| `pnpm verify`       | Run the complete local release gate           |
 
-Important: the server's current `build` command runs `tsc --noEmit`. It checks
-types but does not create a deployable JavaScript build. A production server
-start script and deployment pipeline still need to be added.
+The server build emits `server/dist/server.js`; start it with
+`pnpm --dir server start`. See [Deployment](./docs/DEPLOYMENT.md) for the
+production topology, environment matrix, and release checklist.
 
 ## Security and Reliability Foundations
 
@@ -342,12 +352,11 @@ expires.
   count review; the public job-search filter pipeline has been live-checked.
 - Activity logging covers selected admin moderation/deletion actions, not every
   action represented by the activity model.
-- Automated coverage is limited to query-validation regression; no CI workflow,
-  Docker setup, or production deployment configuration exists yet.
+- Automated coverage remains focused on middleware, candidate profile payloads,
+  and dashboard aggregation helpers; no CI workflow or provider-specific
+  deployment manifest exists yet.
 - AI reports are data-model-only; provider integration, background queues, and
   AI UI flows remain roadmap work.
-- The server `build` command type-checks with `tsc --noEmit`; it does not emit a
-  production artifact or provide a production `start` command.
 
 ## Documentation
 
@@ -356,6 +365,7 @@ expires.
 - [Database Schema](./docs/DATABASE_SCHEMA.md)
 - [Architecture Decisions](./docs/DECISIONS.md)
 - [Environment Setup](./docs/ENVIRONMENT_SETUP.md)
+- [Deployment](./docs/DEPLOYMENT.md)
 - [Coding Standards](./docs/CODING_STANDARDS.md)
 
 The coding standards define strict TypeScript rules, API conventions, soft
@@ -367,7 +377,8 @@ repository does not yet satisfy the documented integration-test requirement.
 - Use Conventional Commits such as `feat(jobs): add saved filters` or
   `fix(jobs): enforce member ownership`.
 - Husky runs lint-staged and workspace type-checking before commits.
-- The pre-push hook validates branch names, linting, type-checking, and builds.
+- The pre-push hook validates branch names, linting, type-checking, tests, and
+  production builds.
 - Supported branch patterns include `main`, `dev-V1`, and prefixes such as
   `feature/`, `fix/`, `hotfix/`, `docs/`, `experiment/`, and `improve/`.
 - Keep environment files local. `.env`, `.env.local`, and build output are

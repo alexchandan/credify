@@ -6,8 +6,9 @@
   "main": "index.js",
   "scripts": {
     "test": "tsx --test",
-    "build": "tsc --noEmit",
+    "build": "tsc -p tsconfig.build.json",
     "dev": "tsx watch src/server.ts",
+    "start": "node dist/server.js",
     "seed": "tsx src/scripts/seed.ts",
     "search:setup": "tsx src/scripts/createSearchIndexes.ts",
     "lint": "eslint .",
@@ -44,6 +45,7 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-mongo-sanitize": "^2.2.0",
     "helmet": "^8.2.0",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.7.3",

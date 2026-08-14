@@ -8,11 +8,19 @@ import { RecruiterProfile } from "../../models/recruiterProfile.model.js";
 import { Company } from "../../models/company.model.js";
 import { Job, JobStatus } from "../../models/job.model.js";
 import { Application } from "../../models/application.model.js";
+import type { ApplicationStatus } from "../../models/application.model.js";
 import { SavedCandidate } from "../../models/savedCandidate.model.js";
 import { Notification } from "../../models/notification.model.js";
 import { AppError } from "../../utils/AppError.js";
 
-function calculateProfileCompletion(candidate: ICandidateProfile): number {
+type ProfileCompletionSource = Pick<
+  ICandidateProfile,
+  "headline" | "skills" | "location" | "resumeUrl" | "education" | "experience"
+>;
+
+export function calculateProfileCompletion(
+  candidate: ProfileCompletionSource,
+): number {
   const checks = [
     Boolean(candidate.headline),
     candidate.skills.length > 0,
@@ -34,46 +42,66 @@ async function attachJobTitles(
   applications: {
     _id: Types.ObjectId;
     jobId: Types.ObjectId;
-    status: string;
+    status: ApplicationStatus;
     createdAt: Date;
   }[],
 ) {
   const jobIds = applications.map((a) => a.jobId);
-  const jobs = await Job.find({ _id: { $in: jobIds } }).select("title");
+  const jobs = await Job.find({
+    _id: { $in: jobIds },
+    isDeleted: false,
+  }).select("title");
   const jobTitleById = new Map(jobs.map((j) => [j._id.toString(), j.title]));
 
   return applications.map((a) => ({
     _id: a._id,
+    jobId: a.jobId,
     status: a.status,
     createdAt: a.createdAt,
     jobTitle: jobTitleById.get(a.jobId.toString()) ?? null,
   }));
 }
 
-function statusCountsToMap(
+export function statusCountsToMap(
   counts: { _id: string; count: number }[],
 ): Record<string, number> {
   return Object.fromEntries(counts.map((c) => [c._id, c.count]));
 }
 
 export async function getCandidateDashboard(userId: string) {
-  const candidate = await CandidateProfile.findOne({ userId, deletedAt: null });
+  const candidate = await CandidateProfile.findOne({
+    userId,
+    deletedAt: null,
+  }).select(
+    "headline skills location resumeUrl resumeUploadedAt education experience",
+  );
   if (!candidate) {
     throw new AppError(404, "CANDIDATE_404", "Candidate profile not found");
   }
 
-  const [statusCounts, recentApplicationsRaw, recentNotifications] =
-    await Promise.all([
-      Application.aggregate<{ _id: string; count: number }>([
-        { $match: { candidateId: candidate._id } },
-        { $group: { _id: "$status", count: { $sum: 1 } } },
-      ]),
-      Application.find({ candidateId: candidate._id })
-        .sort({ createdAt: -1 })
-        .limit(5)
-        .select("jobId status createdAt"),
-      Notification.find({ userId }).sort({ createdAt: -1 }).limit(5),
-    ]);
+  const [
+    statusCounts,
+    recentApplicationsRaw,
+    recentNotifications,
+    unreadNotificationsCount,
+  ] = await Promise.all([
+    Application.aggregate<{ _id: string; count: number }>([
+      { $match: { candidateId: candidate._id } },
+      { $group: { _id: "$status", count: { $sum: 1 } } },
+    ]),
+    Application.find({ candidateId: candidate._id })
+      .sort({ createdAt: -1, _id: -1 })
+      .limit(5)
+      .select("jobId status createdAt"),
+    Notification.find({ userId })
+      .sort({ createdAt: -1, _id: -1 })
+      .limit(5)
+      .select(
+        "type message relatedEntityType relatedEntityId isRead readAt createdAt",
+      )
+      .lean(),
+    Notification.countDocuments({ userId, isRead: false }),
+  ]);
 
   const byStatus = statusCountsToMap(statusCounts);
   const totalApplications = statusCounts.reduce((sum, s) => sum + s.count, 0);
@@ -83,10 +111,12 @@ export async function getCandidateDashboard(userId: string) {
     resumeStatus: {
       hasResume: Boolean(candidate.resumeUrl),
       resumeUrl: candidate.resumeUrl ?? null,
+      uploadedAt: candidate.resumeUploadedAt ?? null,
     },
     applications: { total: totalApplications, byStatus },
     recentApplications: await attachJobTitles(recentApplicationsRaw),
     recentNotifications,
+    unreadNotificationsCount,
   };
 }
 
@@ -129,7 +159,7 @@ export async function getRecruiterDashboard(userId: string) {
     ]),
     SavedCandidate.countDocuments({ recruiterId: recruiter._id }),
     Application.find({ companyId: recruiter.companyId })
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: -1, _id: -1 })
       .limit(5)
       .select("jobId status createdAt"),
   ]);

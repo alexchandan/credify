@@ -36,9 +36,9 @@ modules, plus service discovery and health routes.
 | Applications                                           | Implemented | Partial         | Candidate submission exists; history, withdrawal, review, and status UI are absent.                        |
 | Candidate/job search                                   | Implemented | Partial         | Public job search is wired; candidate search has no UI. Atlas indexes are required.                        |
 | Saved candidates                                       | Implemented | Not implemented | Recruiter API only.                                                                                        |
-| Notifications                                          | Implemented | Count only      | Header shows unread count; feed and read actions have no UI.                                               |
+| Notifications                                          | Implemented | Partial         | Header shows unread count; candidate dashboard shows five recent updates and supports mark-all-read.       |
 | Interface theme                                        | N/A         | Implemented     | System-aware light/dark mode is available globally and persists the selected preference.                   |
-| Dashboards                                             | Implemented | Not implemented | Candidate, recruiter, and admin aggregates exist.                                                          |
+| Dashboards                                             | Implemented | Partial         | Candidate dashboard is responsive and data-backed; recruiter and admin dashboards remain API-only.         |
 | Administration                                         | Implemented | Not implemented | User moderation and company/job removal exist.                                                             |
 | AI reports                                             | Model only  | Not implemented | No generation provider, queue, endpoints, or UI.                                                           |
 
@@ -56,6 +56,7 @@ The current page routes are:
 - `/unauthorized`
 - `/jobs`
 - `/jobs/:id`
+- `/candidate/dashboard`
 - `/candidate/profile`
 
 ## Verification Baseline
@@ -63,16 +64,18 @@ The current page routes are:
 The following checks were performed while this documentation snapshot was
 prepared:
 
-| Check                       | Result          | Detail                                                                                                                                             |
-| --------------------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Workspace type-check        | Pass            | Both client and server TypeScript checks pass.                                                                                                     |
-| Client production build     | Pass            | Next.js production compilation succeeds.                                                                                                           |
-| Client lint                 | Pass            | ESLint completes without errors or warnings.                                                                                                       |
-| Server lint                 | Blocked locally | The installed `@eslint/js` link is stale/broken even though manifests declare it. Reinstall dependencies before treating this as a source failure. |
-| Prettier                    | Pass            | The repository passes the configured Prettier check.                                                                                               |
-| Browser smoke check         | Pass            | Desktop and 390px auth/public layout checks pass; protected candidate access redirects to sign-in.                                                 |
-| Automated tests             | Minimal         | Express 5 query validation has a focused regression test; broader coverage is absent.                                                              |
-| Live API/Atlas verification | Partial         | Public job listing and combined keyword/dropdown filtering pass against the configured live dataset.                                               |
+| Check                       | Result  | Detail                                                                                                                                       |
+| --------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Workspace type-check        | Pass    | Both client and server TypeScript checks pass.                                                                                               |
+| Client production build     | Pass    | Next.js production compilation succeeds.                                                                                                     |
+| Server production build     | Pass    | TypeScript emits `server/dist/server.js`; test files are excluded from the artifact.                                                         |
+| Client lint                 | Pass    | ESLint completes without errors or warnings.                                                                                                 |
+| Server lint                 | Pass    | ESLint completes without errors or warnings.                                                                                                 |
+| Prettier                    | Pass    | The repository passes the configured Prettier check.                                                                                         |
+| Browser smoke check         | Pass    | Candidate login redirect, populated dashboard, mark-all-read, light/dark themes, and 390px layout pass without console warnings or overflow. |
+| Automated tests             | Minimal | Six middleware, candidate profile payload, and dashboard aggregation tests pass; broader coverage is absent.                                 |
+| Live API/Atlas verification | Partial | Public job filters and the populated candidate dashboard pass against the configured live dataset.                                           |
+| Dependency advisory audit   | Pending | `pnpm audit --prod` still needs a network-enabled release environment.                                                                       |
 
 ## Priority Risks
 
@@ -106,10 +109,6 @@ prepared:
    Job services assign both `isDeleted` and `deletedAt`, but `deletedAt` is only
    declared in the TypeScript interface, not the Mongoose schema. The timestamp
    is therefore not persisted under the schema's strict behavior.
-3. **Production log redaction is disabled.**
-   The logger's redaction configuration is nested inside the non-production
-   branch. Production logs should retain sensitive-field redaction even when
-   pretty transport is disabled.
 
 ### P2: API Correctness and Lifecycle
 
@@ -127,11 +126,12 @@ prepared:
 
 ## Delivery Gaps
 
-- Automated coverage is limited to one query-validation regression test; API
-  integration and browser end-to-end tests are still absent.
-- There is no CI workflow, container definition, or deployment configuration.
-- The server has no emitted production build or `start` script; its `build`
-  command is a type-check.
+- Automated coverage is limited to focused middleware, candidate payload, and
+  dashboard aggregation tests; API integration and browser end-to-end tests are
+  still absent.
+- There is no CI workflow or provider-specific deployment manifest. A
+  platform-neutral deployment runbook now documents the build and runtime
+  contract.
 - Most API modules have no corresponding client workflow.
 - OpenAPI/Swagger output is not generated from the written API contract.
 - Atlas Search pipelines and index creation have not been exercised against a
@@ -139,6 +139,9 @@ prepared:
 - Activity logging covers selected admin actions, not every action represented
   by the activity-log model.
 - AI reports remain a persistence schema without processing infrastructure.
+- Production Atlas connectivity, Atlas Search readiness, Resend delivery,
+  Cloudinary lifecycle behavior, and dependency advisories require verification
+  in the target environment before release.
 
 ## Recommended Work Order
 
@@ -150,8 +153,8 @@ prepared:
 4. Add automated protected-route tests for the candidate route guard.
 5. Correct boolean parsing, ObjectId validation, candidate-search totals, and
    deletion cascades.
-6. Define a real server production build/start path and add CI.
-7. Build the missing recruiter, job, application, notification, dashboard, and
-   admin client flows.
+6. Add CI and provider-specific deployment configuration.
+7. Build the missing recruiter, job-management, application-history,
+   full-notification, recruiter/admin dashboard, and admin client flows.
 8. Add AI processing only after its provider, privacy, cost, retry, and data
    retention decisions are explicit.

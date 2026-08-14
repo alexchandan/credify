@@ -1,12 +1,12 @@
 # Environment Setup
 
-This guide configures the current Next.js client and Express API for local
-development.
+This guide configures the Next.js client and Express API for local development.
+Use [Deployment](./DEPLOYMENT.md) for production configuration.
 
 ## Prerequisites
 
-- Node.js 20.9 or newer
-- pnpm 11.x (the root manifest currently requests `^11.9.0`)
+- Node.js 22.13 or newer
+- pnpm 11.9
 - Git
 - A MongoDB Atlas cluster or another MongoDB deployment that supports
   transactions
@@ -78,21 +78,26 @@ origin is needed. Generate JWT secrets separately:
 node -e "console.log(require('node:crypto').randomBytes(48).toString('hex'))"
 ```
 
-The startup validator currently requires the database, JWT, Cloudinary, and
-Resend values. `EMAIL_FROM` is consumed by the mailer but is not included in that
-validator, so treat it as operationally required as well.
+The startup validator requires every value shown above. In production it also
+requires an explicit `CLIENT_ORIGIN`, validates origins and port ranges, and
+requires both JWT secrets to contain at least 32 characters.
 
 ## 4. Configure the Client
 
-There is no tracked client environment template yet. Create
-`client/.env.local` with:
+Create the client environment file from the tracked template:
 
-```dotenv
-NEXT_PUBLIC_API_BASE_URL=http://localhost:5000/api/v1
+```bash
+cp client/.env.example client/.env.local
 ```
 
-Keep the `/api/v1` suffix. A few authentication pages currently contain a stale
-port `8080` fallback, so setting this variable avoids inconsistent behavior.
+```dotenv
+NEXT_PUBLIC_API_BASE_URL=/api/v1
+API_PROXY_TARGET=http://localhost:5000/api/v1
+```
+
+The browser uses the relative `/api/v1` path and Next.js proxies it to the
+absolute `API_PROXY_TARGET`. This keeps the refresh cookie same-origin and is
+the recommended production topology. Keep the `/api/v1` suffix on both values.
 
 ## 5. Start Development
 
@@ -171,31 +176,27 @@ using seeded accounts beyond disposable local data; see
 From the repository root:
 
 ```bash
-pnpm format:check
-pnpm lint
-pnpm type-check
-pnpm build
+pnpm verify
 ```
 
-The client build produces a Next.js production bundle. The server `build` script
-currently runs `tsc --noEmit` only; a compiled output/start workflow has not been
-defined.
+The client build produces a Next.js production bundle. The server build emits
+`server/dist/server.js`, which runs with `pnpm --dir server start`.
 
 ## Common Problems
 
-| Symptom                                        | Check                                                                                                                |
-| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Startup reports a missing environment variable | Compare `server/.env.local` with `server/.env.example`; Cloudinary and Resend are required too.                      |
-| MongoDB connection times out                   | Check the Atlas IP allowlist, credentials, database name, and URL encoding.                                          |
-| Transaction errors                             | Use Atlas or a MongoDB replica set instead of a standalone server.                                                   |
-| Browser reports CORS errors                    | Make `CLIENT_ORIGIN` exactly match the client scheme, host, and port.                                                |
-| Refresh cookie is not sent                     | Check credentials, cookie `SameSite`/`Secure` behavior, HTTPS, and whether the client/API are cross-site.            |
-| Search routes fail or return no data           | Run `search:setup`, wait for Atlas indexes, and confirm the configured index names.                                  |
-| Emails fail                                    | Check `RESEND_API_KEY`, `EMAIL_FROM`, sender verification, and Resend recipient restrictions.                        |
-| Uploads fail                                   | Check all three Cloudinary variables, MIME type, and upload-size limits.                                             |
-| Some auth pages call port 8080                 | Set `NEXT_PUBLIC_API_BASE_URL`; the hard-coded fallback is a known client issue.                                     |
-| Server lint cannot resolve `@eslint/js`        | Reinstall workspace dependencies with the requested pnpm version; a stale local symlink can survive package changes. |
-| Type-check passes but runtime fails            | Boot the applications and exercise the affected endpoint; types do not validate middleware or external services.     |
+| Symptom                                            | Check                                                                                                                                  |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Startup reports a missing environment variable     | Compare `server/.env.local` with `server/.env.example`; Cloudinary and Resend are required too.                                        |
+| MongoDB connection times out                       | Check the Atlas IP allowlist, credentials, database name, and URL encoding.                                                            |
+| Transaction errors                                 | Use Atlas or a MongoDB replica set instead of a standalone server.                                                                     |
+| Browser reports CORS errors                        | Make `CLIENT_ORIGIN` exactly match the client scheme, host, and port.                                                                  |
+| Refresh cookie is not sent                         | Use the same-origin proxy, HTTPS, and `/api/v1` values described above; direct cross-site use conflicts with the strict cookie policy. |
+| Search routes fail or return no data               | Run `search:setup`, wait for Atlas indexes, and confirm the configured index names.                                                    |
+| Emails fail                                        | Check `RESEND_API_KEY`, `EMAIL_FROM`, sender verification, and Resend recipient restrictions.                                          |
+| Uploads fail                                       | Check all three Cloudinary variables, MIME type, and upload-size limits.                                                               |
+| Client API requests target localhost in production | Set `API_PROXY_TARGET` to the deployed API URL and rebuild/redeploy the client.                                                        |
+| Server lint cannot resolve `@eslint/js`            | Reinstall workspace dependencies with the requested pnpm version; a stale local symlink can survive package changes.                   |
+| Type-check passes but runtime fails                | Boot the applications and exercise the affected endpoint; types do not validate middleware or external services.                       |
 
 Do not commit `.env`, `.env.local`, credentials, access tokens, or production
 database URLs.

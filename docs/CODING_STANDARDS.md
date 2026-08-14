@@ -141,10 +141,10 @@ Test scope should match the change:
 - **End-to-end tests:** high-value browser flows such as registration, sign-in,
   job application, and recruiter review.
 
-The repository currently has only a focused query-validation regression test,
-so broader test infrastructure remains an open project task. A clean type-check
-alone is not enough: boot affected applications and exercise the changed route
-or screen with a real request.
+The repository currently has focused middleware, candidate-payload, and
+dashboard-aggregation tests, so broader test infrastructure remains an open
+project task. A clean type-check alone is not enough: boot affected applications
+and exercise the changed route or screen with a real request.
 
 Run the available checks from the repository root:
 
@@ -152,11 +152,12 @@ Run the available checks from the repository root:
 pnpm format:check
 pnpm lint
 pnpm type-check
+pnpm test
 pnpm build
 ```
 
-The current server `build` script runs `tsc --noEmit`; it validates types but
-does not create a production artifact or start command.
+Use `pnpm verify` to run the complete sequence. The server build emits
+`server/dist/server.js`, and production starts through `pnpm --dir server start`.
 
 ## Documentation Responsibilities
 

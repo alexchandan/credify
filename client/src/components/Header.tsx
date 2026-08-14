@@ -8,6 +8,7 @@ import {
   ArrowRight,
   Bell,
   ChevronDown,
+  LayoutDashboard,
   LogOut,
   Menu,
   Search,
@@ -26,10 +27,15 @@ interface NavItem {
 }
 
 function navItemsFor(user: AuthUser | null): NavItem[] {
-  const items: NavItem[] = [{ href: "/jobs", label: "Browse jobs" }];
   if (user?.role === "candidate") {
-    items.push({ href: "/candidate/profile", label: "My profile" });
+    return [
+      { href: "/candidate/dashboard", label: "Dashboard" },
+      { href: "/jobs", label: "Browse jobs" },
+      { href: "/candidate/profile", label: "My profile" },
+    ];
   }
+
+  const items: NavItem[] = [{ href: "/jobs", label: "Browse jobs" }];
   if (!user) {
     items.push({ href: "/register", label: "For employers" });
   }
@@ -114,24 +120,38 @@ export function Nav() {
   useEffect(() => {
     let cancelled = false;
     if (!user) return () => undefined;
+    const userId = user.id;
+
+    function handleNotificationsRead() {
+      setNotificationState({ userId, count: 0 });
+    }
 
     apiRequest<unknown[]>("/notification/me?limit=1")
       .then((result) => {
         if (cancelled) return;
         const count = result.meta?.unreadCount;
         setNotificationState({
-          userId: user.id,
+          userId,
           count: typeof count === "number" ? count : null,
         });
       })
       .catch(() => {
         if (!cancelled) {
-          setNotificationState({ userId: user.id, count: null });
+          setNotificationState({ userId, count: null });
         }
       });
 
+    window.addEventListener(
+      "credify:notifications-read",
+      handleNotificationsRead,
+    );
+
     return () => {
       cancelled = true;
+      window.removeEventListener(
+        "credify:notifications-read",
+        handleNotificationsRead,
+      );
     };
   }, [user]);
 
@@ -234,25 +254,45 @@ export function Nav() {
 
           <ThemeToggle />
 
-          {!isLoading && user && (
-            <span
-              role="status"
-              aria-label={
-                unreadCount === null
-                  ? "Notification count unavailable"
-                  : `${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}`
-              }
-              title="Unread notifications"
-              className="relative flex h-10 w-10 items-center justify-center rounded-md text-slate-600 dark:text-slate-300"
-            >
-              <Bell className="h-5 w-5" aria-hidden="true" />
-              {unreadCount !== null && unreadCount > 0 && (
-                <span className="absolute top-0.5 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
-                  {unreadCount > 9 ? "9+" : unreadCount}
-                </span>
-              )}
-            </span>
-          )}
+          {!isLoading &&
+            user &&
+            (user.role === "candidate" ? (
+              <Link
+                href="/candidate/dashboard#updates"
+                aria-label={
+                  unreadCount === null
+                    ? "View notifications"
+                    : `View ${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}`
+                }
+                title="View notifications"
+                className="relative flex h-10 w-10 items-center justify-center rounded-md text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+              >
+                <Bell className="h-5 w-5" aria-hidden="true" />
+                {unreadCount !== null && unreadCount > 0 && (
+                  <span className="absolute top-0.5 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </Link>
+            ) : (
+              <span
+                role="status"
+                aria-label={
+                  unreadCount === null
+                    ? "Notification count unavailable"
+                    : `${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}`
+                }
+                title="Unread notifications"
+                className="relative flex h-10 w-10 items-center justify-center rounded-md text-slate-600 dark:text-slate-300"
+              >
+                <Bell className="h-5 w-5" aria-hidden="true" />
+                {unreadCount !== null && unreadCount > 0 && (
+                  <span className="absolute top-0.5 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </span>
+            ))}
 
           {isLoading ? (
             <div className="hidden h-10 w-28 animate-pulse rounded-lg bg-slate-100 md:block dark:bg-slate-800" />
@@ -290,6 +330,17 @@ export function Nav() {
 
                   {user.role === "candidate" && (
                     <>
+                      <Link
+                        href="/candidate/dashboard"
+                        onClick={() => setIsAccountMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                      >
+                        <LayoutDashboard
+                          className="h-4 w-4"
+                          aria-hidden="true"
+                        />
+                        Dashboard
+                      </Link>
                       <Link
                         href="/candidate/profile"
                         onClick={() => setIsAccountMenuOpen(false)}
