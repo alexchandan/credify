@@ -14,33 +14,33 @@ Credify is a pnpm monorepo with:
 - a Next.js 16 / React 19 client in `client/`;
 - an Express 5 / Mongoose 9 API in `server/`;
 - MongoDB Atlas Search for candidate and job discovery;
-- Cloudinary-backed resume and company-logo uploads; and
+- Cloudinary-backed candidate avatar/resume and company-logo uploads; and
 - Resend-backed verification and password-reset email.
 
 The backend is substantially broader than the client. The API currently mounts
-54 versioned endpoints across auth, candidates, recruiters, companies, jobs,
+57 versioned endpoints across auth, candidates, recruiters, companies, jobs,
 applications, search, saved candidates, notifications, dashboards, and admin
 modules, plus service discovery and health routes.
 
 ## Feature Readiness
 
-| Area                                                   | Backend     | Frontend        | Notes                                                                                    |
-| ------------------------------------------------------ | ----------- | --------------- | ---------------------------------------------------------------------------------------- |
-| Registration, verification, sign-in, refresh, sign-out | Implemented | Implemented     | Email verification, refresh-cookie restoration, and shared auth state are wired.         |
-| Password recovery                                      | Implemented | Implemented     | Includes request and token reset pages.                                                  |
-| Password/account settings                              | Implemented | Implemented     | Password changes install the new token; deletion clears the client session.              |
-| Candidate profile and resume                           | Implemented | Implemented     | Profile edit, PDF upload, session restoration, and candidate role protection are wired.  |
-| Recruiter profile                                      | Implemented | Not implemented | API supports self profile and company linkage.                                           |
-| Company management                                     | Implemented | Not implemented | Owner/member policy exists; deletion cascade is unresolved.                              |
-| Jobs                                                   | Implemented | Partial         | Public job browsing, filtering, details, and pagination exist; recruiter UI is absent.   |
-| Applications                                           | Implemented | Partial         | Candidate submission exists; history, withdrawal, review, and status UI are absent.      |
-| Candidate/job search                                   | Implemented | Partial         | Public job search is wired; candidate search has no UI. Atlas indexes are required.      |
-| Saved candidates                                       | Implemented | Not implemented | Recruiter API only.                                                                      |
-| Notifications                                          | Implemented | Count only      | Header shows unread count; feed and read actions have no UI.                             |
-| Interface theme                                        | N/A         | Implemented     | System-aware light/dark mode is available globally and persists the selected preference. |
-| Dashboards                                             | Implemented | Not implemented | Candidate, recruiter, and admin aggregates exist.                                        |
-| Administration                                         | Implemented | Not implemented | User moderation and company/job removal exist.                                           |
-| AI reports                                             | Model only  | Not implemented | No generation provider, queue, endpoints, or UI.                                         |
+| Area                                                   | Backend     | Frontend        | Notes                                                                                                      |
+| ------------------------------------------------------ | ----------- | --------------- | ---------------------------------------------------------------------------------------------------------- |
+| Registration, verification, sign-in, refresh, sign-out | Implemented | Implemented     | Email verification, refresh-cookie restoration, and shared auth state are wired.                           |
+| Password recovery                                      | Implemented | Implemented     | Includes request and token reset pages.                                                                    |
+| Password/account settings                              | Implemented | Implemented     | Password changes install the new token; deletion clears the client session.                                |
+| Candidate profile, avatar, and resume                  | Implemented | Implemented     | Full profile editing, image/PDF upload and removal, shared header identity, and role protection are wired. |
+| Recruiter profile                                      | Implemented | Not implemented | API supports self profile and company linkage.                                                             |
+| Company management                                     | Implemented | Not implemented | Owner/member policy exists; deletion cascade is unresolved.                                                |
+| Jobs                                                   | Implemented | Partial         | Public job browsing, filtering, details, and pagination exist; recruiter UI is absent.                     |
+| Applications                                           | Implemented | Partial         | Candidate submission exists; history, withdrawal, review, and status UI are absent.                        |
+| Candidate/job search                                   | Implemented | Partial         | Public job search is wired; candidate search has no UI. Atlas indexes are required.                        |
+| Saved candidates                                       | Implemented | Not implemented | Recruiter API only.                                                                                        |
+| Notifications                                          | Implemented | Count only      | Header shows unread count; feed and read actions have no UI.                                               |
+| Interface theme                                        | N/A         | Implemented     | System-aware light/dark mode is available globally and persists the selected preference.                   |
+| Dashboards                                             | Implemented | Not implemented | Candidate, recruiter, and admin aggregates exist.                                                          |
+| Administration                                         | Implemented | Not implemented | User moderation and company/job removal exist.                                                             |
+| AI reports                                             | Model only  | Not implemented | No generation provider, queue, endpoints, or UI.                                                           |
 
 ## Client Routes
 

@@ -97,3 +97,68 @@ export async function uploadResume(
 
   return profile;
 }
+
+export async function deleteResume(userId: string): Promise<ICandidateProfile> {
+  const profile = await getMyProfile(userId);
+  const publicId = profile.resumePublicId;
+
+  if (publicId) {
+    await storageService.delete(publicId, "raw");
+  }
+
+  profile.set({
+    resumeUrl: undefined,
+    resumePublicId: undefined,
+    resumeUploadedAt: undefined,
+  });
+  await profile.save();
+  return profile;
+}
+
+export async function uploadAvatar(
+  userId: string,
+  fileBuffer: Buffer,
+): Promise<ICandidateProfile> {
+  const profile = await getMyProfile(userId);
+  const previousPublicId = profile.avatarPublicId;
+
+  const result = await storageService.upload(fileBuffer, {
+    folder: "credify/avatars",
+    resourceType: "image",
+  });
+
+  profile.avatarUrl = result.url;
+  profile.avatarPublicId = result.publicId;
+  profile.avatarUploadedAt = new Date();
+  await profile.save();
+
+  if (previousPublicId) {
+    try {
+      await storageService.delete(previousPublicId, "image");
+    } catch (err) {
+      logger.warn(
+        { err, previousPublicId },
+        "Failed to delete previous avatar from storage",
+      );
+    }
+  }
+
+  return profile;
+}
+
+export async function deleteAvatar(userId: string): Promise<ICandidateProfile> {
+  const profile = await getMyProfile(userId);
+  const publicId = profile.avatarPublicId;
+
+  if (publicId) {
+    await storageService.delete(publicId, "image");
+  }
+
+  profile.set({
+    avatarUrl: undefined,
+    avatarPublicId: undefined,
+    avatarUploadedAt: undefined,
+  });
+  await profile.save();
+  return profile;
+}

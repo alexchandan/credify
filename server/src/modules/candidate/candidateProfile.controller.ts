@@ -41,3 +41,24 @@ export async function uploadResume(req: Request, res: Response): Promise<void> {
   );
   sendSuccess(res, { data: profile, message: "Resume uploaded" });
 }
+
+export async function deleteResume(req: Request, res: Response): Promise<void> {
+  const profile = await candidateProfileService.deleteResume(req.user!.userId);
+  sendSuccess(res, { data: profile, message: "Resume removed" });
+}
+
+export async function uploadAvatar(req: Request, res: Response): Promise<void> {
+  if (!req.file) {
+    throw new AppError(400, "VALIDATION_ERROR", "No avatar image provided");
+  }
+  const profile = await candidateProfileService.uploadAvatar(
+    req.user!.userId,
+    req.file.buffer,
+  );
+  sendSuccess(res, { data: profile, message: "Avatar uploaded" });
+}
+
+export async function deleteAvatar(req: Request, res: Response): Promise<void> {
+  const profile = await candidateProfileService.deleteAvatar(req.user!.userId);
+  sendSuccess(res, { data: profile, message: "Avatar removed" });
+}

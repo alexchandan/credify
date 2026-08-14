@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import jwt from "jsonwebtoken";
-import { User, UserRole } from "../../models/user.model.js";
+import { User, UserRole, type IUser } from "../../models/user.model.js";
 import { CandidateProfile } from "../../models/candidateProfile.model.js";
 import { RecruiterProfile } from "../../models/recruiterProfile.model.js";
 import { AppError } from "../../utils/AppError.js";
@@ -27,14 +27,58 @@ interface LoginInput {
   password: string;
 }
 
+interface AuthUserResult {
+  id: string;
+  email: string;
+  role: UserRole;
+  isVerified: boolean;
+  fullName?: string;
+  avatarUrl?: string;
+}
+
 interface LoginResult {
   accessToken: string;
   refreshToken: string;
-  user: {
-    id: string;
-    email: string;
-    role: UserRole;
+  user: AuthUserResult;
+}
+
+async function getAuthUser(user: IUser): Promise<AuthUserResult> {
+  const base = {
+    id: user._id.toString(),
+    email: user.email,
+    role: user.role,
+    isVerified: user.isVerified,
   };
+
+  if (user.role === UserRole.CANDIDATE) {
+    const profile = await CandidateProfile.findOne({
+      userId: user._id,
+      deletedAt: null,
+    })
+      .select("fullName avatarUrl")
+      .lean();
+
+    return {
+      ...base,
+      ...(profile?.fullName ? { fullName: profile.fullName } : {}),
+      ...(profile?.avatarUrl ? { avatarUrl: profile.avatarUrl } : {}),
+    };
+  }
+
+  if (user.role === UserRole.RECRUITER) {
+    const profile = await RecruiterProfile.findOne({
+      userId: user._id,
+      deletedAt: null,
+    })
+      .select("fullName")
+      .lean();
+    return {
+      ...base,
+      ...(profile?.fullName ? { fullName: profile.fullName } : {}),
+    };
+  }
+
+  return base;
 }
 
 // ---- Register function ----
@@ -143,7 +187,7 @@ export async function login(input: LoginInput): Promise<LoginResult> {
   return {
     accessToken,
     refreshToken,
-    user: { id: user._id.toString(), email: user.email, role: user.role },
+    user: await getAuthUser(user),
   };
 }
 
@@ -297,30 +341,18 @@ export async function resetPassword(
   await user.save();
 }
 
-interface MeResult {
-  id: string;
-  email: string;
-  role: UserRole;
-  isVerified: boolean;
-}
-
 /**
  * Supports frontend session restoration: after a silent POST /auth/refresh
  * on page load, the frontend has a valid access token but no idea WHO the
  * user is (refresh only ever returns a new token, never identity).
  */
-export async function getMe(userId: string): Promise<MeResult> {
+export async function getMe(userId: string): Promise<AuthUserResult> {
   const user = await User.findOne({ _id: userId, deletedAt: null });
   if (!user) {
     throw new AppError(404, "USER_404", "User not found");
   }
 
-  return {
-    id: user._id.toString(),
-    email: user.email,
-    role: user.role,
-    isVerified: user.isVerified,
-  };
+  return getAuthUser(user);
 }
 
 // ---- Self serviced change password changed while logged In
@@ -363,7 +395,7 @@ export async function changePassword(
   return {
     accessToken,
     refreshToken,
-    user: { id: user._id.toString(), email: user.email, role: user.role },
+    user: await getAuthUser(user),
   };
 }
 

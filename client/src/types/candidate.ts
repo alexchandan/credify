@@ -56,6 +56,9 @@ export interface CandidateProfile {
   skills: string[];
   location?: string;
   availability: Availability;
+  avatarUrl?: string;
+  avatarPublicId?: string;
+  avatarUploadedAt?: string;
   resumeUrl?: string;
   resumePublicId?: string;
   resumeUploadedAt?: string;

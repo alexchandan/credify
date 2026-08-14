@@ -3,7 +3,7 @@ import { catchAsync } from "../../utils/catchAsync.js";
 import { validate } from "../../middlewares/validate.js";
 import { authenticate } from "../../middlewares/authenticate.js";
 import { authorize } from "../../middlewares/authorize.js";
-import { resumeUpload } from "../../middlewares/upload.js";
+import { avatarUpload, resumeUpload } from "../../middlewares/upload.js";
 import { UserRole } from "../../models/user.model.js";
 import * as candidateProfileController from "./candidateProfile.controller.js";
 import { updateCandidateProfileSchema } from "./candidateProfile.validation.js";
@@ -31,6 +31,28 @@ router.post(
   authorize(UserRole.CANDIDATE),
   resumeUpload,
   catchAsync(candidateProfileController.uploadResume),
+);
+
+router.delete(
+  "/me/resume",
+  authenticate,
+  authorize(UserRole.CANDIDATE),
+  catchAsync(candidateProfileController.deleteResume),
+);
+
+router.post(
+  "/me/avatar",
+  authenticate,
+  authorize(UserRole.CANDIDATE),
+  avatarUpload,
+  catchAsync(candidateProfileController.uploadAvatar),
+);
+
+router.delete(
+  "/me/avatar",
+  authenticate,
+  authorize(UserRole.CANDIDATE),
+  catchAsync(candidateProfileController.deleteAvatar),
 );
 
 // Recruiter/admin-facing read of a specific candidate.

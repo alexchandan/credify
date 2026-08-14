@@ -80,6 +80,9 @@ Model: `CandidateProfile`
 | `skills`           | string[]          | Default `[]`          | Each value is trimmed and lowercased on assignment          |
 | `location`         | string            | Optional              | Trimmed                                                     |
 | `availability`     | Availability enum | Default `not_looking` | See values below                                            |
+| `avatarUrl`        | string            | Optional              | Cloudinary secure image URL                                 |
+| `avatarPublicId`   | string            | Optional              | Cloudinary deletion/replacement identifier                  |
+| `avatarUploadedAt` | Date              | Optional              | Time of latest successful avatar upload                     |
 | `resumeUrl`        | string            | Optional              | Cloudinary secure URL                                       |
 | `resumePublicId`   | string            | Optional              | Cloudinary deletion/replacement identifier                  |
 | `resumeUploadedAt` | Date              | Optional              | Time of latest successful upload                            |

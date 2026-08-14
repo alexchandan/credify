@@ -141,8 +141,9 @@ indexes as ready.
 ## 7. Verify External Services
 
 - Register a user and confirm the verification email is accepted by Resend.
+- Upload a JPEG, PNG, or WebP avatar smaller than 3 MB as a candidate.
 - Upload a PDF resume smaller than 5 MB as a candidate.
-- Upload a PNG, JPEG, WebP, or GIF logo smaller than 2 MB as a recruiter.
+- Upload a PNG, JPEG, or WebP logo smaller than 2 MB as a recruiter.
 - Confirm replacement/deletion behavior in both MongoDB and Cloudinary before
   relying on it in production.
 

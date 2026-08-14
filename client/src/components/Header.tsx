@@ -65,6 +65,34 @@ function NavLink({
   );
 }
 
+function UserAvatar({
+  user,
+  size = "sm",
+}: {
+  user: AuthUser;
+  size?: "sm" | "md";
+}) {
+  const dimensions = size === "md" ? "h-10 w-10" : "h-8 w-8";
+  const initial = (user.fullName || user.email)[0]?.toUpperCase() ?? "U";
+
+  return user.avatarUrl ? (
+    <Image
+      src={user.avatarUrl}
+      alt=""
+      width={40}
+      height={40}
+      className={`${dimensions} rounded-full object-cover ring-1 ring-slate-200 dark:ring-slate-700`}
+    />
+  ) : (
+    <span
+      className={`flex ${dimensions} items-center justify-center rounded-full bg-orange-600 text-xs font-bold text-white`}
+      aria-hidden="true"
+    >
+      {initial}
+    </span>
+  );
+}
+
 export function Nav() {
   const { user, isLoading, logout } = useAuth();
   const pathname = usePathname();
@@ -238,9 +266,7 @@ export function Nav() {
                 aria-controls="account-menu"
                 className="flex h-10 items-center gap-2 rounded-lg px-1.5 text-slate-700 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500 dark:text-slate-200 dark:hover:bg-slate-800"
               >
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-600 text-xs font-bold text-white">
-                  {user.email[0]?.toUpperCase() ?? "U"}
-                </span>
+                <UserAvatar user={user} />
                 <ChevronDown
                   className={`h-4 w-4 transition ${isAccountMenuOpen ? "rotate-180" : ""}`}
                   aria-hidden="true"
@@ -255,10 +281,10 @@ export function Nav() {
                 >
                   <div className="border-b border-slate-100 px-4 py-3 dark:border-slate-800">
                     <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
-                      {user.email}
+                      {user.fullName ?? user.email}
                     </p>
-                    <p className="mt-0.5 text-xs text-slate-500 capitalize dark:text-slate-400">
-                      {user.role}
+                    <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">
+                      {user.email}
                     </p>
                   </div>
 
@@ -374,12 +400,17 @@ export function Nav() {
 
           {!isLoading && user ? (
             <div className="pt-4">
-              <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
-                {user.email}
-              </p>
-              <p className="mt-0.5 text-xs text-slate-500 capitalize dark:text-slate-400">
-                {user.role}
-              </p>
+              <div className="flex items-center gap-3">
+                <UserAvatar user={user} size="md" />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
+                    {user.fullName ?? user.email}
+                  </p>
+                  <p className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">
+                    {user.email}
+                  </p>
+                </div>
+              </div>
               <button
                 type="button"
                 onClick={handleLogout}

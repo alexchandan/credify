@@ -1,39 +1,75 @@
 import { z } from "zod";
 import { Availability } from "../../models/candidateProfile.model.js";
 
-const educationSchema = z.object({
-  institution: z
-    .string()
-    .trim()
-    .min(1, "Institution is required")
-    .max(100, "Institution name is too long"),
-  degree: z
-    .string()
-    .trim()
-    .min(1, "Degree is required")
-    .max(100, "Degree name is too long"),
-  fieldOfStudy: z.string().trim().optional(),
-  startDate: z.coerce.date(),
-  endDate: z.coerce.date().optional(),
-  grade: z.string().trim().optional(),
-});
+const optionalText = (maxLength: number) =>
+  z.preprocess(
+    (value) =>
+      typeof value === "string" && value.trim() === "" ? undefined : value,
+    z.string().trim().max(maxLength).optional(),
+  );
 
-const experienceSchema = z.object({
-  company: z
-    .string()
-    .trim()
-    .min(1, "Company is required")
-    .max(100, "Company name is too long"),
-  title: z
-    .string()
-    .trim()
-    .min(1, "Title is required")
-    .max(100, "Title is too long"),
-  startDate: z.coerce.date(),
-  endDate: z.coerce.date().optional(),
-  isCurrent: z.boolean().default(false),
-  description: z.string().trim().max(2000).optional(),
-});
+const optionalUrl = z.preprocess(
+  (value) =>
+    typeof value === "string" && value.trim() === "" ? undefined : value,
+  z.url("Invalid URL").optional(),
+);
+
+const optionalDate = z.preprocess(
+  (value) => (value === "" || value === null ? undefined : value),
+  z.coerce.date().optional(),
+);
+
+function validateDateRange(
+  value: { startDate: Date; endDate?: Date | undefined },
+  ctx: z.RefinementCtx,
+  endDatePath = "endDate",
+): void {
+  if (value.endDate && value.endDate < value.startDate) {
+    ctx.addIssue({
+      code: "custom",
+      path: [endDatePath],
+      message: "End date cannot be before start date",
+    });
+  }
+}
+
+const educationSchema = z
+  .object({
+    institution: z
+      .string()
+      .trim()
+      .min(1, "Institution is required")
+      .max(100, "Institution name is too long"),
+    degree: z
+      .string()
+      .trim()
+      .min(1, "Degree is required")
+      .max(100, "Degree name is too long"),
+    fieldOfStudy: optionalText(100),
+    startDate: z.coerce.date(),
+    endDate: optionalDate,
+    grade: optionalText(50),
+  })
+  .superRefine(validateDateRange);
+
+const experienceSchema = z
+  .object({
+    company: z
+      .string()
+      .trim()
+      .min(1, "Company is required")
+      .max(100, "Company name is too long"),
+    title: z
+      .string()
+      .trim()
+      .min(1, "Title is required")
+      .max(100, "Title is too long"),
+    startDate: z.coerce.date(),
+    endDate: optionalDate,
+    isCurrent: z.boolean().default(false),
+    description: optionalText(2000),
+  })
+  .superRefine(validateDateRange);
 
 const projectSchema = z.object({
   title: z
@@ -41,42 +77,62 @@ const projectSchema = z.object({
     .trim()
     .min(1, "Project title is required")
     .max(100, "Title is too long"),
-  description: z.string().trim().max(2000).optional(),
-  techStack: z.array(z.string().trim()).default([]),
-  link: z.url("Invalid URL").optional(),
+  description: optionalText(2000),
+  techStack: z
+    .array(z.string().trim().min(1).max(50))
+    .max(30)
+    .transform((items) => [...new Set(items.map((item) => item.toLowerCase()))])
+    .default([]),
+  link: optionalUrl,
 });
 
-const certificationSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, "Certification name is required")
-    .max(100, "Certification name is too long"),
-  issuingOrg: z.string().trim().min(1, "Issuing organization is required"),
-  issueDate: z.coerce.date(),
-  expiryDate: z.coerce.date().optional(),
-  credentialUrl: z.url("Invalid URL").optional(),
-});
+const certificationSchema = z
+  .object({
+    name: z
+      .string()
+      .trim()
+      .min(1, "Certification name is required")
+      .max(100, "Certification name is too long"),
+    issuingOrg: z
+      .string()
+      .trim()
+      .min(1, "Issuing organization is required")
+      .max(100),
+    issueDate: z.coerce.date(),
+    expiryDate: optionalDate,
+    credentialUrl: optionalUrl,
+  })
+  .superRefine((value, ctx) =>
+    validateDateRange(
+      { startDate: value.issueDate, endDate: value.expiryDate },
+      ctx,
+      "expiryDate",
+    ),
+  );
 
 const socialLinksSchema = z.object({
-  linkedIn: z.url("Invalid URL").optional(),
-  github: z.url("Invalid URL").optional(),
-  portfolio: z.url("Invalid URL").optional(),
-  twitter: z.url("Invalid URL").optional(),
+  linkedIn: optionalUrl,
+  github: optionalUrl,
+  portfolio: optionalUrl,
+  twitter: optionalUrl,
 });
 
 export const createCandidateProfileSchema = z.object({
   fullName: z.string().trim().min(1, "Full name is required").max(150),
-  headline: z.string().trim().max(150).optional(),
-  skills: z.array(z.string().trim().min(1)).default([]),
-  location: z.string().trim().optional(),
+  headline: optionalText(150),
+  skills: z
+    .array(z.string().trim().min(1).max(50))
+    .max(50)
+    .transform((items) => [...new Set(items.map((item) => item.toLowerCase()))])
+    .default([]),
+  location: optionalText(100),
   availability: z
     .enum(Object.values(Availability) as [Availability, ...Availability[]])
     .optional(),
-  education: z.array(educationSchema).default([]),
-  experience: z.array(experienceSchema).default([]),
-  projects: z.array(projectSchema).default([]),
-  certifications: z.array(certificationSchema).default([]),
+  education: z.array(educationSchema).max(20).default([]),
+  experience: z.array(experienceSchema).max(30).default([]),
+  projects: z.array(projectSchema).max(30).default([]),
+  certifications: z.array(certificationSchema).max(30).default([]),
   socialLinks: socialLinksSchema.optional(),
 });
 

@@ -27,10 +27,18 @@ class CloudinaryStorageService implements StorageService {
           ...(options.publicId ? { public_id: options.publicId } : {}),
         },
         (error, result) => {
-          if (error || !result) {
+          if (error) {
+            const message =
+              typeof error === "object" &&
+              "message" in error &&
+              typeof error.message === "string"
+                ? error.message
+                : "Cloudinary upload failed";
+            return reject(new Error(message, { cause: error }));
+          }
+          if (!result) {
             return reject(
-              error ??
-                new Error("Cloudinary upload failed with no error or result"),
+              new Error("Cloudinary upload failed with no error or result"),
             );
           }
           resolve({ url: result.secure_url, publicId: result.public_id });

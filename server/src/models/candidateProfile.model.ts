@@ -56,6 +56,9 @@ export interface ICandidateProfile extends Document {
   skills: string[];
   location?: string;
   availability: Availability;
+  avatarUrl?: string;
+  avatarPublicId?: string;
+  avatarUploadedAt?: Date;
   resumeUrl?: string;
   resumePublicId?: string; //Cloudinary public_id for the current resume
   resumeUploadedAt?: Date; // Timestamp of the last resume upload
@@ -165,6 +168,9 @@ const candidateProfileSchema = new mongoose.Schema<
       enum: Object.values(Availability),
       default: Availability.NOT_LOOKING,
     },
+    avatarUrl: { type: String, trim: true },
+    avatarPublicId: { type: String, trim: true },
+    avatarUploadedAt: { type: Date },
     resumeUrl: { type: String, trim: true },
     resumePublicId: { type: String, trim: true },
     resumeUploadedAt: { type: Date },

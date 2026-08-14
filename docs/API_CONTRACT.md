@@ -150,18 +150,19 @@ company-membership checks after the role gate.
 | `DELETE` | `/delete-account`      | Authenticated, rate-limited | `{ password }`                        | Soft-deletes user and matching candidate/recruiter profile; clears refresh cookie                |
 
 Registration accepts only `candidate` and `recruiter`. Password constraints are
-8-15 characters for registration/reset and 6-15 in the current change-password
-Zod schema. The model still enforces a minimum password-hash input length of 8;
-the mismatch is tracked in [Project Status](./PROJECT_STATUS.md).
+8-15 characters for registration, reset, and authenticated password changes.
 
 ### Candidates: `/api/v1/candidates`
 
-| Method  | Path         | Access             | Input                     | Result                                          |
-| ------- | ------------ | ------------------ | ------------------------- | ----------------------------------------------- |
-| `GET`   | `/me`        | Candidate          | None                      | Current candidate profile                       |
-| `PATCH` | `/me`        | Candidate          | Partial candidate profile | Updated candidate profile                       |
-| `POST`  | `/me/resume` | Candidate          | Multipart field `resume`  | Updated profile with Cloudinary resume metadata |
-| `GET`   | `/:id`       | Recruiter or admin | Candidate profile ID      | Candidate profile                               |
+| Method   | Path         | Access             | Input                     | Result                                          |
+| -------- | ------------ | ------------------ | ------------------------- | ----------------------------------------------- |
+| `GET`    | `/me`        | Candidate          | None                      | Current candidate profile                       |
+| `PATCH`  | `/me`        | Candidate          | Partial candidate profile | Updated candidate profile                       |
+| `POST`   | `/me/avatar` | Candidate          | Multipart field `avatar`  | Updated profile with Cloudinary avatar metadata |
+| `DELETE` | `/me/avatar` | Candidate          | None                      | Updated profile without avatar metadata         |
+| `POST`   | `/me/resume` | Candidate          | Multipart field `resume`  | Updated profile with Cloudinary resume metadata |
+| `DELETE` | `/me/resume` | Candidate          | None                      | Updated profile without resume metadata         |
+| `GET`    | `/:id`       | Recruiter or admin | Candidate profile ID      | Candidate profile                               |
 
 Candidate profile input fields:
 
@@ -180,6 +181,8 @@ Candidate profile input fields:
 
 Resume uploads accept PDF MIME type only and are limited to 5 MiB. Files use
 Multer memory storage and are streamed to Cloudinary as raw resources.
+Avatar uploads accept JPEG, PNG, or WebP and are limited to 3 MiB. Replacements
+upload the new asset before deleting the previous Cloudinary image.
 
 ### Recruiters: `/api/v1/recruiters`
 

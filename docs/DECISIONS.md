@@ -273,15 +273,15 @@ incomplete.
 
 ## ADR-019: Stream uploads from memory to Cloudinary
 
-**Decision:** Multer uses memory storage. Resume and logo buffers are streamed
-to Cloudinary without writing temporary files to the application server.
+**Decision:** Multer uses memory storage. Avatar, resume, and logo buffers are
+streamed to Cloudinary without writing temporary files to the application server.
 
 **Rationale:** The server remains stateless and avoids local filesystem cleanup
 or assumptions that do not hold in container/serverless environments.
 
-**Consequences:** Strict upload limits are required to bound memory usage: 5
-MiB for resumes and 2 MiB for logos. Replacement uploads save the new asset
-before attempting best-effort deletion of the old one.
+**Consequences:** Strict upload limits are required to bound memory usage: 3
+MiB for avatars, 5 MiB for resumes, and 2 MiB for logos. Replacement uploads
+save the new asset before attempting best-effort deletion of the old one.
 
 **Status:** Adopted and implemented.
 

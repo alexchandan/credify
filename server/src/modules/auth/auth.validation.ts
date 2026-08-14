@@ -74,7 +74,7 @@ export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, { error: "Current password is required" }),
   newPassword: z
     .string()
-    .min(6, { error: "Password must be at least 6 characters" })
+    .min(8, { error: "Password must be at least 8 characters" })
     .max(15, { error: "Password must be at most 15 characters" }),
 });
 

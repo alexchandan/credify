@@ -18,7 +18,7 @@ AI provider or user-facing AI workflow is connected yet.
 | ------------------ | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | API foundation     | Implemented                                     | Versioned REST API, consistent response contract, request IDs, structured logging, CORS, Helmet, rate limiting, input sanitization, and centralized error handling                             |
 | Authentication     | Implemented                                     | Candidate/recruiter registration, email verification, login, access/refresh tokens, token refresh, logout, logout everywhere, password reset/change, session restoration, and account deletion |
-| Candidate profiles | Backend and one frontend page                   | Profile editing, education, experience, projects, certifications, social links, skills, availability, resume upload, and public recruiter/admin lookup                                         |
+| Candidate profiles | Implemented                                     | Responsive profile editor, avatar and resume upload/removal, education, experience, projects, certifications, skills, links, availability, and recruiter/admin lookup                          |
 | Recruiter profiles | Backend implemented                             | Read/update own profile and leave-company workflow                                                                                                                                             |
 | Companies          | Backend implemented                             | Create, read, update, logo upload, ownership assignment, and authorization policies                                                                                                            |
 | Jobs               | Backend and public frontend                     | Public search/filtering and job details in the client; draft creation, update, publish, close, soft delete, and company listings in the API                                                    |
@@ -30,7 +30,7 @@ AI provider or user-facing AI workflow is connected yet.
 | Administration     | Backend implemented                             | User moderation, company/job listings, company/job deletion, and partial activity logging                                                                                                      |
 | Frontend           | In progress                                     | Responsive light/dark interface, landing/header, authentication, public job board/details, candidate application submission, and candidate profile                                             |
 | AI features        | Schema only                                     | `AIReport` model and lifecycle; no queue, provider, service, route, or UI yet                                                                                                                  |
-| Automated tests    | Minimal                                         | Shared query validation has an Express 5 regression test; broader unit, integration, and end-to-end coverage is still needed                                                                   |
+| Automated tests    | Minimal                                         | Query middleware and candidate profile payloads have focused regression tests; broader unit, integration, and end-to-end coverage is still needed                                              |
 
 ## Technology Stack
 
@@ -130,7 +130,7 @@ The API base path is `/api/v1`. Health information is available separately at
 | Prefix            | Access                                            | Main capabilities                                                                                            |
 | ----------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | `/auth`           | Public and authenticated                          | Registration, login, refresh, verification, password recovery/change, logout, current user, account deletion |
-| `/candidates`     | Candidate, recruiter, or admin depending on route | Own-profile management, resume upload, candidate detail lookup                                               |
+| `/candidates`     | Candidate, recruiter, or admin depending on route | Own-profile management, avatar/resume upload and removal, candidate detail lookup                            |
 | `/recruiters`     | Recruiter                                         | Own-profile management and leaving a company                                                                 |
 | `/companies`      | Public reads; recruiter writes                    | Company creation, details, updates, and logo upload                                                          |
 | `/jobs`           | Public reads; recruiter writes                    | Job feed, filters, details, company jobs, lifecycle management                                               |
@@ -194,7 +194,7 @@ and administrator pages do not have frontend implementations yet.
 - Node.js 20.9 or newer
 - pnpm 11.9 or a compatible pnpm 11 release
 - A MongoDB Atlas deployment (transactions require a replica set)
-- Cloudinary credentials for resume and company-logo uploads
+- Cloudinary credentials for avatar, resume, and company-logo uploads
 - A Resend API key and verified sender for email flows
 
 Atlas Search is required only for the `/search` endpoints. The rest of the API
@@ -323,7 +323,7 @@ Implemented safeguards include:
 - Recursive stripping of MongoDB operator/dotted input keys
 - Zod request validation and centralized API errors
 - Request IDs and structured logs
-- MIME and size restrictions for resume/logo uploads
+- MIME and size restrictions for avatar/resume/logo uploads
 - MongoDB transactions for multi-document invariants
 - Soft deletion for core user-facing entities
 

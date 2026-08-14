@@ -18,6 +18,8 @@ export interface AuthUser {
   email: string;
   role: UserRole;
   isVerified?: boolean;
+  fullName?: string;
+  avatarUrl?: string;
 }
 
 interface LoginResult {
@@ -53,6 +55,7 @@ interface AuthContextValue {
     newPassword: string,
   ) => Promise<void>;
   deleteAccount: (password: string) => Promise<void>;
+  updateUser: (patch: Pick<AuthUser, "fullName" | "avatarUrl">) => void;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -176,6 +179,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [clearSession],
   );
 
+  const updateUser = useCallback(
+    (patch: Pick<AuthUser, "fullName" | "avatarUrl">) => {
+      setUser((current) => (current ? { ...current, ...patch } : current));
+    },
+    [],
+  );
+
   return (
     <AuthContext.Provider
       value={{
@@ -187,6 +197,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         logoutEverywhere,
         changePassword,
         deleteAccount,
+        updateUser,
       }}
     >
       {children}
