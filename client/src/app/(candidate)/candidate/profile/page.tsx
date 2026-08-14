@@ -151,7 +151,7 @@ export default function CandidateProfilePage() {
   const strength = calculateProfileStrength(profile);
 
   return (
-    <div className="flex min-h-screen flex-col bg-slate-50">
+    <div className="flex flex-1 flex-col bg-slate-50">
       <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-8 pb-32">
         <h1 className="text-sm font-medium text-slate-500">Edit Profile</h1>
         <p className="mt-1 text-2xl font-semibold text-slate-900">

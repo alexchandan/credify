@@ -1,32 +1,32 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Eye, EyeOff, Lock, ArrowLeft } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { AuthShell } from "@/components/auth/AuthShell";
 
 const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5000/api/v1";
 
 function ResetPasswordInner() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const token = searchParams.get("token");
-
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
 
     if (!token) {
       setError(
-        "No reset token found in the URL. Use the link from your email.",
+        "No reset token was found. Use the password reset link from your email.",
       );
       return;
     }
@@ -37,7 +37,7 @@ function ResetPasswordInner() {
 
     setIsSubmitting(true);
     try {
-      const res = await fetch(`${API_BASE}/auth/reset-password`, {
+      const res = await fetch(API_BASE + "/auth/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token, newPassword }),
@@ -50,7 +50,6 @@ function ResetPasswordInner() {
         return;
       }
       setSuccess(true);
-      setTimeout(() => router.push("/login"), 2000);
     } catch {
       setError("Could not reach the server. Please try again.");
     } finally {
@@ -58,137 +57,160 @@ function ResetPasswordInner() {
     }
   }
 
-  return (
-    <div className="w-full rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-      {success ? (
-        <div className="text-center">
-          <h1 className="text-xl font-bold text-slate-900">Password reset</h1>
-          <p className="mt-2 text-sm text-slate-500">
-            Redirecting you to log in...
-          </p>
-        </div>
-      ) : (
-        <>
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-blue-50">
-            <Lock className="h-6 w-6 text-blue-700" strokeWidth={2} />
+  if (success) {
+    return (
+      <AuthShell
+        title="Password reset"
+        description="Your new password is ready. You can now sign in."
+      >
+        <div className="mt-7 text-center" role="status">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
+            <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
           </div>
-          <h1 className="mt-4 text-center text-2xl font-bold text-slate-900">
-            Create new password
-          </h1>
-          <p className="mt-2 text-center text-sm text-slate-500">
-            Your new password must be different from previously used passwords.
-          </p>
-
-          <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700">
-                New Password
-              </label>
-              <div className="relative mt-1">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  maxLength={15}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 pr-10 text-sm focus:border-blue-500 focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-              <p className="mt-1 text-xs text-slate-400">
-                Must be 6–15 characters.
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-700">
-                Confirm Password
-              </label>
-              <div className="relative mt-1">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  maxLength={15}
-                  className="w-full rounded-lg border border-slate-300 px-3 py-2.5 pr-10 text-sm focus:border-blue-500 focus:outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {error && <p className="text-sm text-red-600">{error}</p>}
-
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="rounded-lg bg-slate-900 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:opacity-50"
-            >
-              {isSubmitting ? "Resetting..." : "Reset Password"}
-            </button>
-          </form>
-
           <Link
             href="/login"
-            className="mt-6 flex items-center justify-center gap-1.5 text-sm font-medium text-blue-700 hover:underline"
+            className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
           >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back to login
+            Go to sign in
           </Link>
-        </>
-      )}
+        </div>
+      </AuthShell>
+    );
+  }
+
+  return (
+    <AuthShell
+      title="Create a new password"
+      description="Choose a secure password you have not used for this account."
+    >
+      <form onSubmit={handleSubmit} className="mt-7 flex flex-col gap-5">
+        <PasswordField
+          id="reset-new-password"
+          label="New password"
+          value={newPassword}
+          showPassword={showNewPassword}
+          onChange={setNewPassword}
+          onToggle={() => setShowNewPassword((visible) => !visible)}
+          describedBy="reset-password-help"
+          autoFocus
+        />
+        <p id="reset-password-help" className="-mt-3 text-xs text-slate-500">
+          Use 8 to 15 characters.
+        </p>
+
+        <PasswordField
+          id="reset-confirm-password"
+          label="Confirm password"
+          value={confirmPassword}
+          showPassword={showConfirmPassword}
+          onChange={setConfirmPassword}
+          onToggle={() => setShowConfirmPassword((visible) => !visible)}
+        />
+
+        {error && (
+          <p
+            id="reset-password-error"
+            role="alert"
+            className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+          >
+            {error}
+          </p>
+        )}
+
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="inline-flex min-h-11 items-center justify-center rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          {isSubmitting ? "Resetting..." : "Reset password"}
+        </button>
+      </form>
+
+      <Link
+        href="/login"
+        className="mt-6 flex items-center justify-center gap-1.5 text-sm font-semibold text-orange-700 hover:underline"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        Back to sign in
+      </Link>
+    </AuthShell>
+  );
+}
+
+interface PasswordFieldProps {
+  id: string;
+  label: string;
+  value: string;
+  showPassword: boolean;
+  onChange: (value: string) => void;
+  onToggle: () => void;
+  describedBy?: string;
+  autoFocus?: boolean;
+}
+
+function PasswordField({
+  id,
+  label,
+  value,
+  showPassword,
+  onChange,
+  onToggle,
+  describedBy,
+  autoFocus = false,
+}: PasswordFieldProps) {
+  return (
+    <div>
+      <label htmlFor={id} className="block text-sm font-medium text-slate-700">
+        {label}
+      </label>
+      <div className="relative mt-1.5">
+        <input
+          id={id}
+          name={id}
+          type={showPassword ? "text" : "password"}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          autoComplete="new-password"
+          required
+          minLength={8}
+          maxLength={15}
+          autoFocus={autoFocus}
+          aria-describedby={describedBy}
+          className="w-full rounded-lg border border-slate-300 px-3 py-2.5 pr-11 text-sm text-slate-950 transition outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100"
+        />
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-label={`${showPassword ? "Hide" : "Show"} ${label.toLowerCase()}`}
+          aria-pressed={showPassword}
+          className="absolute top-1/2 right-1.5 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500"
+        >
+          {showPassword ? (
+            <EyeOff className="h-4 w-4" aria-hidden="true" />
+          ) : (
+            <Eye className="h-4 w-4" aria-hidden="true" />
+          )}
+        </button>
+      </div>
     </div>
   );
 }
 
 export default function ResetPasswordPage() {
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-b from-slate-50 to-white">
-      <header className="border-b border-slate-200 bg-white/80 px-6 py-4 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <Link href="/" className="text-lg font-bold text-slate-900">
-            Credify
-          </Link>
-          <Link
-            href="/register"
-            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white"
-          >
-            Register
-          </Link>
-        </div>
-      </header>
-
-      <div className="mx-auto flex w-full max-w-md flex-1 items-center px-6 py-12">
-        <Suspense
-          fallback={
-            <p className="text-center text-sm text-slate-500">Loading...</p>
-          }
+    <Suspense
+      fallback={
+        <AuthShell
+          title="Loading password reset"
+          description="This will only take a moment."
         >
-          <ResetPasswordInner />
-        </Suspense>
-      </div>
-    </div>
+          <p className="mt-7 text-center text-sm text-slate-500" role="status">
+            Loading...
+          </p>
+        </AuthShell>
+      }
+    >
+      <ResetPasswordInner />
+    </Suspense>
   );
 }

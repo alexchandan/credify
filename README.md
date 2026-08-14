@@ -93,6 +93,12 @@ Credify/
 There is no shared workspace package at present. Client and server types and
 validation schemas are maintained separately.
 
+The client root layout owns shared authentication state. Route-group layouts
+then choose their chrome: `(public)` and `(candidate)` render the site header
+and footer through `SiteChrome`, while every page in `(auth)` uses a focused
+header-free and footer-free account layout. The `(candidate)` layout also
+enforces the candidate role before rendering protected pages.
+
 ## Data Model
 
 The server currently defines ten MongoDB models:
@@ -330,8 +336,6 @@ expires.
 ## Known Gaps
 
 - Most backend modules do not yet have corresponding frontend screens.
-- The candidate route group does not yet have its intended authentication and
-  role guard.
 - Company deletion does not cascade or close the company's published jobs.
 - Job permission rules need reconciliation with the documented member role.
 - Atlas Search pipelines have not been validated against a live search index;

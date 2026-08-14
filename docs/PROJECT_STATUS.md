@@ -24,22 +24,22 @@ modules, plus service discovery and health routes.
 
 ## Feature Readiness
 
-| Area                                                   | Backend     | Frontend        | Notes                                                                                  |
-| ------------------------------------------------------ | ----------- | --------------- | -------------------------------------------------------------------------------------- |
-| Registration, verification, sign-in, refresh, sign-out | Implemented | Implemented     | Email verification, refresh-cookie restoration, and shared auth state are wired.       |
-| Password recovery                                      | Implemented | Implemented     | Includes request and token reset pages.                                                |
-| Password/account settings                              | Implemented | Implemented     | Password changes install the new token; deletion clears the client session.            |
-| Candidate profile and resume                           | Implemented | Implemented     | Profile edit and PDF upload exist. Route protection is incomplete.                     |
-| Recruiter profile                                      | Implemented | Not implemented | API supports self profile and company linkage.                                         |
-| Company management                                     | Implemented | Not implemented | Owner/member policy exists; deletion cascade is unresolved.                            |
-| Jobs                                                   | Implemented | Partial         | Public job browsing, filtering, details, and pagination exist; recruiter UI is absent. |
-| Applications                                           | Implemented | Partial         | Candidate submission exists; history, withdrawal, review, and status UI are absent.    |
-| Candidate/job search                                   | Implemented | Partial         | Public job search is wired; candidate search has no UI. Atlas indexes are required.    |
-| Saved candidates                                       | Implemented | Not implemented | Recruiter API only.                                                                    |
-| Notifications                                          | Implemented | Count only      | Header shows unread count; feed and read actions have no UI.                           |
-| Dashboards                                             | Implemented | Not implemented | Candidate, recruiter, and admin aggregates exist.                                      |
-| Administration                                         | Implemented | Not implemented | User moderation and company/job removal exist.                                         |
-| AI reports                                             | Model only  | Not implemented | No generation provider, queue, endpoints, or UI.                                       |
+| Area                                                   | Backend     | Frontend        | Notes                                                                                   |
+| ------------------------------------------------------ | ----------- | --------------- | --------------------------------------------------------------------------------------- |
+| Registration, verification, sign-in, refresh, sign-out | Implemented | Implemented     | Email verification, refresh-cookie restoration, and shared auth state are wired.        |
+| Password recovery                                      | Implemented | Implemented     | Includes request and token reset pages.                                                 |
+| Password/account settings                              | Implemented | Implemented     | Password changes install the new token; deletion clears the client session.             |
+| Candidate profile and resume                           | Implemented | Implemented     | Profile edit, PDF upload, session restoration, and candidate role protection are wired. |
+| Recruiter profile                                      | Implemented | Not implemented | API supports self profile and company linkage.                                          |
+| Company management                                     | Implemented | Not implemented | Owner/member policy exists; deletion cascade is unresolved.                             |
+| Jobs                                                   | Implemented | Partial         | Public job browsing, filtering, details, and pagination exist; recruiter UI is absent.  |
+| Applications                                           | Implemented | Partial         | Candidate submission exists; history, withdrawal, review, and status UI are absent.     |
+| Candidate/job search                                   | Implemented | Partial         | Public job search is wired; candidate search has no UI. Atlas indexes are required.     |
+| Saved candidates                                       | Implemented | Not implemented | Recruiter API only.                                                                     |
+| Notifications                                          | Implemented | Count only      | Header shows unread count; feed and read actions have no UI.                            |
+| Dashboards                                             | Implemented | Not implemented | Candidate, recruiter, and admin aggregates exist.                                       |
+| Administration                                         | Implemented | Not implemented | User moderation and company/job removal exist.                                          |
+| AI reports                                             | Model only  | Not implemented | No generation provider, queue, endpoints, or UI.                                        |
 
 ## Client Routes
 
@@ -62,15 +62,16 @@ The current page routes are:
 The following checks were performed while this documentation snapshot was
 prepared:
 
-| Check                       | Result                | Detail                                                                                                                                             |
-| --------------------------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Workspace type-check        | Pass                  | Both client and server TypeScript checks pass.                                                                                                     |
-| Client production build     | Pass                  | Next.js production compilation succeeds.                                                                                                           |
-| Client lint                 | Pass                  | ESLint completes without errors or warnings.                                                                                                       |
-| Server lint                 | Blocked locally       | The installed `@eslint/js` link is stale/broken even though manifests declare it. Reinstall dependencies before treating this as a source failure. |
-| Prettier                    | Pass for updated docs | Documentation was formatted with the repository Prettier configuration.                                                                            |
-| Automated tests             | Unavailable           | No test suite is currently implemented.                                                                                                            |
-| Live API/Atlas verification | Not performed         | Avoided external database mutations and automatic index creation during the docs audit.                                                            |
+| Check                       | Result          | Detail                                                                                                                                             |
+| --------------------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Workspace type-check        | Pass            | Both client and server TypeScript checks pass.                                                                                                     |
+| Client production build     | Pass            | Next.js production compilation succeeds.                                                                                                           |
+| Client lint                 | Pass            | ESLint completes without errors or warnings.                                                                                                       |
+| Server lint                 | Blocked locally | The installed `@eslint/js` link is stale/broken even though manifests declare it. Reinstall dependencies before treating this as a source failure. |
+| Prettier                    | Pass            | The repository passes the configured Prettier check.                                                                                               |
+| Browser smoke check         | Pass            | Desktop and 390px auth/public layout checks pass; protected candidate access redirects to sign-in.                                                 |
+| Automated tests             | Unavailable     | No test suite is currently implemented.                                                                                                            |
+| Live API/Atlas verification | Not performed   | Avoided external database mutations and automatic index creation during the docs audit.                                                            |
 
 ## Priority Risks
 
@@ -93,10 +94,6 @@ prepared:
    The seed script creates candidate users with `insertMany()`, which skips the
    Mongoose `save` password hook. Those values may be stored unhashed and the
    documented shared login may fail.
-5. **The candidate page lacks its claimed route guard.**
-   `/candidate/profile` assumes a `(candidate)/layout.tsx` role wrapper that is
-   not present. It can render for the wrong session state and relies on the API
-   to reject the request.
 
 ### P1: Data and File Integrity
 
@@ -127,8 +124,6 @@ prepared:
 4. Company soft deletion does not close/delete company jobs, remove recruiter
    membership, or prevent all associated data from appearing through every
    read path.
-5. Two auth pages fall back to API port `8080`, while the rest of the client
-   falls back to `5000`. Setting `NEXT_PUBLIC_API_BASE_URL` masks the mismatch.
 
 ## Delivery Gaps
 
