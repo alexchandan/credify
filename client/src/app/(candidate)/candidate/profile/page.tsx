@@ -31,6 +31,7 @@ import {
 import { apiRequest, ApiError } from "@/lib/apiClient";
 import { getErrorMessage } from "@/lib/formErrors";
 import { useAuth } from "@/context/AuthContext";
+import CandidateProfileSkeleton from "@/../src/components/ui/skeletons/CandidateProfileSkeletons";
 import {
   type CandidateProfile,
   type Education,
@@ -315,11 +316,7 @@ export default function CandidateProfilePage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="flex flex-1 items-center justify-center p-12 text-slate-500 dark:text-slate-400">
-        Loading your profile...
-      </div>
-    );
+    return <CandidateProfileSkeleton />;
   }
   if (error || !profile) {
     return (
