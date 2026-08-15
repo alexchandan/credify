@@ -6,12 +6,13 @@ echo "🚀 Running pre-push validation..."
 
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-if ! echo "$BRANCH" | grep -Eq "^(main|dev-V[0-9]+|(feature|fix|hotfix|docs|experiment|improve)/[a-z0-9-]+)$"; then
+if ! echo "$BRANCH" | grep -Eq "^(main|dev-V[0-9]+|development|(feature|fix|hotfix|docs|experiment|improve)/[a-z0-9-]+)$"; then
     echo "❌ Invalid branch name: $BRANCH"
     echo ""
     echo "Expected:"
     echo "  main"
     echo "  dev-V1"
+    echo " development"
     echo "  feature/auth"
     echo "  fix/login"
     echo "  docs/api"
