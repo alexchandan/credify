@@ -30,15 +30,15 @@ modules, plus service discovery and health routes.
 | Password recovery                                      | Implemented | Implemented     | Includes request and token reset pages.                                                                    |
 | Password/account settings                              | Implemented | Implemented     | Password changes install the new token; deletion clears the client session.                                |
 | Candidate profile, avatar, and resume                  | Implemented | Implemented     | Full profile editing, image/PDF upload and removal, shared header identity, and role protection are wired. |
-| Recruiter profile                                      | Implemented | Not implemented | API supports self profile and company linkage.                                                             |
-| Company management                                     | Implemented | Not implemented | Owner/member policy exists; deletion cascade is unresolved.                                                |
-| Jobs                                                   | Implemented | Partial         | Public job browsing, filtering, details, and pagination exist; recruiter UI is absent.                     |
+| Recruiter profile                                      | Implemented | Implemented     | Responsive identity, basic profile, company membership, and account settings UI are wired.                 |
+| Company management                                     | Implemented | Implemented     | Company create/edit, role-aware logo upload, and leave-company confirmation are wired.                     |
+| Jobs                                                   | Implemented | Partial         | Public browsing and recruiter recent-jobs overview exist; job authoring UI remains.                        |
 | Applications                                           | Implemented | Partial         | Candidate submission exists; history, withdrawal, review, and status UI are absent.                        |
 | Candidate/job search                                   | Implemented | Partial         | Public job search is wired; candidate search has no UI. Atlas indexes are required.                        |
 | Saved candidates                                       | Implemented | Not implemented | Recruiter API only.                                                                                        |
-| Notifications                                          | Implemented | Partial         | Header shows unread count; candidate dashboard shows five recent updates and supports mark-all-read.       |
+| Notifications                                          | Implemented | Implemented     | Candidate and recruiter headers show paginated recent notifications and support mark-all-read.             |
 | Interface theme                                        | N/A         | Implemented     | System-aware light/dark mode is available globally and persists the selected preference.                   |
-| Dashboards                                             | Implemented | Partial         | Candidate dashboard is responsive and data-backed; recruiter and admin dashboards remain API-only.         |
+| Dashboards                                             | Implemented | Partial         | Candidate and recruiter dashboards are responsive and data-backed; admin dashboard remains API-only.       |
 | Administration                                         | Implemented | Not implemented | User moderation and company/job removal exist.                                                             |
 | AI reports                                             | Model only  | Not implemented | No generation provider, queue, endpoints, or UI.                                                           |
 
@@ -58,6 +58,8 @@ The current page routes are:
 - `/jobs/:id`
 - `/candidate/dashboard`
 - `/candidate/profile`
+- `/recruiter/dashboard`
+- `/recruiter/profile`
 
 ## Verification Baseline
 

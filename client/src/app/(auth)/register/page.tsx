@@ -24,7 +24,13 @@ export default function RegisterPage() {
 
   useEffect(() => {
     if (!isLoading && user) {
-      router.replace(user.role === "candidate" ? "/candidate/dashboard" : "/");
+      router.replace(
+        user.role === "candidate"
+          ? "/candidate/dashboard"
+          : user.role === "recruiter"
+            ? "/recruiter/dashboard"
+            : "/",
+      );
       return;
     }
   }, [isLoading, router, user]);

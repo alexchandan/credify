@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 export function Footer() {
   const { user } = useAuth();
   const isCandidate = user?.role === "candidate";
+  const isRecruiter = user?.role === "recruiter";
 
   return (
     <footer className="bg-slate-900 px-6 py-12 text-slate-300 dark:bg-black dark:text-slate-400">
@@ -29,10 +30,14 @@ export function Footer() {
                 Find Jobs
               </Link>
             </li>
-            {isCandidate ? (
+            {isCandidate || isRecruiter ? (
               <li>
                 <Link
-                  href="/candidate/dashboard"
+                  href={
+                    isCandidate
+                      ? "/candidate/dashboard"
+                      : "/recruiter/dashboard"
+                  }
                   className="hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500"
                 >
                   Dashboard
@@ -67,6 +72,25 @@ export function Footer() {
                 <li>
                   <Link
                     href="/candidate/profile#account-settings"
+                    className="hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500"
+                  >
+                    Account settings
+                  </Link>
+                </li>
+              </>
+            ) : isRecruiter ? (
+              <>
+                <li>
+                  <Link
+                    href="/recruiter/profile"
+                    className="hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500"
+                  >
+                    My profile
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/recruiter/profile#account-settings"
                     className="hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500"
                   >
                     Account settings
