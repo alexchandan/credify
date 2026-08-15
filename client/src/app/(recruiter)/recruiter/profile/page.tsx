@@ -51,7 +51,8 @@ export default function RecruiterProfilePage() {
   const [saving, setSaving] = useState(false);
   const [companySaving, setCompanySaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [successNotice, setSuccessNotice] = useState<string | null>(null);
+  const [errorNotice, setErrorNotice] = useState<string | null>(null);
   const [leaveConfirm, setLeaveConfirm] = useState(false);
   const [leaveError, setLeaveError] = useState<string | null>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -105,7 +106,8 @@ export default function RecruiterProfilePage() {
   async function saveProfile() {
     if (!profile) return;
     setSaving(true);
-    setNotice(null);
+    setSuccessNotice(null);
+    setErrorNotice(null);
     try {
       const result = await apiRequest<RecruiterProfile>("/recruiters/me", {
         method: "PATCH",
@@ -117,9 +119,9 @@ export default function RecruiterProfilePage() {
       setProfile(result.data);
       setSavedProfile(result.data);
       updateUser({ fullName: result.data.fullName });
-      setNotice("Profile saved.");
+      setSuccessNotice("Profile saved.");
     } catch (err) {
-      setNotice(getErrorMessage(err));
+      setErrorNotice(getErrorMessage(err));
     } finally {
       setSaving(false);
     }
@@ -128,7 +130,8 @@ export default function RecruiterProfilePage() {
   async function saveCompany(event: React.FormEvent) {
     event.preventDefault();
     setCompanySaving(true);
-    setNotice(null);
+    setSuccessNotice(null);
+    setErrorNotice(null);
     try {
       const body = Object.fromEntries(
         Object.entries(companyDraft).filter(([, value]) => value !== ""),
@@ -140,17 +143,14 @@ export default function RecruiterProfilePage() {
       setCompany(result.data);
       setCompanyDraft(draftFromCompany(result.data));
       if (profile && !profile.companyId) {
-        const nextProfile = {
-          ...profile,
-          companyId: result.data._id,
-          companyRole: "owner" as const,
-        };
-        setProfile(nextProfile);
-        setSavedProfile(nextProfile);
+        const profileResult =
+          await apiRequest<RecruiterProfile>("/recruiters/me");
+        setProfile(profileResult.data);
+        setSavedProfile(profileResult.data);
       }
-      setNotice(company ? "Company details saved." : "Company created.");
+      setSuccessNotice(company ? "Company details saved." : "Company created.");
     } catch (err) {
-      setNotice(getErrorMessage(err));
+      setErrorNotice(getErrorMessage(err));
     } finally {
       setCompanySaving(false);
     }
@@ -158,6 +158,8 @@ export default function RecruiterProfilePage() {
 
   async function uploadLogo(file: File) {
     if (!company) return;
+    setSuccessNotice(null);
+    setErrorNotice(null);
     const body = new FormData();
     body.append("logo", file);
     try {
@@ -169,9 +171,9 @@ export default function RecruiterProfilePage() {
         },
       );
       setCompany(result.data);
-      setNotice("Company logo updated.");
+      setSuccessNotice("Company logo updated.");
     } catch (err) {
-      setNotice(getErrorMessage(err));
+      setErrorNotice(getErrorMessage(err));
     }
   }
 
@@ -187,7 +189,7 @@ export default function RecruiterProfilePage() {
         setSavedProfile(nextProfile);
       }
       setLeaveConfirm(false);
-      setNotice("You have left the company.");
+      setSuccessNotice("You have left the company.");
     } catch (err) {
       if (
         err instanceof ApiError &&
@@ -474,12 +476,20 @@ export default function RecruiterProfilePage() {
             </>
           )}
         </section>
-        {notice && (
+        {errorNotice && (
+          <p
+            role="alert"
+            className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
+          >
+            {errorNotice}
+          </p>
+        )}
+        {successNotice && (
           <p
             role="status"
-            className="rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
+            className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300"
           >
-            {notice}
+            {successNotice}
           </p>
         )}
         <AccountSettingsSection />

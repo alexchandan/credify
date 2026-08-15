@@ -36,6 +36,7 @@ export default function RecruiterDashboardPage() {
   const [company, setCompany] = useState<Company | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -70,7 +71,7 @@ export default function RecruiterDashboardPage() {
     }
     load();
     return () => controller.abort();
-  }, []);
+  }, [reloadToken]);
 
   if (loading) {
     return (
@@ -97,6 +98,17 @@ export default function RecruiterDashboardPage() {
           className="mx-auto max-w-xl rounded-lg border border-red-200 bg-red-50 p-5 text-sm text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300"
         >
           {error ?? "Unable to load your dashboard."}
+          <button
+            type="button"
+            onClick={() => {
+              setLoading(true);
+              setError(null);
+              setReloadToken((value) => value + 1);
+            }}
+            className="mt-4 inline-flex min-h-10 items-center rounded-lg bg-red-700 px-4 text-sm font-semibold text-white hover:bg-red-800"
+          >
+            Try again
+          </button>
         </div>
       </main>
     );
@@ -111,7 +123,7 @@ export default function RecruiterDashboardPage() {
             Recruiter workspace
           </p>
           <h1 className="mt-1 text-2xl font-bold text-slate-950 sm:text-3xl dark:text-white">
-            Good morning, {firstName}
+            Welcome back, {firstName}
           </h1>
           <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
             {company

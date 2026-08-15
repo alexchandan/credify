@@ -22,17 +22,11 @@ import logo from "@/../public/logo.png";
 import { useAuth, type AuthUser } from "@/context/AuthContext";
 import { apiRequest } from "@/lib/apiClient";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import type { DashboardNotification } from "@/types/dashboard";
 
 interface NavItem {
   href: string;
   label: string;
-}
-
-interface Notification {
-  _id: string;
-  message: string;
-  isRead: boolean;
-  createdAt: string;
 }
 
 function shortDate(value: string): string {
@@ -142,7 +136,9 @@ export function Nav() {
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<DashboardNotification[]>(
+    [],
+  );
   const [notificationsLoading, setNotificationsLoading] = useState(false);
   const [notificationsError, setNotificationsError] = useState<string | null>(
     null,
@@ -237,7 +233,7 @@ export function Nav() {
       setNotificationsLoading(true);
       setNotificationsError(null);
       try {
-        const result = await apiRequest<Notification[]>(
+        const result = await apiRequest<DashboardNotification[]>(
           "/notification/me?limit=8",
         );
         if (!cancelled) setNotifications(result.data);
@@ -359,7 +355,13 @@ export function Nav() {
               <button
                 type="button"
                 onClick={() => setIsNotificationsOpen((open) => !open)}
-                aria-label="Open notifications"
+                aria-label={
+                  unreadCount === null
+                    ? "Open notifications"
+                    : unreadCount === 1
+                      ? "Open notifications, 1 unread"
+                      : `Open notifications, ${unreadCount} unread`
+                }
                 aria-expanded={isNotificationsOpen}
                 aria-controls="notifications-menu"
                 title="Notifications"
