@@ -20,14 +20,14 @@ is connected yet.
 | API foundation     | Implemented                                     | Versioned REST API, consistent response contract, request IDs, structured logging, CORS, Helmet, rate limiting, input sanitization, and centralized error handling                             |
 | Authentication     | Implemented                                     | Candidate/recruiter registration, email verification, login, access/refresh tokens, token refresh, logout, logout everywhere, password reset/change, session restoration, and account deletion |
 | Candidate profiles | Implemented                                     | Responsive profile editor, avatar and resume upload/removal, education, experience, projects, certifications, skills, links, availability, and recruiter/admin lookup                          |
-| Recruiter profiles | Backend implemented                             | Read/update own profile and leave-company workflow                                                                                                                                             |
+| Recruiter profiles | Backend and frontend implemented                | Responsive identity/basic profile editor, company membership management, and leave-company workflow                                                                                            |
 | Companies          | Backend implemented                             | Create, read, update, logo upload, ownership assignment, and authorization policies                                                                                                            |
 | Jobs               | Backend and public frontend                     | Public search/filtering and job details in the client; draft creation, update, publish, close, soft delete, and company listings in the API                                                    |
 | Applications       | Backend and candidate submission frontend       | Candidates can apply from job details; history, recruiter review, withdrawal, and status management remain API-only                                                                            |
 | Search             | Backend implemented, Atlas verification pending | Fuzzy Atlas Search for jobs and candidates plus one-time index setup script                                                                                                                    |
 | Saved candidates   | Backend implemented                             | Recruiter-specific saved lists and notes                                                                                                                                                       |
 | Notifications      | Backend and candidate dashboard                 | Paginated notification feed, unread counts, and mark-one/all APIs; the candidate dashboard shows recent updates and supports marking all read                                                  |
-| Dashboards         | Candidate frontend and backend                  | Responsive candidate overview with application pipeline, profile/resume readiness, notifications, and new jobs; recruiter and administrator summary endpoints remain API-only                  |
+| Dashboards         | Candidate/recruiter frontend and backend        | Responsive candidate and recruiter overviews with application pipeline, company/job stats, notifications, and recent work; administrator summary remains API-only                              |
 | Administration     | Backend implemented                             | User moderation, company/job listings, company/job deletion, and partial activity logging                                                                                                      |
 | Frontend           | In progress                                     | Responsive light/dark interface, landing/header, authentication, public job board/details, candidate application submission, profile, and dashboard                                            |
 | AI features        | Schema only                                     | `AIReport` model and lifecycle; no queue, provider, service, route, or UI yet                                                                                                                  |
@@ -187,6 +187,8 @@ The following pages currently exist:
 | `/jobs/:id`            | Public job details and candidate application submission                                   |
 | `/candidate/dashboard` | Candidate search overview, profile readiness, applications, resume, updates, and new jobs |
 | `/candidate/profile`   | Candidate profile, resume, password, and account settings                                 |
+| `/recruiter/dashboard` | Recruiter company/job/application overview and recent jobs                                |
+| `/recruiter/profile`   | Recruiter identity, company management, logo upload, password, and account settings       |
 
 Recruiter management, candidate application history, full notification feeds,
 recruiter/admin dashboards, and administrator pages do not have frontend

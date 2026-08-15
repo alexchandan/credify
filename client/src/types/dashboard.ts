@@ -44,3 +44,15 @@ export interface CandidateDashboard {
   recentNotifications: DashboardNotification[];
   unreadNotificationsCount: number;
 }
+
+export interface RecruiterDashboard {
+  hasCompany: boolean;
+  activeJobsCount: number;
+  totalJobsCount: number;
+  applications: {
+    total: number;
+    byStatus: Partial<Record<ApplicationStatus, number>>;
+  };
+  savedCandidatesCount: number;
+  recentApplications: RecentApplication[];
+}

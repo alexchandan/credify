@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { apiRequest, ApiError } from "@/lib/apiClient";
 import { getErrorMessage } from "@/lib/formErrors";
+import { AccountSettingsSection as SharedAccountSettingsSection } from "@/components/account/AccountSettingsSection";
 import { useAuth } from "@/context/AuthContext";
 import {
   type CandidateProfile,
@@ -927,7 +928,7 @@ export default function CandidateProfilePage() {
             </Card>
 
             {/* --- Account Settings (change password / delete account) --- */}
-            <AccountSettingsSection />
+            <SharedAccountSettingsSection />
           </div>
         </div>
       </div>
@@ -1321,6 +1322,8 @@ function ListEditor<T extends object>({
 // Account Settings — the "must" section: change password + delete account
 // ---------------------------------------------------------------------
 
+// Kept below for backwards-compatible local structure; the shared component is rendered above.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function AccountSettingsSection() {
   return (
     <section

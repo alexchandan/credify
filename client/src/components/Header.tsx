@@ -15,6 +15,8 @@ import {
   Settings,
   User as UserIcon,
   X,
+  Check,
+  LoaderCircle,
 } from "lucide-react";
 import logo from "@/../public/logo.png";
 import { useAuth, type AuthUser } from "@/context/AuthContext";
@@ -26,12 +28,41 @@ interface NavItem {
   label: string;
 }
 
+interface Notification {
+  _id: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+function shortDate(value: string): string {
+  const elapsed = Date.now() - new Date(value).getTime();
+  const minutes = Math.floor(elapsed / 60000);
+  if (minutes < 1) return "Just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "numeric",
+  }).format(new Date(value));
+}
+
 function navItemsFor(user: AuthUser | null): NavItem[] {
   if (user?.role === "candidate") {
     return [
       { href: "/candidate/dashboard", label: "Dashboard" },
       { href: "/jobs", label: "Browse jobs" },
       { href: "/candidate/profile", label: "My profile" },
+    ];
+  }
+  if (user?.role === "recruiter") {
+    return [
+      { href: "/recruiter/dashboard", label: "Dashboard" },
+      { href: "/jobs", label: "Browse jobs" },
+      { href: "/recruiter/profile", label: "My profile" },
     ];
   }
 
@@ -110,7 +141,16 @@ export function Nav() {
   } | null>(null);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [notificationsError, setNotificationsError] = useState<string | null>(
+    null,
+  );
+  const [isMarkingNotificationsRead, setIsMarkingNotificationsRead] =
+    useState(false);
   const accountMenuRef = useRef<HTMLDivElement>(null);
+  const notificationMenuRef = useRef<HTMLDivElement>(null);
   const navItems = navItemsFor(user);
   const unreadCount =
     user && notificationState?.userId === user.id
@@ -124,6 +164,9 @@ export function Nav() {
 
     function handleNotificationsRead() {
       setNotificationState({ userId, count: 0 });
+      setNotifications((current) =>
+        current.map((notification) => ({ ...notification, isRead: true })),
+      );
     }
 
     apiRequest<unknown[]>("/notification/me?limit=1")
@@ -163,11 +206,18 @@ export function Nav() {
       ) {
         setIsAccountMenuOpen(false);
       }
+      if (
+        notificationMenuRef.current &&
+        !notificationMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsNotificationsOpen(false);
+      }
     }
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         setIsAccountMenuOpen(false);
+        setIsNotificationsOpen(false);
         setIsMobileMenuOpen(false);
       }
     }
@@ -179,6 +229,56 @@ export function Nav() {
       document.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
+
+  useEffect(() => {
+    if (!isNotificationsOpen || !user) return;
+    let cancelled = false;
+    async function loadNotifications() {
+      setNotificationsLoading(true);
+      setNotificationsError(null);
+      try {
+        const result = await apiRequest<Notification[]>(
+          "/notification/me?limit=8",
+        );
+        if (!cancelled) setNotifications(result.data);
+      } catch (err) {
+        if (!cancelled) {
+          setNotificationsError(
+            err instanceof Error
+              ? err.message
+              : "Unable to load notifications.",
+          );
+        }
+      } finally {
+        if (!cancelled) setNotificationsLoading(false);
+      }
+    }
+    void loadNotifications();
+    return () => {
+      cancelled = true;
+    };
+  }, [isNotificationsOpen, user]);
+
+  async function markAllNotificationsRead() {
+    if (!unreadCount) return;
+    setIsMarkingNotificationsRead(true);
+    try {
+      await apiRequest("/notification/read-all", { method: "PATCH" });
+      setNotificationState(user ? { userId: user.id, count: 0 } : null);
+      setNotifications((current) =>
+        current.map((notification) => ({ ...notification, isRead: true })),
+      );
+      window.dispatchEvent(new Event("credify:notifications-read"));
+    } catch (err) {
+      setNotificationsError(
+        err instanceof Error
+          ? err.message
+          : "Unable to mark notifications read.",
+      );
+    } finally {
+      setIsMarkingNotificationsRead(false);
+    }
+  }
 
   function handleSearchSubmit(event: React.SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -254,17 +354,15 @@ export function Nav() {
 
           <ThemeToggle />
 
-          {!isLoading &&
-            user &&
-            (user.role === "candidate" ? (
-              <Link
-                href="/candidate/dashboard#updates"
-                aria-label={
-                  unreadCount === null
-                    ? "View notifications"
-                    : `View ${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}`
-                }
-                title="View notifications"
+          {!isLoading && user && (
+            <div className="relative" ref={notificationMenuRef}>
+              <button
+                type="button"
+                onClick={() => setIsNotificationsOpen((open) => !open)}
+                aria-label="Open notifications"
+                aria-expanded={isNotificationsOpen}
+                aria-controls="notifications-menu"
+                title="Notifications"
                 className="relative flex h-10 w-10 items-center justify-center rounded-md text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
               >
                 <Bell className="h-5 w-5" aria-hidden="true" />
@@ -273,26 +371,72 @@ export function Nav() {
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </span>
                 )}
-              </Link>
-            ) : (
-              <span
-                role="status"
-                aria-label={
-                  unreadCount === null
-                    ? "Notification count unavailable"
-                    : `${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}`
-                }
-                title="Unread notifications"
-                className="relative flex h-10 w-10 items-center justify-center rounded-md text-slate-600 dark:text-slate-300"
-              >
-                <Bell className="h-5 w-5" aria-hidden="true" />
-                {unreadCount !== null && unreadCount > 0 && (
-                  <span className="absolute top-0.5 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </span>
-                )}
-              </span>
-            ))}
+              </button>
+              {isNotificationsOpen && (
+                <div
+                  id="notifications-menu"
+                  role="region"
+                  aria-label="Notifications"
+                  className="absolute right-0 z-50 mt-2 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-950"
+                >
+                  <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+                    <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                      Notifications
+                    </h2>
+                    {unreadCount ? (
+                      <button
+                        type="button"
+                        onClick={() => void markAllNotificationsRead()}
+                        disabled={isMarkingNotificationsRead}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-orange-700 disabled:opacity-50 dark:text-orange-400"
+                      >
+                        {isMarkingNotificationsRead ? (
+                          <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Check className="h-3.5 w-3.5" />
+                        )}
+                        Mark all as read
+                      </button>
+                    ) : null}
+                  </div>
+                  {notificationsLoading ? (
+                    <div className="px-4 py-8 text-center text-sm text-slate-500">
+                      Loading notifications...
+                    </div>
+                  ) : notificationsError ? (
+                    <p
+                      role="alert"
+                      className="px-4 py-8 text-center text-sm text-red-700 dark:text-red-300"
+                    >
+                      {notificationsError}
+                    </p>
+                  ) : notifications.length === 0 ? (
+                    <p className="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                      No notifications yet.
+                    </p>
+                  ) : (
+                    <div className="max-h-80 divide-y divide-slate-100 overflow-y-auto dark:divide-slate-800">
+                      {notifications.map((notification) => (
+                        <div
+                          key={notification._id}
+                          className={`px-4 py-3 ${notification.isRead ? "" : "bg-orange-50/60 dark:bg-orange-950/20"}`}
+                        >
+                          <p
+                            className={`text-sm leading-5 ${notification.isRead ? "text-slate-600 dark:text-slate-400" : "font-medium text-slate-900 dark:text-slate-100"}`}
+                          >
+                            {notification.message}
+                          </p>
+                          <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
+                            {shortDate(notification.createdAt)}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {isLoading ? (
             <div className="hidden h-10 w-28 animate-pulse rounded-lg bg-slate-100 md:block dark:bg-slate-800" />
@@ -355,6 +499,34 @@ export function Nav() {
                         className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
                       >
                         <Settings className="h-4 w-4" aria-hidden="true" />
+                        Account settings
+                      </Link>
+                    </>
+                  )}
+                  {user.role === "recruiter" && (
+                    <>
+                      <Link
+                        href="/recruiter/dashboard"
+                        onClick={() => setIsAccountMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                      >
+                        <LayoutDashboard className="h-4 w-4" />
+                        Dashboard
+                      </Link>
+                      <Link
+                        href="/recruiter/profile"
+                        onClick={() => setIsAccountMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                      >
+                        <UserIcon className="h-4 w-4" />
+                        My profile
+                      </Link>
+                      <Link
+                        href="/recruiter/profile#account-settings"
+                        onClick={() => setIsAccountMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                      >
+                        <Settings className="h-4 w-4" />
                         Account settings
                       </Link>
                     </>
