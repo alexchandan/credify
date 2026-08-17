@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { useAuth, type AuthUser } from "@/context/AuthContext";
@@ -21,7 +21,7 @@ function safeReturnPath(fallback: string): string {
     : fallback;
 }
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const { user, isLoading, login } = useAuth();
   const [email, setEmail] = useState("");
@@ -30,9 +30,14 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next");
   useEffect(() => {
-    if (!isLoading && user) router.replace(roleHome(user));
-  }, [isLoading, router, user]);
+    if (!isLoading && user) {
+      const destination = next?.startsWith("/") ? next : roleHome(user);
+      router.replace(destination);
+    }
+  }, [isLoading, router, user, next]);
 
   async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -51,17 +56,7 @@ export default function LoginPage() {
   }
 
   if (isLoading || user) {
-    return (
-      <div
-        className="flex min-h-80 flex-1 items-center justify-center"
-        aria-live="polite"
-        aria-busy="true"
-      >
-        <span className="text-sm text-slate-500 dark:text-slate-400">
-          Checking your session...
-        </span>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -165,5 +160,13 @@ export default function LoginPage() {
         </Link>
       </p>
     </AuthShell>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginContent />
+    </Suspense>
   );
 }

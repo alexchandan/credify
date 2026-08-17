@@ -19,7 +19,7 @@ export function RequireRole({ allowedRoles, children }: RequireRoleProps) {
     if (isLoading || isAllowed) return;
 
     if (!user) {
-      router.replace(`/login?next=${encodeURIComponent(pathname)}`);
+      router.replace("/");
       return;
     }
 

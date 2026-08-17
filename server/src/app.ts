@@ -86,6 +86,11 @@ app.get("/health", (req: Request, res: Response) => {
   });
 });
 
+// "/" Root to avoid deployment error
+app.get("/", (_req: Request, res: Response) => {
+  res.send("Credify is running!");
+});
+
 // API Root
 app.get("/api/v1", (req: Request, res: Response) => {
   sendSuccess(res, {

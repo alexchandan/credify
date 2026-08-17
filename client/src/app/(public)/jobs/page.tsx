@@ -142,7 +142,7 @@ function JobBoard() {
             <label>
               <span className="sr-only">Location</span>
               <input
-                type="text"
+                type="search"
                 name="location"
                 defaultValue={searchParams.get("location") ?? ""}
                 placeholder="Location"

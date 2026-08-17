@@ -1,8 +1,8 @@
 // Populates the database with realistic, interrelated test data:
 // ~30 companies, ~60-90 recruiters, ~200 candidates, ~150 jobs, ~500 applications.
 //
-// Run with: npm run seed          (adds to existing data)
-//           npm run seed -- --fresh   (wipes seed-relevant collections first)
+// Run with: pnpm run seed          (adds to existing data)
+//           pnpm run seed -- --fresh   (wipes seed-relevant collections first)
 //
 // All seeded users share the password printed at the end of the run.
 
@@ -39,12 +39,12 @@ import { Application, ApplicationStatus } from "../models/application.model.js";
 import { SavedCandidate } from "../models/savedCandidate.model.js";
 
 const COUNTS = {
-  companies: 30,
+  companies: 60,
   extraRecruitersPerCompanyMax: 2,
-  candidates: 200,
-  jobs: 150,
-  applications: 500,
-  savedCandidates: 100,
+  candidates: 2000,
+  jobs: 1000,
+  applications: 2000,
+  savedCandidates: 200,
 };
 
 const SKILL_POOL = [

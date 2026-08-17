@@ -19,13 +19,9 @@ function baseEmailLayout(
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
       <h1 style="font-size: 20px; color: #0f172a; margin-bottom: 16px;">${title}</h1>
       <p style="font-size: 14px; color: #475569; line-height: 1.6;">${bodyHtml}</p>
-      <a href="${ctaUrl}" style="display: inline-block; margin-top: 20px; background: #0f172a; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 500;">
+      <a href="${ctaUrl}" style="display: inline-block; margin-top: 20px; background: #ff5100; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 500;">
         ${ctaLabel}
       </a>
-      <p style="font-size: 12px; color: #94a3b8; margin-top: 24px;">
-        If the button doesn't work, copy and paste this link into your browser:<br />
-        <span style="word-break: break-all;">${ctaUrl}</span>
-      </p>
     </div>
   `;
 }
