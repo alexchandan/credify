@@ -47,7 +47,6 @@ function LoginContent() {
     try {
       const loggedInUser = await login(email.trim().toLowerCase(), password);
       router.replace(safeReturnPath(roleHome(loggedInUser)));
-      router.refresh();
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {

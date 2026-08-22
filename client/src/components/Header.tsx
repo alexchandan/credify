@@ -157,7 +157,7 @@ export function Nav() {
 
   useEffect(() => {
     let cancelled = false;
-    if (!user) return () => undefined;
+    if (!user || isLoading) return () => undefined;
     const userId = user.id;
 
     function handleNotificationsRead() {
@@ -194,7 +194,7 @@ export function Nav() {
         handleNotificationsRead,
       );
     };
-  }, [user]);
+  }, [isLoading, user]);
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent) {
@@ -229,7 +229,7 @@ export function Nav() {
   }, []);
 
   useEffect(() => {
-    if (!isNotificationsOpen || !user) return;
+    if (!isNotificationsOpen || !user || isLoading) return;
     let cancelled = false;
     async function loadNotifications() {
       setNotificationsLoading(true);
@@ -259,7 +259,7 @@ export function Nav() {
     return () => {
       cancelled = true;
     };
-  }, [isNotificationsOpen, user]);
+  }, [isLoading, isNotificationsOpen, user]);
 
   async function markAllNotificationsRead() {
     if (!unreadCount) return;
@@ -309,7 +309,6 @@ export function Nav() {
       // AuthContext clears local state even when the server cannot respond.
     } finally {
       router.replace("/");
-      router.refresh();
     }
   }
 
@@ -367,7 +366,7 @@ export function Nav() {
 
           <ThemeToggle />
 
-          {!isLoading && user && (
+          {user && (
             <div className="relative" ref={notificationMenuRef}>
               <button
                 type="button"
@@ -455,9 +454,7 @@ export function Nav() {
             </div>
           )}
 
-          {isLoading ? (
-            <div className="hidden h-10 w-28 animate-pulse rounded-lg bg-slate-100 md:block dark:bg-slate-800" />
-          ) : user ? (
+          {user ? (
             <div className="relative hidden md:block" ref={accountMenuRef}>
               <button
                 type="button"
@@ -638,7 +635,7 @@ export function Nav() {
             ))}
           </nav>
 
-          {!isLoading && user ? (
+          {user ? (
             <div className="pt-4">
               <div className="flex items-center gap-3">
                 <UserAvatar user={user} size="md" />
@@ -660,7 +657,7 @@ export function Nav() {
                 Sign out
               </button>
             </div>
-          ) : !isLoading ? (
+          ) : (
             <div className="grid grid-cols-2 gap-3 pt-4">
               <Link
                 href="/login"
@@ -675,7 +672,7 @@ export function Nav() {
                 Get started
               </Link>
             </div>
-          ) : null}
+          )}
         </div>
       )}
     </header>
