@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { apiRequest, configureApiClient } from "@/lib/apiClient";
+import { writeAuthUserSnapshot } from "@/lib/authUserSnapshot";
 
 export type UserRole = "candidate" | "recruiter" | "admin";
 
@@ -60,13 +61,20 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({
+  children,
+  initialUser = null,
+}: {
+  children: ReactNode;
+  initialUser?: AuthUser | null;
+}) {
   const tokenRef = useRef<string | null>(null);
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(initialUser);
   const [isLoading, setIsLoading] = useState(true);
 
   const clearSession = useCallback(() => {
     tokenRef.current = null;
+    writeAuthUserSnapshot(null);
     setUser(null);
   }, []);
 
@@ -99,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         const meResult = await apiRequest<AuthUser>("/auth/me");
         if (!cancelled) {
+          writeAuthUserSnapshot(meResult.data);
           setUser(meResult.data);
         }
       } catch {
@@ -127,6 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       skipAuth: true,
     });
     tokenRef.current = result.data.accessToken;
+    writeAuthUserSnapshot(result.data.user);
     setUser(result.data.user);
     return result.data.user;
   }, []);
@@ -163,6 +173,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: { currentPassword, newPassword },
       });
       tokenRef.current = result.data.accessToken;
+      writeAuthUserSnapshot(result.data.user);
       setUser(result.data.user);
     },
     [],
@@ -181,7 +192,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const updateUser = useCallback(
     (patch: Pick<AuthUser, "fullName" | "avatarUrl">) => {
-      setUser((current) => (current ? { ...current, ...patch } : current));
+      setUser((current) => {
+        if (!current) return current;
+        const nextUser = { ...current, ...patch };
+        writeAuthUserSnapshot(nextUser);
+        return nextUser;
+      });
     },
     [],
   );
