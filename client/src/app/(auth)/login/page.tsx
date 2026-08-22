@@ -21,7 +21,7 @@ function safeReturnPath(fallback: string): string {
     : fallback;
 }
 
-function LoginContent() {
+function LoginPageContent() {
   const router = useRouter();
   const { user, isLoading, login } = useAuth();
   const [email, setEmail] = useState("");
@@ -165,7 +165,7 @@ function LoginContent() {
 export default function LoginPage() {
   return (
     <Suspense fallback={null}>
-      <LoginContent />
+      <LoginPageContent />
     </Suspense>
   );
 }

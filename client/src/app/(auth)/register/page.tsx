@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
@@ -10,7 +10,7 @@ import { getErrorMessage, parseFieldErrors } from "@/lib/formErrors";
 
 type Role = "candidate" | "recruiter";
 
-export default function RegisterPage() {
+function RegisterPageContent() {
   const router = useRouter();
   const { user, isLoading, register } = useAuth();
   const [role, setRole] = useState<Role>("candidate");
@@ -72,17 +72,7 @@ export default function RegisterPage() {
   }
 
   if (isLoading || user) {
-    return (
-      <div
-        className="flex min-h-80 flex-1 items-center justify-center"
-        aria-live="polite"
-        aria-busy="true"
-      >
-        <span className="text-sm text-slate-500 dark:text-slate-400">
-          Checking your session...
-        </span>
-      </div>
-    );
+    return null;
   }
 
   return (
@@ -285,5 +275,13 @@ export default function RegisterPage() {
         </Link>
       </p>
     </AuthShell>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={null}>
+      <RegisterPageContent />
+    </Suspense>
   );
 }
