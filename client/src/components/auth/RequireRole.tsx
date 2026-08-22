@@ -3,6 +3,10 @@
 import { useEffect, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth, type UserRole } from "@/context/AuthContext";
+import CandidateDashboardSkeleton from "@/components/ui/skeletons/CandidateDashboardSkeleton";
+import CandidateProfileSkeleton from "@/components/ui/skeletons/CandidateProfileSkeleton";
+import RecruiterDashboardSkeleton from "@/components/ui/skeletons/RecruiterDashboardSkeleton";
+import RecruiterProfileSkeleton from "@/components/ui/skeletons/RecruiterProfileSkeleton";
 
 interface RequireRoleProps {
   allowedRoles: UserRole[];
@@ -27,16 +31,37 @@ export function RequireRole({ allowedRoles, children }: RequireRoleProps) {
   }, [isAllowed, isLoading, pathname, router, user]);
 
   if (isLoading || !isAllowed) {
-    return (
-      <div
-        className="flex flex-1 items-center justify-center px-6 py-16 text-sm text-slate-500 dark:text-slate-400"
-        role="status"
-        aria-live="polite"
-      >
-        Checking access...
-      </div>
-    );
+    return <RolePageSkeleton pathname={pathname} />;
   }
 
   return children;
+}
+
+function RolePageSkeleton({ pathname }: { pathname: string }) {
+  if (pathname === "/candidate/dashboard") {
+    return <CandidateDashboardSkeleton />;
+  }
+
+  if (pathname === "/candidate/profile") {
+    return <CandidateProfileSkeleton />;
+  }
+
+  if (pathname === "/recruiter/dashboard") {
+    return <RecruiterDashboardSkeleton />;
+  }
+
+  if (pathname === "/recruiter/profile") {
+    return <RecruiterProfileSkeleton />;
+  }
+
+  return (
+    <div
+      className="flex flex-1 items-center justify-center px-6 py-16"
+      role="status"
+      aria-label="Loading page"
+      aria-live="polite"
+    >
+      <div className="h-8 w-48 animate-pulse rounded-md bg-slate-200 dark:bg-slate-800" />
+    </div>
+  );
 }
