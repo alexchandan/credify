@@ -40,10 +40,13 @@ export default function JobBoardSkeleton() {
 
 function JobGridSkeleton() {
   return (
-    <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-      {Array.from({ length: 6 }, (_, index) => (
-        <JobCardSkeleton key={index} />
-      ))}
+    <div>
+      <SkeletonText className="mt-2 w-24" />
+      <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 9 }, (_, index) => (
+          <JobCardSkeleton key={index} />
+        ))}
+      </div>
     </div>
   );
 }
