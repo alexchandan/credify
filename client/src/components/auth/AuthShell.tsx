@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import logo from "@/../public/logo.png";
-import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface AuthShellProps {
   title: string;
@@ -14,7 +13,6 @@ export function AuthShell({ title, description, children }: AuthShellProps) {
   return (
     <section className="mx-auto flex w-full max-w-md flex-1 items-center px-5 py-10 sm:px-6 sm:py-14">
       <div className="relative w-full rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8 dark:border-slate-800 dark:bg-slate-950">
-        <ThemeToggle className="absolute top-3 right-3" />
         <Link
           href="/"
           aria-label="Go to Credify home"

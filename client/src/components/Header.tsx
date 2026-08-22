@@ -23,6 +23,7 @@ import { useAuth, type AuthUser } from "@/context/AuthContext";
 import { apiRequest } from "@/lib/apiClient";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import type { DashboardNotification } from "@/types/dashboard";
+import { NotificationSkeleton } from "./ui/skeletons/NotificationSkeleton";
 
 interface NavItem {
   href: string;
@@ -402,9 +403,7 @@ export function Nav() {
                     ) : null}
                   </div>
                   {notificationsLoading ? (
-                    <div className="px-4 py-8 text-center text-sm text-slate-500">
-                      Loading notifications...
-                    </div>
+                    <NotificationSkeleton />
                   ) : notificationsError ? (
                     <p
                       role="alert"

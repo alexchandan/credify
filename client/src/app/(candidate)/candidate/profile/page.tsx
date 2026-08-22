@@ -28,7 +28,7 @@ import { apiRequest, ApiError } from "@/lib/apiClient";
 import { getErrorMessage } from "@/lib/formErrors";
 import { AccountSettingsSection } from "@/components/account/AccountSettingsSection";
 import { useAuth } from "@/context/AuthContext";
-import CandidateProfileSkeleton from "@/../src/components/ui/skeletons/CandidateProfileSkeletons";
+import CandidateProfileSkeleton from "@/components/ui/skeletons/CandidateProfileSkeleton";
 import {
   type CandidateProfile,
   type Education,

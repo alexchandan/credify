@@ -118,6 +118,9 @@ async function performRequest<T>(
  * Coalesces concurrent refresh attempts into a single in-flight request —
  * if 5 requests all hit an expired token at the same moment, this ensures
  * exactly ONE call to /auth/refresh happens, not 5.
+ *
+ * i.e. when several API requests realize at the same time that the access token has expired,
+ * they all share one refresh request instead of each sending their own refresh request.
  */
 let refreshPromise: Promise<string> | null = null;
 
