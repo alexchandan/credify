@@ -141,6 +141,7 @@ export function Nav() {
     [],
   );
   const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [notificationsLoaded, setNotificationsLoaded] = useState(false);
   const [notificationsError, setNotificationsError] = useState<string | null>(
     null,
   );
@@ -232,6 +233,7 @@ export function Nav() {
     let cancelled = false;
     async function loadNotifications() {
       setNotificationsLoading(true);
+      setNotificationsLoaded(false);
       setNotificationsError(null);
       try {
         const result = await apiRequest<DashboardNotification[]>(
@@ -247,7 +249,10 @@ export function Nav() {
           );
         }
       } finally {
-        if (!cancelled) setNotificationsLoading(false);
+        if (!cancelled) {
+          setNotificationsLoading(false);
+          setNotificationsLoaded(true);
+        }
       }
     }
     void loadNotifications();
@@ -282,6 +287,17 @@ export function Nav() {
     const query = searchQuery.trim();
     router.push(query ? `/jobs?q=${encodeURIComponent(query)}` : "/jobs");
     setIsMobileMenuOpen(false);
+  }
+
+  function toggleNotifications() {
+    const willOpen = !isNotificationsOpen;
+    if (willOpen) {
+      setNotificationsLoaded(false);
+      setNotificationsLoading(true);
+      setNotificationsError(null);
+      setNotifications([]);
+    }
+    setIsNotificationsOpen(willOpen);
   }
 
   async function handleLogout() {
@@ -355,7 +371,7 @@ export function Nav() {
             <div className="relative" ref={notificationMenuRef}>
               <button
                 type="button"
-                onClick={() => setIsNotificationsOpen((open) => !open)}
+                onClick={toggleNotifications}
                 aria-label={
                   unreadCount === null
                     ? "Open notifications"
@@ -402,21 +418,21 @@ export function Nav() {
                       </button>
                     ) : null}
                   </div>
-                  {notificationsLoading ? (
+                  {notificationsLoading || !notificationsLoaded ? (
                     <NotificationSkeleton />
                   ) : notificationsError ? (
                     <p
                       role="alert"
-                      className="px-4 py-8 text-center text-sm text-red-700 dark:text-red-300"
+                      className="flex min-h-72 items-center justify-center px-4 py-8 text-center text-sm text-red-700 dark:text-red-300"
                     >
                       {notificationsError}
                     </p>
                   ) : notifications.length === 0 ? (
-                    <p className="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
+                    <p className="flex min-h-72 items-center justify-center px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
                       No notifications yet.
                     </p>
                   ) : (
-                    <div className="max-h-80 divide-y divide-slate-100 overflow-y-auto dark:divide-slate-800">
+                    <div className="max-h-80 min-h-72 divide-y divide-slate-100 overflow-y-auto dark:divide-slate-800">
                       {notifications.map((notification) => (
                         <div
                           key={notification._id}

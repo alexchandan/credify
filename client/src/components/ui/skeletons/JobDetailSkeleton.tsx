@@ -9,7 +9,7 @@ export default function JobDetailSkeleton() {
       <div className="mx-auto max-w-5xl">
         <SkeletonText className="w-24" />
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-          <SkeletonCard className="min-h-[30rem] p-6 sm:p-8">
+          <SkeletonCard className="min-h-120 p-6 sm:p-8">
             <Skeleton className="h-14 w-14 rounded-xl" />
             <Skeleton className="mt-6 h-9 w-3/4 max-w-full" />
             <SkeletonText className="mt-3 w-2/5" />

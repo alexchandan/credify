@@ -16,7 +16,7 @@ export default function RecruiterProfileSkeleton() {
           <SkeletonCard className="h-64 p-5" />
           <div className="space-y-6">
             <SkeletonCard className="h-64 p-6" />
-            <SkeletonCard className="h-[34rem] p-6" />
+            <SkeletonCard className="h-136 p-6" />
             <SkeletonCard className="h-40 p-6" />
           </div>
         </div>

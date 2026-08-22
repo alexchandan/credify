@@ -25,8 +25,8 @@ export default function RecruiterDashboardSkeleton() {
         </div>
         <SkeletonCard className="mt-6 h-40" />
         <div className="mt-6 grid gap-6 lg:grid-cols-2">
-          <SkeletonCard className="h-[25rem]" />
-          <SkeletonCard className="h-[25rem]" />
+          <SkeletonCard className="h-100" />
+          <SkeletonCard className="h-100" />
         </div>
       </div>
     </main>

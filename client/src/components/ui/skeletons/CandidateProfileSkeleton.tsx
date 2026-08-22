@@ -7,7 +7,7 @@ export default function CandidateProfileSkeleton() {
         {/* Page heading */}
         <div className="mb-6 space-y-3">
           <div className={`h-3 w-28 rounded ${skeleton}`} />
-          <div className={`h-7 w-80 max-w-full rounded ${skeleton}`} />
+          <div className={`h-8 w-80 max-w-full rounded ${skeleton}`} />
           <div className={`h-3 w-96 max-w-full rounded ${skeleton}`} />
         </div>
 

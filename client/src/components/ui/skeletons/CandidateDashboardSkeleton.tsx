@@ -15,7 +15,7 @@ export default function CandidateDashboardSkeleton() {
           ))}
         </div>
         <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.65fr)_minmax(280px,0.75fr)]">
-          <SkeletonCard className="h-[26rem]" />
+          <SkeletonCard className="h-104" />
           <SkeletonCard className="h-72" />
         </div>
       </div>
