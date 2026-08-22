@@ -6,6 +6,7 @@ import { ArrowRight, RotateCcw } from "lucide-react";
 import { JobCard } from "@/components/jobs/JobCard";
 import { apiRequest } from "@/lib/apiClient";
 import { getErrorMessage } from "@/lib/formErrors";
+import { JobCardSkeleton } from "@/components/ui/skeletons/JobBoardSkeleton";
 import { addCompanyNames } from "@/lib/jobData";
 import type { Job, JobWithCompany } from "@/types/job";
 
@@ -61,10 +62,7 @@ export function FeaturedJobs() {
         {isLoading ? (
           <div className="mt-7 grid gap-5 sm:grid-cols-3">
             {Array.from({ length: 3 }, (_, index) => (
-              <div
-                key={index}
-                className="h-64 animate-pulse rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900"
-              />
+              <JobCardSkeleton key={index} />
             ))}
           </div>
         ) : error ? (

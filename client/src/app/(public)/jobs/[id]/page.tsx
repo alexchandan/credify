@@ -15,6 +15,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { apiRequest, ApiError } from "@/lib/apiClient";
 import { getErrorMessage } from "@/lib/formErrors";
+import JobDetailSkeleton from "@/components/ui/skeletons/JobDetailSkeleton";
 import { formatJobLabel, formatSalary } from "@/lib/jobData";
 import type { CompanySummary, Job } from "@/types/job";
 
@@ -85,12 +86,7 @@ export default function JobDetailPage() {
   }
 
   if (isLoading) {
-    return (
-      <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-12 sm:px-6">
-        <div className="h-8 w-64 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
-        <div className="mt-8 h-80 animate-pulse rounded-lg bg-slate-100 dark:bg-slate-800" />
-      </div>
-    );
+    return <JobDetailSkeleton />;
   }
 
   if (error || !job) {

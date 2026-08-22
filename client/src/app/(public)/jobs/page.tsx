@@ -7,6 +7,9 @@ import { JobCard } from "@/components/jobs/JobCard";
 import { apiRequest } from "@/lib/apiClient";
 import { addCompanyNames } from "@/lib/jobData";
 import { getErrorMessage } from "@/lib/formErrors";
+import JobBoardSkeleton, {
+  JobGridSkeleton,
+} from "@/components/ui/skeletons/JobBoardSkeleton";
 import type { Job, JobWithCompany } from "@/types/job";
 
 interface PaginationMeta {
@@ -16,19 +19,7 @@ interface PaginationMeta {
 }
 
 function JobsFallback() {
-  return (
-    <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-12 sm:px-6">
-      <div className="h-8 w-52 animate-pulse rounded bg-slate-100 dark:bg-slate-800" />
-      <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }, (_, index) => (
-          <div
-            key={index}
-            className="h-64 animate-pulse rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900"
-          />
-        ))}
-      </div>
-    </div>
-  );
+  return <JobBoardSkeleton />;
 }
 
 function JobBoard() {
@@ -212,14 +203,7 @@ function JobBoard() {
         )}
 
         {isLoading ? (
-          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }, (_, index) => (
-              <div
-                key={index}
-                className="h-64 animate-pulse rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950"
-              />
-            ))}
-          </div>
+          <JobGridSkeleton />
         ) : jobs.length > 0 ? (
           <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {jobs.map((job) => (

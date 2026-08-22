@@ -28,6 +28,7 @@ import { useAuth } from "@/context/AuthContext";
 import { apiRequest } from "@/lib/apiClient";
 import { addCompanyNames, formatJobLabel } from "@/lib/jobData";
 import { getErrorMessage } from "@/lib/formErrors";
+import CandidateDashboardSkeleton from "@/components/ui/skeletons/CandidateDashboardSkeleton";
 import type {
   ApplicationStatus,
   CandidateDashboard,
@@ -46,28 +47,6 @@ function formatDate(value: string): string {
 
 function firstName(fullName?: string): string {
   return fullName?.trim().split(/\s+/)[0] || "there";
-}
-
-function DashboardSkeleton() {
-  return (
-    <div className="flex-1 bg-slate-50 dark:bg-slate-900">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-        <div className="h-9 w-72 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
-        <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {Array.from({ length: 4 }, (_, index) => (
-            <div
-              key={index}
-              className="h-28 animate-pulse rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950"
-            />
-          ))}
-        </div>
-        <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1.65fr)_minmax(280px,0.75fr)]">
-          <div className="h-96 animate-pulse rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950" />
-          <div className="h-72 animate-pulse rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950" />
-        </div>
-      </div>
-    </div>
-  );
 }
 
 export default function CandidateDashboardPage() {
@@ -189,7 +168,7 @@ export default function CandidateDashboardPage() {
     }
   }
 
-  if (isLoading) return <DashboardSkeleton />;
+  if (isLoading) return <CandidateDashboardSkeleton />;
 
   if (error || !dashboard) {
     return (
