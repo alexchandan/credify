@@ -93,6 +93,7 @@ async function main(): Promise<void> {
   );
 
   await mongoose.disconnect();
+  logger.info("Database Disconnected Successfully!");
   process.exit(0);
 }
 
