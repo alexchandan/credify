@@ -154,7 +154,7 @@ jobSchema.index({ skillsRequired: 1 }); // multikey - skill-based filtering
 jobSchema.index({ location: 1 });
 jobSchema.index({ createdBy: 1 });
 jobSchema.index({ isDeleted: 1 });
-jobSchema.index({ title: "text", description: "text" }); // fallback text search before Atlas Search is introduced
+jobSchema.index({ title: "text", description: "text", skillsRequired: "text" }); // fallback text search before Atlas Search is introduced
 
 // check publishedAt modification
 jobSchema.pre("save", function (this: IJob) {

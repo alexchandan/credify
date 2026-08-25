@@ -44,11 +44,8 @@ function JobBoard() {
 
       const params = new URLSearchParams(queryString);
       params.set("limit", "9");
-      const hasSearchQuery = Boolean(params.get("q")?.trim());
-      const endpoint = hasSearchQuery ? "/search/jobs" : "/jobs";
-
       try {
-        const result = await apiRequest<Job[]>(`${endpoint}?${params}`, {
+        const result = await apiRequest<Job[]>(`/jobs?${params}`, {
           skipAuth: true,
           signal: controller.signal,
         });

@@ -17,7 +17,9 @@ function RegisterPageContent() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -48,14 +50,20 @@ function RegisterPageContent() {
     e.preventDefault();
     setFieldErrors({});
     setGeneralError(null);
-    setIsSubmitting(true);
 
+    if (password !== confirmPassword) {
+      setFieldErrors({ confirmPassword: "Passwords do not match" });
+      return;
+    }
+
+    setIsSubmitting(true);
     const normalizedEmail = email.trim().toLowerCase();
 
     try {
       await register({
         email: normalizedEmail,
         password,
+        confirmPassword,
         fullName: fullName.trim(),
         role,
       });
@@ -201,8 +209,19 @@ function RegisterPageContent() {
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => {
-                setPassword(e.target.value);
+                const nextPassword = e.target.value;
+                setPassword(nextPassword);
                 clearFieldError("password");
+                if (confirmPassword) {
+                  if (nextPassword === confirmPassword) {
+                    clearFieldError("confirmPassword");
+                  } else {
+                    setFieldErrors((current) => ({
+                      ...current,
+                      confirmPassword: "Passwords do not match",
+                    }));
+                  }
+                }
               }}
               placeholder="8-15 characters"
               autoComplete="new-password"
@@ -243,6 +262,72 @@ function RegisterPageContent() {
               className="mt-1.5 text-xs text-red-700 dark:text-red-300"
             >
               {fieldErrors.password}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label
+            htmlFor="register-confirm-password"
+            className="block text-sm font-medium text-slate-700 dark:text-slate-200"
+          >
+            Confirm password
+          </label>
+          <div className="relative mt-1.5">
+            <input
+              id="register-confirm-password"
+              name="confirm-password"
+              type={showConfirmPassword ? "text" : "password"}
+              value={confirmPassword}
+              onChange={(e) => {
+                const nextConfirmPassword = e.target.value;
+                setConfirmPassword(nextConfirmPassword);
+                if (nextConfirmPassword && nextConfirmPassword !== password) {
+                  setFieldErrors((current) => ({
+                    ...current,
+                    confirmPassword: "Passwords do not match",
+                  }));
+                } else {
+                  clearFieldError("confirmPassword");
+                }
+              }}
+              placeholder="Re-enter your password"
+              autoComplete="new-password"
+              required
+              minLength={8}
+              maxLength={15}
+              aria-invalid={Boolean(fieldErrors.confirmPassword)}
+              aria-describedby={
+                fieldErrors.confirmPassword
+                  ? "register-confirm-password-error"
+                  : undefined
+              }
+              className="w-full rounded-lg border border-slate-300 px-3 py-2.5 pr-11 text-sm text-slate-950 transition outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:border-slate-700 dark:text-white dark:focus:ring-orange-900/50"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword((visible) => !visible)}
+              aria-label={
+                showConfirmPassword
+                  ? "Hide confirmation password"
+                  : "Show confirmation password"
+              }
+              aria-pressed={showConfirmPassword}
+              className="absolute top-1/2 right-1.5 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            >
+              {showConfirmPassword ? (
+                <EyeOff className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <Eye className="h-4 w-4" aria-hidden="true" />
+              )}
+            </button>
+          </div>
+          {fieldErrors.confirmPassword && (
+            <p
+              id="register-confirm-password-error"
+              className="mt-1.5 text-xs text-red-700 dark:text-red-300"
+            >
+              {fieldErrors.confirmPassword}
             </p>
           )}
         </div>

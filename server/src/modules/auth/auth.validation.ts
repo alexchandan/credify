@@ -1,29 +1,37 @@
 import { z } from "zod";
 import { UserRole } from "../../models/user.model.js";
 
-export const registerSchema = z.object({
-  email: z.email({
-    error: "Invalid email address",
-  }),
-  password: z
-    .string()
-    .min(8, {
-      error: "Password must be at least 8 characters",
-    })
-    .max(15, {
-      error: "Password must be at most 15 characters",
+export const registerSchema = z
+  .object({
+    email: z.email({
+      error: "Invalid email address",
     }),
-  fullName: z
-    .string()
-    .trim()
-    .min(1, { error: "Full name is required" })
-    .max(150, {
-      error: "Full Name cannnot exceed 150 characters",
+    password: z
+      .string()
+      .min(8, {
+        error: "Password must be at least 8 characters",
+      })
+      .max(15, {
+        error: "Password must be at most 15 characters",
+      }),
+    confirmPassword: z.string().min(1, {
+      error: "Confirm password is required",
     }),
-  role: z.enum([UserRole.CANDIDATE, UserRole.RECRUITER] as const, {
-    error: "Role must be either candidate or recruiter",
-  }),
-});
+    fullName: z
+      .string()
+      .trim()
+      .min(1, { error: "Full name is required" })
+      .max(150, {
+        error: "Full Name cannnot exceed 150 characters",
+      }),
+    role: z.enum([UserRole.CANDIDATE, UserRole.RECRUITER] as const, {
+      error: "Role must be either candidate or recruiter",
+    }),
+  })
+  .refine((input) => input.password === input.confirmPassword, {
+    path: ["confirmPassword"],
+    error: "Passwords do not match",
+  });
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 

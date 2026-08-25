@@ -51,6 +51,7 @@ export type UpdateJobInput = z.infer<typeof updateJobSchema>;
 export const jobListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(50).default(20),
+  q: z.string().trim().min(1).optional(),
   skill: z.string().trim().optional(),
   location: z.string().trim().optional(),
   employmentType: z
