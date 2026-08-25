@@ -72,6 +72,10 @@ export async function getJobById(
   return job;
 }
 
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 interface JobListResult {
   jobs: IJob[];
   page: number;
@@ -82,8 +86,8 @@ interface JobListResult {
 
 /**
  * Public job feed — published jobs only, newest first. Basic filtering
- * for now; full-text/fuzzy search is the dedicated Search module's job,
- * not this one (see the architecture doc's phase separation).
+ * including keyword, skill, and location filtering. Keeping these filters in
+ * one endpoint means they can be combined without depending on Atlas Search.
  */
 export async function listJobs(query: JobListQuery): Promise<JobListResult> {
   const filter: Record<string, unknown> = {
@@ -91,8 +95,16 @@ export async function listJobs(query: JobListQuery): Promise<JobListResult> {
     isDeleted: false,
   };
 
+  if (query.q) filter.$text = { $search: query.q };
   if (query.skill) filter.skillsRequired = query.skill.trim().toLowerCase();
-  if (query.location) filter.location = query.location.trim().toLowerCase();
+  if (query.location) {
+    const locationQuery = query.location.trim();
+    const locationPattern = new RegExp(escapeRegex(locationQuery), "i");
+    filter.$or = [
+      { location: locationPattern },
+      ...(locationQuery.toLowerCase() === "remote" ? [{ isRemote: true }] : []),
+    ];
+  }
   if (query.employmentType) filter.employmentType = query.employmentType;
   if (query.experienceLevel) filter.experienceLevel = query.experienceLevel;
   if (query.isRemote !== undefined) filter.isRemote = query.isRemote;
@@ -100,8 +112,12 @@ export async function listJobs(query: JobListQuery): Promise<JobListResult> {
 
   const skip = (query.page - 1) * query.limit;
 
+  const sort: Record<string, 1 | -1 | { $meta: "textScore" }> = query.q
+    ? { score: { $meta: "textScore" }, publishedAt: -1 }
+    : { publishedAt: -1 };
+
   const [jobs, totalCount] = await Promise.all([
-    Job.find(filter).sort({ publishedAt: -1 }).skip(skip).limit(query.limit),
+    Job.find(filter).sort(sort).skip(skip).limit(query.limit),
     Job.countDocuments(filter),
   ]);
 
