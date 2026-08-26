@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { useAuth } from "@/context/AuthContext";
@@ -12,8 +12,11 @@ type Role = "candidate" | "recruiter";
 
 function RegisterPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, isLoading, register } = useAuth();
-  const [role, setRole] = useState<Role>("candidate");
+  const [role, setRole] = useState<Role>(
+    searchParams.get("role") === "recruiter" ? "recruiter" : "candidate",
+  );
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
