@@ -63,7 +63,7 @@ function navItemsFor(user: AuthUser | null): NavItem[] {
 
   const items: NavItem[] = [{ href: "/jobs", label: "Browse jobs" }];
   if (!user) {
-    items.push({ href: "/register", label: "For employers" });
+    items.push({ href: "/register?role=recruiter", label: "For employers" });
   }
   return items;
 }
