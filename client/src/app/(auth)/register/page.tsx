@@ -28,6 +28,11 @@ function RegisterPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    if (role === "recruiter") {
+      router.replace("/register?role=recruiter");
+    } else {
+      router.replace("/register?role=candidate");
+    }
     if (!isLoading && user) {
       router.replace(
         user.role === "candidate"
@@ -38,7 +43,7 @@ function RegisterPageContent() {
       );
       return;
     }
-  }, [isLoading, router, user]);
+  }, [isLoading, router, user, role]);
 
   function clearFieldError(field: string) {
     setFieldErrors((current) => {
@@ -100,7 +105,13 @@ function RegisterPageContent() {
           type="button"
           role="radio"
           aria-checked={role === "candidate"}
-          onClick={() => setRole("candidate")}
+          // onClick={() => setRole("candidate")}
+
+          onClick={() => {
+            setRole("candidate");
+            router.replace("/register?role=candidate");
+          }}
+
           className={`rounded-md px-3 py-2.5 transition ${
             role === "candidate"
               ? "bg-orange-600 text-white"
@@ -113,7 +124,10 @@ function RegisterPageContent() {
           type="button"
           role="radio"
           aria-checked={role === "recruiter"}
-          onClick={() => setRole("recruiter")}
+          onClick={() => {
+            setRole("recruiter");
+            router.replace("/register?role=recruiter");
+          }}
           className={`rounded-md px-3 py-2.5 transition ${
             role === "recruiter"
               ? "bg-orange-600 text-white"
