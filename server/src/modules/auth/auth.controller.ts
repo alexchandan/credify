@@ -15,6 +15,7 @@ import type {
   ResendVerificationInput,
   ChangePasswordInput,
   DeleteAccountInput,
+  RecoverAccountInput,
 } from "./auth.validation.js";
 
 export async function register(req: Request, res: Response): Promise<void> {
@@ -142,8 +143,27 @@ export async function deleteAccount(
   res: Response,
 ): Promise<void> {
   const { password } = req.body as DeleteAccountInput;
-  await authService.deleteAccount(req.user!.userId, password);
+  const result = await authService.deleteAccount(req.user!.userId, password);
 
   res.clearCookie(REFRESH_COOKIE_NAME, refreshCookieOptions());
-  sendSuccess(res, { data: null, message: "Account deleted." });
+  sendSuccess(res, {
+    data: result,
+    message: `Your account has been deactivated. You have ${result.daysRemaining} days to recover it before permanent deletion.`,
+  });
+}
+
+// ---- Recover Soft-Deleted Account ----
+export async function recoverAccount(
+  req: Request,
+  res: Response,
+): Promise<void> {
+  const input = req.body as RecoverAccountInput;
+  const { accessToken, refreshToken, user } =
+    await authService.recoverAccount(input);
+
+  res.cookie(REFRESH_COOKIE_NAME, refreshToken, refreshCookieOptions());
+  sendSuccess(res, {
+    data: { accessToken, user },
+    message: "Account recovered successfully. Welcome back!",
+  });
 }

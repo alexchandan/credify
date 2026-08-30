@@ -79,7 +79,8 @@ function editableProfile(profile: CandidateProfile) {
 
 function validationMessage(error: unknown): string {
   if (error instanceof ApiError && error.details.length > 0) {
-    return error.details[0] ?? error.message;
+    const firstDetail = error.details[0];
+    if (typeof firstDetail === "string") return firstDetail;
   }
   return getErrorMessage(error);
 }

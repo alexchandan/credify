@@ -13,6 +13,7 @@ import {
   resendVerificationSchema,
   changePasswordSchema,
   deleteAccountSchema,
+  recoverAccountSchema,
 } from "./auth.validation.js";
 
 const router: Router = Router();
@@ -28,6 +29,13 @@ router.post(
   authRateLimiter,
   validate(loginSchema),
   catchAsync(authController.login),
+);
+
+router.post(
+  "/recover-account",
+  authRateLimiter,
+  validate(recoverAccountSchema),
+  catchAsync(authController.recoverAccount),
 );
 
 // No body to validate — the refresh token comes from the httpOnly cookie, not req.body.

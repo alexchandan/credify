@@ -2,6 +2,10 @@ import mongoose from "mongoose";
 import { app } from "./app.js";
 import { env } from "./config/env.js";
 import { logger } from "./utils/logger.js";
+import {
+  startAccountCleanupScheduler,
+  stopAccountCleanupScheduler,
+} from "./modules/auth/accountCleanup.service.js";
 import type { Server } from "node:http";
 
 let server: Server | undefined;
@@ -11,6 +15,9 @@ async function start(): Promise<void> {
     await mongoose.connect(env.mongodbUri);
 
     logger.info("Connected to MongoDB");
+
+    // Initialize 7-day soft-delete permanent cleanup scheduler
+    startAccountCleanupScheduler();
 
     server = app.listen(env.port, () => {
       logger.info(`Credify API listening on port ${env.port} [${env.nodeEnv}]`);
@@ -29,6 +36,7 @@ process.on("unhandledRejection", (reason: unknown) => {
 // Graceful Shutdown
 async function gracefulShutdown(signal: string): Promise<void> {
   logger.info(`Received ${signal}. Closing server...`);
+  stopAccountCleanupScheduler();
   try {
     if (!server) {
       await mongoose.connection.close();

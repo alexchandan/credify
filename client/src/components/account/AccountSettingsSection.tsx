@@ -125,7 +125,7 @@ function DeleteAccountForm() {
     setIsSubmitting(true);
     try {
       await deleteAccount(password);
-      router.replace("/");
+      router.replace("/login?deactivated=true");
     } catch (err) {
       setError(getErrorMessage(err));
       setIsSubmitting(false);
@@ -137,9 +137,11 @@ function DeleteAccountForm() {
       <h3 className="text-sm font-medium text-red-700 dark:text-red-300">
         Delete Account
       </h3>
-      <p className="text-sm text-slate-500 dark:text-slate-400">
-        This permanently deactivates your account and profile. This cannot be
-        undone from within the app.
+      <p className="text-sm text-slate-600 dark:text-slate-400">
+        Deleting your account will immediately deactivate your profile and log
+        you out. You will have a <strong>7-day grace period</strong> to change
+        your mind and recover your account. After 7 days, your account, profile,
+        and all associated data will be permanently and irreversibly deleted.
       </p>
       {!confirmOpen ? (
         <button
@@ -147,19 +149,26 @@ function DeleteAccountForm() {
           onClick={() => setConfirmOpen(true)}
           className="w-fit rounded-lg border border-red-300 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-950/50"
         >
-          Delete My Account
+          Deactivate / Delete My Account
         </button>
       ) : (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950/40">
-          <p className="text-sm font-medium text-red-800 dark:text-red-300">
-            Enter your password to confirm. This is permanent.
-          </p>
+          <div className="mb-2">
+            <p className="text-sm font-semibold text-red-900 dark:text-red-200">
+              Confirm Account Deletion
+            </p>
+            <p className="mt-1 text-xs text-red-700 dark:text-red-300">
+              Enter your password to deactivate your account. You can log in
+              within 7 days to recover it. After 7 days, it will be permanently
+              deleted.
+            </p>
+          </div>
           <input
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            placeholder="Your password"
-            className="mt-2 w-full rounded-lg border border-red-300 px-3 py-2.5 text-sm focus:outline-none dark:border-red-700"
+            placeholder="Enter your current password"
+            className="mt-2 w-full rounded-lg border border-red-300 px-3 py-2.5 text-sm focus:outline-none dark:border-red-700 dark:bg-slate-900"
           />
           {error && (
             <p className="mt-2 text-sm text-red-700 dark:text-red-300">
@@ -174,8 +183,8 @@ function DeleteAccountForm() {
               className="rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800 disabled:opacity-50"
             >
               {isSubmitting
-                ? "Deleting..."
-                : "Yes, permanently delete my account"}
+                ? "Deactivating..."
+                : "Yes, deactivate my account (7-day grace period)"}
             </button>
             <button
               type="button"
@@ -184,7 +193,7 @@ function DeleteAccountForm() {
                 setPassword("");
                 setError(null);
               }}
-              className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 dark:border-slate-700 dark:text-slate-300"
+              className="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-600 hover:bg-white dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-900"
             >
               Cancel
             </button>
