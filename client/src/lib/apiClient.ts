@@ -12,7 +12,7 @@ interface ApiErrorBody {
   error: {
     code: string;
     message: string;
-    details: string[];
+    details: unknown[];
   };
 }
 
@@ -26,13 +26,13 @@ type ApiBody<T> = ApiSuccessBody<T> | ApiErrorBody;
 export class ApiError extends Error {
   statusCode: number;
   code: string;
-  details: string[];
+  details: unknown[];
 
   constructor(
     statusCode: number,
     code: string,
     message: string,
-    details: string[] = [],
+    details: unknown[] = [],
   ) {
     super(message);
     this.name = "ApiError";

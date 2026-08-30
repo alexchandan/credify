@@ -95,3 +95,14 @@ export const deleteAccountSchema = z.object({
 });
 
 export type DeleteAccountInput = z.infer<typeof deleteAccountSchema>;
+
+export const recoverAccountSchema = z.object({
+  email: z.email({
+    error: "Invalid email address",
+  }),
+  password: z.string().min(1, {
+    error: "Password is required to recover account",
+  }),
+});
+
+export type RecoverAccountInput = z.infer<typeof recoverAccountSchema>;

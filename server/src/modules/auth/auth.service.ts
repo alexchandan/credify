@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { User, UserRole, type IUser } from "../../models/user.model.js";
 import { CandidateProfile } from "../../models/candidateProfile.model.js";
 import { RecruiterProfile } from "../../models/recruiterProfile.model.js";
+import { Company } from "../../models/company.model.js";
 import { AppError } from "../../utils/AppError.js";
 import { generateRawToken, hashToken } from "../../utils/hashToken.js";
 import { env } from "../../config/env.js";
@@ -12,6 +13,11 @@ import {
   signRefreshToken,
   verifyRefreshToken,
 } from "../../utils/tokenUtils.js";
+import {
+  RECOVERY_PERIOD_MS,
+  purgeSingleUser,
+} from "./accountCleanup.service.js";
+import type { RecoverAccountInput } from "./auth.validation.js";
 
 const EMAIL_VERIFICATION_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -85,13 +91,32 @@ async function getAuthUser(user: IUser): Promise<AuthUserResult> {
 export async function register(
   input: RegisterInput,
 ): Promise<{ userId: string }> {
-  const existing = await User.findOne({ email: input.email, deletedAt: null });
+  const existing = await User.findOne({ email: input.email });
   if (existing) {
-    throw new AppError(
-      409,
-      "USER_ALREADY_EXISTS",
-      "An account with this email already exists",
-    );
+    if (existing.deletedAt === null) {
+      throw new AppError(
+        409,
+        "USER_ALREADY_EXISTS",
+        "An account with this email already exists",
+      );
+    }
+
+    const elapsed = Date.now() - existing.deletedAt.getTime();
+    if (elapsed <= RECOVERY_PERIOD_MS) {
+      const daysRemaining = Math.max(
+        1,
+        Math.ceil((RECOVERY_PERIOD_MS - elapsed) / (1000 * 60 * 60 * 24)),
+      );
+      throw new AppError(
+        409,
+        "ACCOUNT_PENDING_DELETION",
+        `An account with this email is currently deactivated and scheduled for deletion in ${daysRemaining} day${daysRemaining === 1 ? "" : "s"}. You can recover your existing account instead of creating a new one.`,
+        [{ email: existing.email, daysRemaining }],
+      );
+    } else {
+      // 7-day grace period has passed; purge the old record so registration can proceed
+      await purgeSingleUser(existing._id);
+    }
   }
 
   const rawVerificationToken = generateRawToken();
@@ -144,7 +169,6 @@ export async function register(
 export async function login(input: LoginInput): Promise<LoginResult> {
   const user = await User.findOne({
     email: input.email,
-    deletedAt: null,
   }).select("+passwordHash");
 
   // Same generic error whether the user doesn't exist or the password is
@@ -164,6 +188,45 @@ export async function login(input: LoginInput): Promise<LoginResult> {
       401,
       "AUTH_INVALID_CREDENTIALS",
       "Invalid email or password",
+    );
+  }
+
+  // Check if account was soft-deleted
+  if (user.deletedAt !== null) {
+    const elapsed = Date.now() - user.deletedAt.getTime();
+    if (elapsed > RECOVERY_PERIOD_MS) {
+      // 7-day recovery period expired — purge lazily and reject login
+      void purgeSingleUser(user._id).catch(() => {});
+      throw new AppError(
+        401,
+        "AUTH_INVALID_CREDENTIALS",
+        "Invalid email or password",
+      );
+    }
+
+    const scheduledPermanentDeletion = new Date(
+      user.deletedAt.getTime() + RECOVERY_PERIOD_MS,
+    );
+    const daysRemaining = Math.max(
+      1,
+      Math.ceil(
+        (scheduledPermanentDeletion.getTime() - Date.now()) /
+          (1000 * 60 * 60 * 24),
+      ),
+    );
+
+    throw new AppError(
+      403,
+      "ACCOUNT_SCHEDULED_FOR_DELETION",
+      `Your account is deactivated and scheduled for permanent deletion on ${scheduledPermanentDeletion.toLocaleDateString()}. You have ${daysRemaining} day${daysRemaining === 1 ? "" : "s"} left to recover it.`,
+      [
+        {
+          email: user.email,
+          deletedAt: user.deletedAt.toISOString(),
+          scheduledPermanentDeletion: scheduledPermanentDeletion.toISOString(),
+          daysRemaining,
+        },
+      ],
     );
   }
 
@@ -399,11 +462,11 @@ export async function changePassword(
   };
 }
 
-// ---- Self serviced account deletion ----
+// ---- Self serviced account deletion (7-day soft delete) ----
 export async function deleteAccount(
   userId: string,
   password: string,
-): Promise<void> {
+): Promise<{ scheduledPermanentDeletion: Date; daysRemaining: number }> {
   const user = await User.findOne({ _id: userId, deletedAt: null }).select(
     "+passwordHash",
   );
@@ -417,28 +480,158 @@ export async function deleteAccount(
     throw new AppError(401, "AUTH_INVALID_CREDENTIALS", "Incorrect password");
   }
 
+  const deletionTimestamp = new Date();
   const session = await mongoose.startSession();
   try {
     await session.withTransaction(async () => {
-      user.deletedAt = new Date();
+      user.deletedAt = deletionTimestamp;
       user.tokenVersion += 1;
       await user.save({ session });
 
       if (user.role === UserRole.CANDIDATE) {
         await CandidateProfile.updateOne(
           { userId: user._id },
-          { deletedAt: new Date() },
+          { $set: { deletedAt: deletionTimestamp } },
           { session },
         );
       } else if (user.role === UserRole.RECRUITER) {
-        await RecruiterProfile.updateOne(
-          { userId: user._id },
-          { deletedAt: new Date() },
-          { session },
-        );
+        const recruiterProfile = await RecruiterProfile.findOne({
+          userId: user._id,
+        }).session(session);
+
+        if (recruiterProfile) {
+          recruiterProfile.deletedAt = deletionTimestamp;
+          await recruiterProfile.save({ session });
+
+          // If recruiter is owner of a company with no other active members, soft-delete company
+          if (recruiterProfile.companyId) {
+            const otherMembersCount = await RecruiterProfile.countDocuments({
+              companyId: recruiterProfile.companyId,
+              _id: { $ne: recruiterProfile._id },
+              deletedAt: null,
+            }).session(session);
+
+            if (otherMembersCount === 0) {
+              await Company.updateOne(
+                { _id: recruiterProfile.companyId },
+                { $set: { deletedAt: deletionTimestamp } },
+                { session },
+              );
+            }
+          }
+        }
       }
     });
   } finally {
     await session.endSession();
   }
+
+  const scheduledPermanentDeletion = new Date(
+    deletionTimestamp.getTime() + RECOVERY_PERIOD_MS,
+  );
+
+  return {
+    scheduledPermanentDeletion,
+    daysRemaining: 7,
+  };
+}
+
+// ---- Recover Soft-Deleted Account within 7 Days ----
+export async function recoverAccount(
+  input: RecoverAccountInput,
+): Promise<LoginResult> {
+  const user = await User.findOne({
+    email: input.email,
+  }).select("+passwordHash");
+
+  if (!user) {
+    throw new AppError(
+      401,
+      "AUTH_INVALID_CREDENTIALS",
+      "Invalid email or password",
+    );
+  }
+
+  const isPasswordValid = await user.comparePassword(input.password);
+  if (!isPasswordValid) {
+    throw new AppError(
+      401,
+      "AUTH_INVALID_CREDENTIALS",
+      "Invalid email or password",
+    );
+  }
+
+  if (user.deletedAt === null) {
+    throw new AppError(
+      400,
+      "ACCOUNT_ALREADY_ACTIVE",
+      "Your account is already active. Please sign in directly.",
+    );
+  }
+
+  const elapsed = Date.now() - user.deletedAt.getTime();
+  if (elapsed > RECOVERY_PERIOD_MS) {
+    void purgeSingleUser(user._id).catch(() => {});
+    throw new AppError(
+      410,
+      "ACCOUNT_DELETION_EXPIRED",
+      "The 7-day recovery grace period for this account has expired. The account has been permanently deleted.",
+    );
+  }
+
+  const session = await mongoose.startSession();
+  try {
+    await session.withTransaction(async () => {
+      user.deletedAt = null;
+      user.tokenVersion += 1;
+      await user.save({ session });
+
+      if (user.role === UserRole.CANDIDATE) {
+        await CandidateProfile.updateOne(
+          { userId: user._id },
+          { $set: { deletedAt: null } },
+          { session },
+        );
+      } else if (user.role === UserRole.RECRUITER) {
+        await RecruiterProfile.updateOne(
+          { userId: user._id },
+          { $set: { deletedAt: null } },
+          { session },
+        );
+
+        // If recruiter profile has a soft-deleted company that was created by them, restore it
+        const recruiterProfile = await RecruiterProfile.findOne({
+          userId: user._id,
+        }).session(session);
+
+        if (recruiterProfile?.companyId) {
+          await Company.updateOne(
+            {
+              _id: recruiterProfile.companyId,
+              createdBy: recruiterProfile._id,
+            },
+            { $set: { deletedAt: null } },
+            { session },
+          );
+        }
+      }
+    });
+  } finally {
+    await session.endSession();
+  }
+
+  const accessToken = signAccessToken({
+    userId: user._id.toString(),
+    role: user.role,
+  });
+  const refreshToken = signRefreshToken({
+    userId: user._id.toString(),
+    tokenVersion: user.tokenVersion,
+  });
+
+  return {
+    accessToken,
+    refreshToken,
+    user: await getAuthUser(user),
+  };
 }

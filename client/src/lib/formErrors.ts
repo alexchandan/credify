@@ -12,6 +12,7 @@ export function parseFieldErrors(err: unknown): Record<string, string> {
 
   const fieldErrors: Record<string, string> = {};
   for (const detail of err.details) {
+    if (typeof detail !== "string") continue;
     const separatorIndex = detail.indexOf(":");
     if (separatorIndex === -1) continue;
     const field = detail.slice(0, separatorIndex).trim();

@@ -57,6 +57,7 @@ interface AuthContextValue {
     newPassword: string,
   ) => Promise<void>;
   deleteAccount: (password: string) => Promise<void>;
+  recoverAccount: (email: string, password: string) => Promise<AuthUser>;
   updateUser: (patch: Pick<AuthUser, "fullName" | "avatarUrl">) => void;
 }
 
@@ -191,6 +192,21 @@ export function AuthProvider({
     [clearSession],
   );
 
+  const recoverAccount = useCallback(
+    async (email: string, password: string) => {
+      const result = await apiRequest<LoginResult>("/auth/recover-account", {
+        method: "POST",
+        body: { email, password },
+        skipAuth: true,
+      });
+      tokenRef.current = result.data.accessToken;
+      writeAuthUserSnapshot(result.data.user);
+      setUser(result.data.user);
+      return result.data.user;
+    },
+    [],
+  );
+
   const updateUser = useCallback(
     (patch: Pick<AuthUser, "fullName" | "avatarUrl">) => {
       setUser((current) => {
@@ -214,6 +230,7 @@ export function AuthProvider({
         logoutEverywhere,
         changePassword,
         deleteAccount,
+        recoverAccount,
         updateUser,
       }}
     >
