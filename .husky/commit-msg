@@ -93,4 +93,43 @@ fi
 # ---- Success ----
 
 echo "✅ Commit message looks good."
+
+# ---- Automatic semantic versioning ----
+
+if [ "${SKIP_AUTO_VERSION:-0}" = "1" ]; then
+    echo "⏭️  Automatic versioning skipped."
+    exit 0
+fi
+
+BUMP_TYPE=$(node scripts/increment-version.mjs detect "$1") || exit 1
+
+if [ "$BUMP_TYPE" = "none" ]; then
+    echo "ℹ️  This commit does not require a version bump."
+    exit 0
+fi
+
+if git diff --cached --unified=0 -- package.json | grep -Eq '^\+[[:space:]]*"version":'; then
+    echo "ℹ️  Using the manually staged project version."
+    exit 0
+fi
+
+PACKAGE_FILES="package.json client/package.json server/package.json"
+
+for file in $PACKAGE_FILES; do
+    if [ -f "$file" ] && ! git diff --quiet -- "$file"; then
+        echo "❌ Cannot automatically bump project version."
+        echo "Unstaged changes detected in $file. Stage or stash them, then try again."
+        exit 1
+    fi
+done
+
+node scripts/increment-version.mjs "$BUMP_TYPE"
+
+for file in $PACKAGE_FILES; do
+    if [ -f "$file" ]; then
+        git add "$file"
+    fi
+done
+
+echo "✅ Prepared and staged the $BUMP_TYPE version bump."
 exit 0
