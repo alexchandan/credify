@@ -153,7 +153,14 @@ export async function apiRequest<T>(
       !_isRetry;
 
     if (!shouldAttemptRefresh) {
-      if (err instanceof ApiError && err.statusCode === 401 && onUnauthorized) {
+      // Only treat session as expired/unauthorized if the bearer token is rejected on authenticated routes.
+      // Do NOT trigger onUnauthorized on login/register/recover forms or when user enters wrong password (AUTH_INVALID_CREDENTIALS).
+      const isSessionAuthFailure =
+        err instanceof ApiError &&
+        !options.skipAuth &&
+        (err.code === "AUTH_UNAUTHORIZED" || err.code === "AUTH_TOKEN_INVALID");
+
+      if (isSessionAuthFailure && onUnauthorized) {
         onUnauthorized();
       }
       throw err;

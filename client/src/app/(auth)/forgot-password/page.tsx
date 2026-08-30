@@ -1,13 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { ArrowLeft, Mail } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { API_BASE_URL as API_BASE } from "@/lib/apiBaseUrl";
 
-export default function ForgotPasswordPage() {
-  const [email, setEmail] = useState("");
+function ForgotPasswordContent() {
+  const searchParams = useSearchParams();
+  const initialEmail = searchParams.get("email") || "";
+
+  const [email, setEmail] = useState(initialEmail);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +47,7 @@ export default function ForgotPasswordPage() {
       title={submitted ? "Check your email" : "Reset your password"}
       description={
         submitted
-          ? "If an account with that email exists, we sent a password reset link."
+          ? "If an account with that email exists (active or within the 7-day recovery period), we sent a password reset link."
           : "Enter your account email and we will send you a secure reset link."
       }
     >
@@ -112,15 +116,25 @@ export default function ForgotPasswordPage() {
             </button>
           </form>
 
-          <Link
-            href="/login"
-            className="mt-6 flex items-center justify-center gap-1.5 text-sm font-semibold text-orange-700 hover:underline dark:text-orange-400"
-          >
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Back to sign in
-          </Link>
+          <div className="mt-6 text-center text-sm text-slate-600 dark:text-slate-300">
+            <Link
+              href="/login"
+              className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-orange-700 hover:underline dark:text-orange-400"
+            >
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+              Back to sign in
+            </Link>
+          </div>
         </>
       )}
     </AuthShell>
+  );
+}
+
+export default function ForgotPasswordPage() {
+  return (
+    <Suspense fallback={null}>
+      <ForgotPasswordContent />
+    </Suspense>
   );
 }

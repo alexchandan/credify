@@ -7,6 +7,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { useAuth } from "@/context/AuthContext";
 import { getErrorMessage, parseFieldErrors } from "@/lib/formErrors";
+import { ApiError } from "@/lib/apiClient";
 
 type Role = "candidate" | "recruiter";
 
@@ -79,6 +80,12 @@ function RegisterPageContent() {
         `/check-email?email=${encodeURIComponent(normalizedEmail)}`,
       );
     } catch (err) {
+      if (err instanceof ApiError && err.code === "ACCOUNT_PENDING_DELETION") {
+        router.push(
+          `/login?email=${encodeURIComponent(normalizedEmail)}&deactivated=true`,
+        );
+        return;
+      }
       const fields = parseFieldErrors(err);
       if (Object.keys(fields).length > 0) setFieldErrors(fields);
       else setGeneralError(getErrorMessage(err));

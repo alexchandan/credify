@@ -139,9 +139,9 @@ function DeleteAccountForm() {
       </h3>
       <p className="text-sm text-slate-600 dark:text-slate-400">
         Deleting your account will immediately deactivate your profile and log
-        you out. You will have a <strong>7-day grace period</strong> to change
-        your mind and recover your account. After 7 days, your account, profile,
-        and all associated data will be permanently and irreversibly deleted.
+        you out. You will have a <strong>7 days</strong> to recover your
+        account. After 7 days, your account, profile, and all associated data
+        will be deleted permanently.
       </p>
       {!confirmOpen ? (
         <button
@@ -158,8 +158,8 @@ function DeleteAccountForm() {
               Confirm Account Deletion
             </p>
             <p className="mt-1 text-xs text-red-700 dark:text-red-300">
-              Enter your password to deactivate your account. You can log in
-              within 7 days to recover it. After 7 days, it will be permanently
+              Enter your password to delete your account. You can log in within
+              7 days to recover it. After 7 days, it will be permanently
               deleted.
             </p>
           </div>
@@ -182,9 +182,7 @@ function DeleteAccountForm() {
               disabled={isSubmitting || !password}
               className="rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white hover:bg-red-800 disabled:opacity-50"
             >
-              {isSubmitting
-                ? "Deactivating..."
-                : "Yes, deactivate my account (7-day grace period)"}
+              {isSubmitting ? "Deleting..." : "Yes, delete my account"}
             </button>
             <button
               type="button"
