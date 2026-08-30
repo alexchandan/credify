@@ -91,7 +91,8 @@ async function getAuthUser(user: IUser): Promise<AuthUserResult> {
 export async function register(
   input: RegisterInput,
 ): Promise<{ userId: string }> {
-  const existing = await User.findOne({ email: input.email });
+  const normalizedEmail = input.email.trim().toLowerCase();
+  const existing = await User.findOne({ email: normalizedEmail });
   if (existing) {
     if (existing.deletedAt === null) {
       throw new AppError(
@@ -110,7 +111,7 @@ export async function register(
       throw new AppError(
         409,
         "ACCOUNT_PENDING_DELETION",
-        `An account with this email is currently deactivated and scheduled for deletion in ${daysRemaining} day${daysRemaining === 1 ? "" : "s"}. You can recover your existing account instead of creating a new one.`,
+        `This email belongs to an account currently in recovery period (${daysRemaining} day${daysRemaining === 1 ? "" : "s"} left). Please recover your account instead of creating a new one.`,
         [{ email: existing.email, daysRemaining }],
       );
     } else {
@@ -126,7 +127,7 @@ export async function register(
   try {
     await session.withTransaction(async () => {
       const user = new User({
-        email: input.email,
+        email: normalizedEmail,
         passwordHash: input.password, // hashed by User's pre('save') hook
         role: input.role,
         emailVerificationTokenHash: hashToken(rawVerificationToken),
@@ -357,11 +358,21 @@ export async function verifyEmail(rawToken: string): Promise<void> {
 
 // ---- Password reset through link send on email ----
 export async function forgotPassword(email: string): Promise<void> {
-  const user = await User.findOne({ email, deletedAt: null });
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await User.findOne({ email: normalizedEmail });
 
   // Deliberately silent if no match — to avoid email enumeration
   if (!user) {
     return;
+  }
+
+  // If user was soft-deleted, check if within 7-day grace period
+  if (user.deletedAt !== null) {
+    const elapsed = Date.now() - user.deletedAt.getTime();
+    if (elapsed > RECOVERY_PERIOD_MS) {
+      void purgeSingleUser(user._id).catch(() => {});
+      return;
+    }
   }
 
   const PASSWORD_RESET_TTL_MS = 30 * 60 * 1000; // 30 minutes — shorter than email verification, since a leaked reset link is more sensitive
@@ -373,7 +384,7 @@ export async function forgotPassword(email: string): Promise<void> {
 
   const resetUrl = `${env.clientOrigins[0]}/reset-password?token=${rawResetToken}`;
   await sendEmailSafely(() =>
-    emailService.sendPasswordResetEmail(email, resetUrl),
+    emailService.sendPasswordResetEmail(normalizedEmail, resetUrl),
   );
 }
 
@@ -381,7 +392,7 @@ export async function forgotPassword(email: string): Promise<void> {
 export async function resetPassword(
   rawToken: string,
   newPassword: string,
-): Promise<void> {
+): Promise<{ accountRecovered: boolean }> {
   const tokenHash = hashToken(rawToken);
 
   const user = await User.findOne({
@@ -397,11 +408,72 @@ export async function resetPassword(
     );
   }
 
-  user.passwordHash = newPassword; // rehashed by User's pre('save') hook
-  user.passwordResetTokenHash = undefined;
-  user.passwordResetTokenExpiry = undefined;
-  user.tokenVersion += 1; // password changed — invalidate every existing session
-  await user.save();
+  let accountRecovered = false;
+
+  if (user.deletedAt !== null) {
+    const elapsed = Date.now() - user.deletedAt.getTime();
+    if (elapsed > RECOVERY_PERIOD_MS) {
+      void purgeSingleUser(user._id).catch(() => {});
+      throw new AppError(
+        410,
+        "ACCOUNT_DELETION_EXPIRED",
+        "The 7-day recovery period for this account has expired. The account cannot be recovered.",
+      );
+    }
+
+    // Resetting password for an account in recovery grace period automatically restores the account
+    const session = await mongoose.startSession();
+    try {
+      await session.withTransaction(async () => {
+        user.deletedAt = null;
+        user.passwordHash = newPassword;
+        user.passwordResetTokenHash = undefined;
+        user.passwordResetTokenExpiry = undefined;
+        user.tokenVersion += 1;
+        await user.save({ session });
+
+        if (user.role === UserRole.CANDIDATE) {
+          await CandidateProfile.updateOne(
+            { userId: user._id },
+            { $set: { deletedAt: null } },
+            { session },
+          );
+        } else if (user.role === UserRole.RECRUITER) {
+          await RecruiterProfile.updateOne(
+            { userId: user._id },
+            { $set: { deletedAt: null } },
+            { session },
+          );
+
+          const recruiterProfile = await RecruiterProfile.findOne({
+            userId: user._id,
+          }).session(session);
+
+          if (recruiterProfile?.companyId) {
+            await Company.updateOne(
+              {
+                _id: recruiterProfile.companyId,
+                createdBy: recruiterProfile._id,
+              },
+              { $set: { deletedAt: null } },
+              { session },
+            );
+          }
+        }
+      });
+      accountRecovered = true;
+    } finally {
+      await session.endSession();
+    }
+  } else {
+    user.passwordHash = newPassword; // rehashed by User's pre('save') hook
+    user.passwordResetTokenHash = undefined;
+    user.passwordResetTokenExpiry = undefined;
+    user.tokenVersion += 1; // password changed — invalidate every existing session
+    await user.save();
+  }
+
+  return { accountRecovered };
 }
 
 /**

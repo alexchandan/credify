@@ -17,6 +17,7 @@ function ResetPasswordInner() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [accountRecovered, setAccountRecovered] = useState(false);
 
   async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -47,6 +48,7 @@ function ResetPasswordInner() {
         );
         return;
       }
+      setAccountRecovered(Boolean(json.data?.accountRecovered));
       setSuccess(true);
     } catch {
       setError("Could not reach the server. Please try again.");
@@ -58,8 +60,16 @@ function ResetPasswordInner() {
   if (success) {
     return (
       <AuthShell
-        title="Password reset"
-        description="Your new password is ready. You can now sign in."
+        title={
+          accountRecovered
+            ? "Account Recovered & Password Reset!"
+            : "Password reset"
+        }
+        description={
+          accountRecovered
+            ? "Your account has been reactivated and your new password is saved. You can now sign in."
+            : "Your new password is ready. You can now sign in."
+        }
       >
         <div className="mt-7 text-center" role="status">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">

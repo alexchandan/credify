@@ -37,7 +37,12 @@ interface DeletionDetails {
 function LoginPageContent() {
   const router = useRouter();
   const { user, isLoading, login, recoverAccount } = useAuth();
-  const [email, setEmail] = useState("");
+  const searchParams = useSearchParams();
+  const next = searchParams.get("next");
+  const isDeactivated = searchParams.get("deactivated") === "true";
+  const initialEmail = searchParams.get("email") || "";
+
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,10 +52,6 @@ function LoginPageContent() {
     null,
   );
   const [recoverySuccess, setRecoverySuccess] = useState(false);
-
-  const searchParams = useSearchParams();
-  const next = searchParams.get("next");
-  const isDeactivated = searchParams.get("deactivated") === "true";
 
   useEffect(() => {
     if (!isLoading && user) {
@@ -277,26 +278,15 @@ function LoginPageContent() {
         </button>
       </form>
 
-      <div className="mt-6 flex flex-col gap-2 text-center text-sm text-slate-600 dark:text-slate-300">
-        <p>
-          Don&apos;t have an account?{" "}
-          <Link
-            href="/register"
-            className="font-semibold text-orange-700 hover:underline dark:text-orange-400"
-          >
-            Create one
-          </Link>
-        </p>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          Deactivated your account within the last 7 days?{" "}
-          <Link
-            href="/recover-account"
-            className="font-medium text-emerald-700 hover:underline dark:text-emerald-400"
-          >
-            Recover account
-          </Link>
-        </p>
-      </div>
+      <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-300">
+        Don&apos;t have an account?{" "}
+        <Link
+          href="/register"
+          className="font-semibold text-orange-700 hover:underline dark:text-orange-400"
+        >
+          Create one
+        </Link>
+      </p>
     </AuthShell>
   );
 }
