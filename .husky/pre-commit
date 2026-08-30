@@ -4,6 +4,9 @@ set -e
 
 echo "🚀 Running pre-commit checks..."
 
+echo "🔖 Validating project version..."
+node scripts/increment-version.mjs check
+
 echo "📝 Linting & formatting staged files..."
 pnpm lint-staged || {
   echo ""
