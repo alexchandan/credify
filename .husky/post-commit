@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+
+set -e
+
+PENDING_VERSION_FILE=$(git rev-parse --git-path CREDIFY_AUTO_VERSION_PENDING)
+
+if [ ! -f "$PENDING_VERSION_FILE" ]; then
+    exit 0
+fi
+
+rm -f "$PENDING_VERSION_FILE"
+
+# Git captures the tree before commit-msg runs, so package.json changes staged in commit-msg
+# are amended into the commit automatically to keep it a single commit.
+git commit --amend --no-edit --no-verify >/dev/null 2>&1 || true

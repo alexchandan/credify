@@ -96,6 +96,9 @@ echo "✅ Commit message looks good."
 
 # ---- Automatic semantic versioning ----
 
+PENDING_VERSION_FILE=$(git rev-parse --git-path CREDIFY_AUTO_VERSION_PENDING)
+rm -f "$PENDING_VERSION_FILE"
+
 if [ "${SKIP_AUTO_VERSION:-0}" = "1" ]; then
     echo "⏭️  Automatic versioning skipped."
     exit 0
@@ -131,5 +134,6 @@ for file in $PACKAGE_FILES; do
     fi
 done
 
+printf "%s\n" "$BUMP_TYPE" > "$PENDING_VERSION_FILE"
 echo "✅ Prepared and staged the $BUMP_TYPE version bump."
 exit 0
