@@ -9,12 +9,12 @@ export function JobCard({ job }: { job: JobWithCompany }) {
     : job.location.join(", ") || "Location not specified";
 
   return (
-    <article className="flex h-full flex-col rounded-lg border border-slate-200 bg-white p-5 transition hover:border-orange-200 hover:shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:hover:border-orange-700">
+    <article className="group flex h-full flex-col rounded-xl border border-slate-200/90 bg-white p-5 transition-all hover:border-cyan-300 hover:shadow-lg hover:shadow-cyan-500/5 dark:border-white/10 dark:bg-slate-900 dark:hover:border-cyan-500/60 dark:hover:shadow-cyan-500/10">
       <div className="flex items-start justify-between gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-400">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-cyan-200/80 bg-cyan-50/90 text-cyan-700 shadow-xs dark:border-cyan-900/40 dark:bg-cyan-950/50 dark:text-cyan-400">
           <BriefcaseBusiness className="h-5 w-5" aria-hidden="true" />
         </span>
-        <span className="rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
+        <span className="rounded-full border border-emerald-300/60 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-950/40 dark:text-[#8ff0c1]">
           {formatJobLabel(job.employmentType)}
         </span>
       </div>
@@ -22,7 +22,7 @@ export function JobCard({ job }: { job: JobWithCompany }) {
       <h3 className="mt-4 text-base font-semibold text-slate-950 dark:text-white">
         <Link
           href={`/jobs/${job._id}`}
-          className="transition hover:text-orange-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500"
+          className="transition hover:text-cyan-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400 dark:hover:text-cyan-400"
         >
           {job.title}
         </Link>
@@ -53,10 +53,13 @@ export function JobCard({ job }: { job: JobWithCompany }) {
       <div className="mt-auto pt-5">
         <Link
           href={`/jobs/${job._id}`}
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-orange-700 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-cyan-700 transition group-hover:text-cyan-800 dark:text-cyan-400 dark:group-hover:text-cyan-300"
         >
           View job
-          <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+          <ArrowUpRight
+            className="h-4 w-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+            aria-hidden="true"
+          />
         </Link>
       </div>
     </article>

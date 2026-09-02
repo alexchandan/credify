@@ -44,7 +44,33 @@ export default async function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className="min-h-full bg-white text-slate-950 dark:bg-slate-950 dark:text-white">
+      <body className="relative min-h-full bg-white text-slate-950 selection:bg-cyan-400/40 selection:text-slate-950 dark:bg-slate-950 dark:text-[#f1f8fa]">
+        {/* Ambient Top Glow */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed top-0 left-1/2 -z-10 h-125 w-200 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-100 transition-opacity duration-500 dark:opacity-0"
+          style={{
+            background:
+              "radial-gradient(ellipse at center, rgba(6, 182, 212, 0.06) 0%, rgba(6, 182, 212, 0) 70%)",
+          }}
+        />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed top-0 left-1/2 -z-10 h-125 w-200 -translate-x-1/2 -translate-y-1/2 rounded-full opacity-0 transition-opacity duration-500 dark:opacity-100"
+          style={{
+            background:
+              "radial-gradient(ellipse at center, rgba(34, 211, 238, 0.13) 0%, rgba(34, 211, 238, 0) 70%)",
+          }}
+        />
+        {/* Ambient Bottom Glow */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed right-0 bottom-0 -z-10 h-150 w-150 rounded-full opacity-0 transition-opacity duration-500 dark:opacity-100"
+          style={{
+            background:
+              "radial-gradient(ellipse at center, rgba(52, 211, 153, 0.06) 0%, rgba(52, 211, 153, 0) 70%)",
+          }}
+        />
         <AuthProvider initialUser={initialUser}>{children}</AuthProvider>
       </body>
     </html>

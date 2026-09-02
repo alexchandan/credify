@@ -18,7 +18,7 @@ import {
   Check,
   LoaderCircle,
 } from "lucide-react";
-import logo from "@/../public/logo.png";
+import { Logo } from "@/components/Logo";
 import { useAuth, type AuthUser } from "@/context/AuthContext";
 import { apiRequest } from "@/lib/apiClient";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -86,9 +86,9 @@ function NavLink({
       href={item.href}
       onClick={onClick}
       aria-current={isActive ? "page" : undefined}
-      className={`text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-500 ${
+      className={`text-sm font-medium transition focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-indigo-500 ${
         isActive
-          ? "text-orange-700 dark:text-orange-400"
+          ? "font-semibold text-indigo-600 dark:text-indigo-400"
           : "text-slate-600 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white"
       }`}
     >
@@ -117,7 +117,7 @@ function UserAvatar({
     />
   ) : (
     <span
-      className={`flex ${dimensions} items-center justify-center rounded-full bg-orange-600 text-xs font-bold text-white`}
+      className={`flex ${dimensions} items-center justify-center rounded-full bg-linear-to-br from-cyan-500 to-cyan-700 text-xs font-bold text-slate-950 shadow-sm`}
       aria-hidden="true"
     >
       {initial}
@@ -313,22 +313,24 @@ export function Nav() {
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95">
+    <header className="sticky top-0 z-40 border-b border-slate-200/80 bg-white/95 backdrop-blur-md dark:border-white/10 dark:bg-slate-950/90">
       <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
         <Link
           href="/"
           onClick={() => setIsMobileMenuOpen(false)}
           aria-label="Credify home"
-          className="flex shrink-0 items-center gap-2 text-xl font-extrabold text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-orange-500 dark:text-white"
+          className="group flex shrink-0 items-center gap-2.5 text-xl font-extrabold tracking-tight text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-cyan-400 dark:text-white"
         >
-          <Image
-            src={logo}
-            alt=""
-            className="h-8 w-8 object-contain"
-            priority
+          <Logo
+            size={30}
+            className="transition-transform duration-300 group-hover:scale-105"
           />
           <span>
-            Cre<span className="text-orange-600">di</span>fy
+            Cre
+            <span className="bg-linear-to-r from-cyan-600 to-emerald-600 bg-clip-text text-transparent dark:from-[#22d3ee] dark:to-[#67e8f9]">
+              di
+            </span>
+            fy
           </span>
         </Link>
 
@@ -360,7 +362,7 @@ export function Nav() {
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder="Search jobs"
-              className="h-10 w-full rounded-lg border border-slate-300 bg-slate-50 pr-3 pl-9 text-sm text-slate-950 transition outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-100 dark:border-slate-700 dark:bg-slate-900 dark:text-white dark:focus:bg-slate-950 dark:focus:ring-orange-900/50"
+              className="h-10 w-full rounded-lg border border-slate-300/90 bg-slate-50 pr-3 pl-9 text-sm text-slate-950 transition outline-none focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-100 dark:border-slate-700/80 dark:bg-slate-900/80 dark:text-white dark:focus:bg-slate-950 dark:focus:ring-cyan-500/30"
             />
           </form>
 
@@ -381,11 +383,11 @@ export function Nav() {
                 aria-expanded={isNotificationsOpen}
                 aria-controls="notifications-menu"
                 title="Notifications"
-                className="relative flex h-10 w-10 items-center justify-center rounded-md text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
+                className="relative flex h-10 w-10 items-center justify-center rounded-md text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
               >
                 <Bell className="h-5 w-5" aria-hidden="true" />
                 {unreadCount !== null && unreadCount > 0 && (
-                  <span className="absolute top-0.5 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
+                  <span className="absolute top-0.5 right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow-sm">
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </span>
                 )}
@@ -395,7 +397,7 @@ export function Nav() {
                   id="notifications-menu"
                   role="region"
                   aria-label="Notifications"
-                  className="absolute right-0 z-50 mt-2 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-950"
+                  className="absolute right-0 z-50 mt-2 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-slate-200/80 bg-white/95 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/95"
                 >
                   <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
                     <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
@@ -406,7 +408,7 @@ export function Nav() {
                         type="button"
                         onClick={() => void markAllNotificationsRead()}
                         disabled={isMarkingNotificationsRead}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-orange-700 disabled:opacity-50 dark:text-orange-400"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 disabled:opacity-50 dark:text-indigo-400 dark:hover:text-indigo-300"
                       >
                         {isMarkingNotificationsRead ? (
                           <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
@@ -422,7 +424,7 @@ export function Nav() {
                   ) : notificationsError ? (
                     <p
                       role="alert"
-                      className="flex min-h-72 items-center justify-center px-4 py-8 text-center text-sm text-red-700 dark:text-red-300"
+                      className="flex min-h-72 items-center justify-center px-4 py-8 text-center text-sm text-rose-600 dark:text-rose-400"
                     >
                       {notificationsError}
                     </p>
@@ -435,7 +437,7 @@ export function Nav() {
                       {notifications.map((notification) => (
                         <div
                           key={notification._id}
-                          className={`px-4 py-3 ${notification.isRead ? "" : "bg-orange-50/60 dark:bg-orange-950/20"}`}
+                          className={`px-4 py-3 ${notification.isRead ? "" : "bg-indigo-50/70 dark:bg-indigo-950/30"}`}
                         >
                           <p
                             className={`text-sm leading-5 ${notification.isRead ? "text-slate-600 dark:text-slate-400" : "font-medium text-slate-900 dark:text-slate-100"}`}
@@ -462,7 +464,7 @@ export function Nav() {
                 aria-haspopup="true"
                 aria-expanded={isAccountMenuOpen}
                 aria-controls="account-menu"
-                className="flex h-10 items-center gap-2 rounded-lg px-1.5 text-slate-700 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500 dark:text-slate-200 dark:hover:bg-slate-800"
+                className="flex h-10 items-center gap-2 rounded-lg px-1.5 text-slate-700 transition hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:text-slate-200 dark:hover:bg-slate-800"
               >
                 <UserAvatar user={user} />
                 <ChevronDown
@@ -475,7 +477,7 @@ export function Nav() {
               {isAccountMenuOpen && (
                 <div
                   id="account-menu"
-                  className="absolute right-0 mt-2 w-60 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg dark:border-slate-800 dark:bg-slate-950"
+                  className="absolute right-0 mt-2 w-60 overflow-hidden rounded-xl border border-slate-200/80 bg-white/95 py-1 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/95"
                 >
                   <div className="border-b border-slate-100 px-4 py-3 dark:border-slate-800">
                     <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">
@@ -549,7 +551,7 @@ export function Nav() {
                   <button
                     type="button"
                     onClick={handleLogout}
-                    className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-red-700 hover:bg-red-50 dark:text-red-300 dark:hover:bg-red-950/50"
+                    className="flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/50"
                   >
                     <LogOut className="h-4 w-4" aria-hidden="true" />
                     Sign out
@@ -561,13 +563,13 @@ export function Nav() {
             <div className="hidden items-center gap-2 md:flex">
               <Link
                 href="/login"
-                className="inline-flex h-10 items-center justify-center rounded-lg border border-orange-600 px-4 text-sm font-semibold text-orange-700 transition hover:bg-orange-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500 dark:text-orange-400 dark:hover:bg-orange-950/40"
+                className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-300/80 px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 dark:hover:text-white"
               >
                 Sign in
               </Link>
               <Link
                 href="/register"
-                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-orange-600 px-4 text-sm font-semibold text-white transition hover:bg-orange-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500"
+                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-linear-to-r from-cyan-600 via-cyan-600 to-cyan-700 px-4 text-white shadow-sm shadow-cyan-600/20 transition hover:from-cyan-500 hover:to-cyan-600 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400 active:scale-[0.99] dark:from-cyan-500 dark:via-cyan-500 dark:to-cyan-600 dark:text-slate-950 dark:shadow-cyan-500/25 dark:hover:from-cyan-400 dark:hover:to-cyan-500"
               >
                 Get started
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -583,7 +585,7 @@ export function Nav() {
             }
             aria-expanded={isMobileMenuOpen}
             aria-controls="mobile-navigation"
-            className="flex h-10 w-10 items-center justify-center rounded-md text-slate-700 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500 md:hidden dark:text-slate-200 dark:hover:bg-slate-800"
+            className="flex h-10 w-10 items-center justify-center rounded-md text-slate-700 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 md:hidden dark:text-slate-200 dark:hover:bg-slate-800"
           >
             {isMobileMenuOpen ? (
               <X className="h-5 w-5" aria-hidden="true" />
@@ -617,7 +619,7 @@ export function Nav() {
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
               placeholder="Search jobs"
-              className="h-11 w-full rounded-lg border border-slate-300 bg-slate-50 pr-3 pl-9 text-sm outline-none focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-100 dark:border-slate-700 dark:bg-slate-900 dark:focus:bg-slate-950 dark:focus:ring-orange-900/50"
+              className="h-11 w-full rounded-lg border border-slate-300 bg-slate-50 pr-3 pl-9 text-sm outline-none focus:border-cyan-500 focus:bg-white focus:ring-2 focus:ring-cyan-100 dark:border-slate-700 dark:bg-slate-900 dark:focus:bg-slate-950 dark:focus:ring-cyan-500/30"
             />
           </form>
 
@@ -651,7 +653,7 @@ export function Nav() {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="mt-4 inline-flex h-10 items-center gap-2 rounded-lg border border-red-200 px-4 text-sm font-semibold text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/50"
+                className="mt-4 inline-flex h-10 items-center gap-2 rounded-lg border border-rose-200 px-4 text-sm font-semibold text-rose-600 hover:bg-rose-50 dark:border-rose-800/80 dark:text-rose-400 dark:hover:bg-rose-950/50"
               >
                 <LogOut className="h-4 w-4" aria-hidden="true" />
                 Sign out
@@ -661,13 +663,13 @@ export function Nav() {
             <div className="grid grid-cols-2 gap-3 pt-4">
               <Link
                 href="/login"
-                className="inline-flex h-11 items-center justify-center rounded-lg border border-orange-600 text-sm font-semibold text-orange-700 dark:text-orange-400"
+                className="inline-flex h-11 items-center justify-center rounded-lg border border-slate-300 text-sm font-semibold text-slate-700 dark:border-slate-700 dark:text-slate-200"
               >
                 Sign in
               </Link>
               <Link
                 href="/register"
-                className="inline-flex h-11 items-center justify-center rounded-lg bg-orange-600 text-sm font-semibold text-white"
+                className="inline-flex h-11 items-center justify-center rounded-lg bg-linear-to-r from-cyan-600 to-cyan-700 text-sm font-semibold text-white shadow-sm dark:from-cyan-500 dark:to-cyan-600 dark:text-slate-950"
               >
                 Get started
               </Link>

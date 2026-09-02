@@ -43,19 +43,22 @@ export function FeaturedJobs() {
       <div className="mx-auto max-w-5xl">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-emerald-700 dark:text-emerald-400">
+            <p className="text-xs font-bold tracking-wider text-cyan-600 uppercase dark:text-cyan-400">
               Recently published
             </p>
-            <h2 className="mt-1 text-2xl font-bold text-slate-950 dark:text-white">
+            <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950 dark:text-white">
               Featured jobs
             </h2>
           </div>
           <Link
             href="/jobs"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-orange-700 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300"
+            className="group inline-flex items-center gap-1.5 text-sm font-semibold text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300"
           >
             Browse all
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            <ArrowRight
+              className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+              aria-hidden="true"
+            />
           </Link>
         </div>
 
@@ -66,8 +69,8 @@ export function FeaturedJobs() {
             ))}
           </div>
         ) : error ? (
-          <div className="mt-7 rounded-lg border border-red-200 bg-red-50 px-5 py-6 dark:border-red-800 dark:bg-red-950/40">
-            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
+          <div className="mt-7 rounded-xl border border-rose-200 bg-rose-50/80 px-5 py-6 dark:border-rose-900/50 dark:bg-rose-950/40">
+            <p className="text-sm text-rose-700 dark:text-rose-300">{error}</p>
             <button
               type="button"
               onClick={() => {
@@ -75,15 +78,15 @@ export function FeaturedJobs() {
                 setIsLoading(true);
                 setLoadVersion((version) => version + 1);
               }}
-              className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-red-800 hover:underline dark:text-red-300"
+              className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-rose-800 hover:underline dark:text-rose-300"
             >
               <RotateCcw className="h-4 w-4" aria-hidden="true" />
               Try again
             </button>
           </div>
         ) : jobs.length === 0 ? (
-          <div className="mt-7 rounded-lg border border-slate-200 bg-slate-50 px-5 py-10 text-center dark:border-slate-800 dark:bg-slate-900">
-            <p className="text-sm text-slate-600 dark:text-slate-300">
+          <div className="mt-7 rounded-xl border border-slate-200/80 bg-slate-50/60 px-5 py-10 text-center dark:border-white/10 dark:bg-slate-900/50">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
               No published jobs are available right now.
             </p>
           </div>

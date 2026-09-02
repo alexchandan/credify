@@ -327,13 +327,13 @@ export default function CandidateProfilePage() {
   const strength = calculateProfileStrength(profile);
 
   return (
-    <div className="flex flex-1 flex-col bg-slate-50 dark:bg-slate-900">
+    <div className="flex flex-1 flex-col bg-slate-50/70 dark:bg-slate-950">
       <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 pb-28 sm:px-6">
-        <div className="border-b border-slate-200 pb-6 dark:border-slate-800">
-          <p className="text-sm font-semibold text-orange-700 dark:text-orange-400">
+        <div className="border-b border-slate-200/80 pb-6 dark:border-slate-800">
+          <p className="text-xs font-bold tracking-wider text-cyan-500 uppercase dark:text-cyan-400">
             Candidate profile
           </p>
-          <h1 className="mt-1 text-3xl font-bold text-slate-950 dark:text-white">
+          <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-950 dark:text-white">
             Build a profile recruiters can trust
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
@@ -344,7 +344,7 @@ export default function CandidateProfilePage() {
 
         <div className="mt-6 grid items-start gap-6 lg:grid-cols-[260px_minmax(0,1fr)]">
           <aside className="space-y-4 lg:sticky lg:top-24">
-            <section className="rounded-lg border border-slate-200 bg-white p-5 text-center dark:border-slate-800 dark:bg-slate-950">
+            <section className="rounded-xl border border-slate-200/90 bg-white p-5 text-center shadow-sm dark:border-white/10 dark:bg-slate-900">
               <div className="relative mx-auto h-28 w-28">
                 {profile.avatarUrl ? (
                   <Image
@@ -352,10 +352,10 @@ export default function CandidateProfilePage() {
                     alt={`${profile.fullName}'s profile photo`}
                     fill
                     sizes="112px"
-                    className="rounded-full object-cover ring-4 ring-orange-100 dark:ring-orange-950"
+                    className="rounded-full object-cover ring-4 ring-indigo-100 dark:ring-indigo-950/60"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center rounded-full bg-orange-100 text-3xl font-bold text-orange-700 ring-4 ring-orange-50 dark:bg-orange-950 dark:text-orange-300 dark:ring-orange-950/50">
+                  <div className="flex h-full w-full items-center justify-center rounded-full bg-linear-to-br from-indigo-600 to-violet-600 text-3xl font-bold text-white shadow-md ring-4 ring-indigo-100 dark:ring-indigo-950/60">
                     {profile.fullName[0]?.toUpperCase() ?? "U"}
                   </div>
                 )}
@@ -365,7 +365,7 @@ export default function CandidateProfilePage() {
                   disabled={isUploadingAvatar || isRemovingAvatar}
                   title="Change profile photo"
                   aria-label="Change profile photo"
-                  className="absolute right-0 bottom-0 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-orange-600 text-white shadow-sm hover:bg-orange-700 disabled:opacity-50 dark:border-slate-950"
+                  className="absolute right-0 bottom-0 flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-indigo-600 text-white shadow-sm transition hover:bg-indigo-700 disabled:opacity-50 dark:border-slate-950"
                 >
                   {isUploadingAvatar ? (
                     <LoaderCircle className="h-4 w-4 animate-spin" />
@@ -385,7 +385,7 @@ export default function CandidateProfilePage() {
                   type="button"
                   onClick={() => avatarInputRef.current?.click()}
                   disabled={isUploadingAvatar || isRemovingAvatar}
-                  className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-300 px-3 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-900"
+                  className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-300 px-3 text-xs font-semibold text-slate-700 transition hover:border-indigo-300 hover:text-indigo-600 disabled:opacity-50 dark:border-slate-700 dark:text-slate-200 dark:hover:border-indigo-600 dark:hover:text-indigo-400"
                 >
                   <Upload className="h-3.5 w-3.5" />
                   {profile.avatarUrl ? "Replace" : "Upload"}
@@ -397,7 +397,7 @@ export default function CandidateProfilePage() {
                     disabled={isUploadingAvatar || isRemovingAvatar}
                     title="Remove profile photo"
                     aria-label="Remove profile photo"
-                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/40"
+                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-900/50 dark:text-rose-400 dark:hover:bg-rose-950/40"
                   >
                     {isRemovingAvatar ? (
                       <LoaderCircle className="h-4 w-4 animate-spin" />
@@ -419,18 +419,18 @@ export default function CandidateProfilePage() {
               </p>
             </section>
 
-            <section className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
+            <section className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-slate-900">
               <div className="flex items-center justify-between text-sm">
                 <span className="font-semibold text-slate-900 dark:text-slate-100">
                   Profile strength
                 </span>
-                <span className="font-semibold text-orange-700 dark:text-orange-400">
+                <span className="font-bold text-indigo-600 dark:text-indigo-400">
                   {strength}%
                 </span>
               </div>
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                 <div
-                  className="h-full rounded-full bg-orange-600 transition-all"
+                  className="h-full rounded-full bg-linear-to-r from-indigo-600 to-violet-600 transition-all"
                   style={{ width: `${strength}%` }}
                 />
               </div>
@@ -459,7 +459,7 @@ export default function CandidateProfilePage() {
                 <a
                   key={href}
                   href={href}
-                  className="text-slate-500 hover:text-orange-700 dark:text-slate-400 dark:hover:text-orange-400"
+                  className="text-slate-500 transition hover:text-indigo-600 dark:text-slate-400 dark:hover:text-indigo-400"
                 >
                   {label}
                 </a>
@@ -552,9 +552,9 @@ export default function CandidateProfilePage() {
             {/* --- Resume --- */}
             <Card id="resume" icon={FileText} title="Application resume">
               {profile.resumeUrl ? (
-                <div className="flex flex-col gap-4 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800 dark:bg-slate-900">
+                <div className="flex flex-col gap-4 rounded-xl border border-slate-200/90 bg-slate-50/80 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-slate-800 dark:bg-slate-900/80">
                   <div className="flex min-w-0 items-center gap-3">
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-orange-700 dark:bg-slate-950 dark:text-orange-400">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-indigo-100/80 bg-indigo-50 text-indigo-600 shadow-sm dark:border-indigo-900/40 dark:bg-indigo-950/50 dark:text-indigo-400">
                       <FileText className="h-5 w-5" />
                     </span>
                     <div className="min-w-0">
@@ -562,7 +562,7 @@ export default function CandidateProfilePage() {
                         href={profile.resumeUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="truncate text-sm font-semibold text-slate-900 hover:underline dark:text-slate-100"
+                        className="truncate text-sm font-semibold text-slate-900 hover:text-indigo-600 hover:underline dark:text-slate-100 dark:hover:text-indigo-400"
                       >
                         Candidate resume.pdf
                       </a>
@@ -580,7 +580,7 @@ export default function CandidateProfilePage() {
                       rel="noopener noreferrer"
                       title="Open current resume"
                       aria-label="Open current resume"
-                      className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-slate-700 hover:bg-white dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                      className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-300 text-slate-700 transition hover:border-indigo-300 hover:text-indigo-600 dark:border-slate-700 dark:text-slate-200 dark:hover:border-indigo-600 dark:hover:text-indigo-400"
                     >
                       <ExternalLink className="h-4 w-4" />
                     </a>
@@ -588,7 +588,7 @@ export default function CandidateProfilePage() {
                       type="button"
                       onClick={() => resumeInputRef.current?.click()}
                       disabled={isUploadingResume || isRemovingResume}
-                      className="inline-flex h-9 items-center gap-2 rounded-lg bg-orange-600 px-3 text-xs font-semibold text-white hover:bg-orange-700 disabled:opacity-50"
+                      className="inline-flex h-9 items-center gap-2 rounded-lg bg-linear-to-r from-indigo-600 to-indigo-700 px-3 text-xs font-semibold text-white shadow-sm shadow-indigo-500/20 transition hover:from-indigo-500 hover:to-indigo-600 disabled:opacity-50"
                     >
                       {isUploadingResume ? (
                         <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
@@ -603,7 +603,7 @@ export default function CandidateProfilePage() {
                       disabled={isUploadingResume || isRemovingResume}
                       title="Remove resume"
                       aria-label="Remove resume"
-                      className="flex h-9 w-9 items-center justify-center rounded-lg border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950/40"
+                      className="flex h-9 w-9 items-center justify-center rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 disabled:opacity-50 dark:border-rose-900/50 dark:text-rose-400 dark:hover:bg-rose-950/40"
                     >
                       {isRemovingResume ? (
                         <LoaderCircle className="h-4 w-4 animate-spin" />
@@ -614,7 +614,7 @@ export default function CandidateProfilePage() {
                   </div>
                 </div>
               ) : (
-                <div className="flex flex-col items-start gap-3 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-5 sm:flex-row sm:items-center sm:justify-between dark:border-slate-700 dark:bg-slate-900">
+                <div className="flex flex-col items-start gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50/80 p-5 sm:flex-row sm:items-center sm:justify-between dark:border-slate-700 dark:bg-slate-900/80">
                   <div>
                     <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
                       Add your application resume
@@ -628,7 +628,7 @@ export default function CandidateProfilePage() {
                     type="button"
                     onClick={() => resumeInputRef.current?.click()}
                     disabled={isUploadingResume}
-                    className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-orange-600 px-4 text-xs font-semibold text-white hover:bg-orange-700 disabled:opacity-50"
+                    className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-linear-to-r from-indigo-600 to-indigo-700 px-4 text-xs font-semibold text-white shadow-sm shadow-indigo-500/20 transition hover:from-indigo-500 hover:to-indigo-600 active:scale-[0.99] disabled:opacity-50"
                   >
                     {isUploadingResume ? (
                       <LoaderCircle className="h-4 w-4 animate-spin" />
@@ -969,7 +969,7 @@ export default function CandidateProfilePage() {
             type="button"
             onClick={handleSave}
             disabled={isSaving || !isDirty}
-            className="flex h-10 shrink-0 items-center gap-2 rounded-lg bg-orange-600 px-5 text-sm font-semibold text-white transition hover:bg-orange-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-10 shrink-0 items-center gap-2 rounded-lg bg-linear-to-r from-indigo-600 via-indigo-600 to-violet-600 px-5 text-sm font-semibold text-white shadow-md shadow-indigo-500/25 transition hover:from-indigo-500 hover:to-violet-500 hover:shadow-lg active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {isSaving ? (
               <LoaderCircle className="h-4 w-4 animate-spin" />
@@ -1002,11 +1002,11 @@ function Card({
   return (
     <section
       id={id}
-      className="mb-4 scroll-mt-24 rounded-lg border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950"
+      className="mb-4 scroll-mt-24 rounded-xl border border-slate-200/90 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-slate-900"
     >
-      <div className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
+      <div className="mb-4 flex items-center gap-2.5 border-b border-slate-100 pb-3 dark:border-slate-800">
         <Icon
-          className="h-4 w-4 text-orange-700 dark:text-orange-400"
+          className="h-4 w-4 text-indigo-600 dark:text-indigo-400"
           strokeWidth={2}
         />
         <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
@@ -1034,7 +1034,7 @@ function TextField({
     <div>
       <label
         htmlFor={id}
-        className="block text-xs font-medium tracking-wide text-slate-500 uppercase dark:text-slate-400"
+        className="block text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400"
       >
         {label}
       </label>
@@ -1043,7 +1043,7 @@ function TextField({
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:border-orange-500 focus:outline-none dark:border-slate-700 dark:text-slate-100"
+        className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 transition outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 dark:border-slate-700 dark:text-slate-100 dark:focus:ring-indigo-900/50"
       />
     </div>
   );
@@ -1063,7 +1063,7 @@ function TextAreaField({
     <div>
       <label
         htmlFor={id}
-        className="block text-xs font-medium tracking-wide text-slate-500 uppercase dark:text-slate-400"
+        className="block text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400"
       >
         {label}
       </label>
@@ -1072,7 +1072,7 @@ function TextAreaField({
         value={value}
         rows={4}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-1 w-full resize-y rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:border-orange-500 focus:outline-none dark:border-slate-700 dark:text-slate-100"
+        className="mt-1.5 w-full resize-y rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 transition outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 dark:border-slate-700 dark:text-slate-100 dark:focus:ring-indigo-900/50"
       />
     </div>
   );
@@ -1092,7 +1092,7 @@ function DateField({
     <div>
       <label
         htmlFor={id}
-        className="block text-xs font-medium tracking-wide text-slate-500 uppercase dark:text-slate-400"
+        className="block text-xs font-semibold tracking-wider text-slate-500 uppercase dark:text-slate-400"
       >
         {label}
       </label>
@@ -1101,7 +1101,7 @@ function DateField({
         type="date"
         value={value ? value.slice(0, 10) : ""}
         onChange={(e) => onChange(e.target.value)}
-        className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 focus:border-orange-500 focus:outline-none dark:border-slate-700 dark:text-slate-100"
+        className="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-900 transition outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 dark:border-slate-700 dark:text-slate-100 dark:focus:ring-indigo-900/50"
       />
     </div>
   );
@@ -1130,7 +1130,7 @@ function SkillsEditor({
         {skills.map((skill) => (
           <span
             key={skill}
-            className="flex items-center gap-1.5 rounded-full bg-orange-50 px-3 py-1 text-xs font-medium text-orange-700 dark:bg-orange-950/40 dark:text-orange-400"
+            className="flex items-center gap-1.5 rounded-lg border border-indigo-100/80 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700 dark:border-indigo-900/40 dark:bg-indigo-950/50 dark:text-indigo-300"
           >
             {skill}
             <button
@@ -1138,7 +1138,7 @@ function SkillsEditor({
               onClick={() => onChange(skills.filter((s) => s !== skill))}
               aria-label={`Remove ${skill}`}
               title={`Remove ${skill}`}
-              className="text-orange-500 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300"
+              className="text-indigo-400 transition hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-200"
             >
               <X className="h-3 w-3" />
             </button>
@@ -1162,13 +1162,13 @@ function SkillsEditor({
             }
           }}
           placeholder="Type a skill and press enter..."
-          className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-orange-500 focus:outline-none dark:border-slate-700"
+          className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-2 text-sm transition outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 dark:border-slate-700 dark:text-white dark:focus:ring-indigo-900/50"
         />
         <button
           type="button"
           onClick={addSkill}
           disabled={!input.trim()}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-orange-50 px-4 py-2 text-xs font-semibold text-orange-700 hover:bg-orange-100 disabled:opacity-50 dark:bg-orange-950/40 dark:text-orange-400 dark:hover:bg-orange-900/60"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-indigo-50 px-4 py-2 text-xs font-semibold text-indigo-700 transition hover:bg-indigo-100 disabled:opacity-50 dark:bg-indigo-950/40 dark:text-indigo-400 dark:hover:bg-indigo-900/60"
         >
           <Plus className="h-3.5 w-3.5" />
           Add
@@ -1221,14 +1221,14 @@ function ListEditor<T extends object>({
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-800">
+    <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
       <button
         type="button"
         onClick={() => setIsOpen((v) => !v)}
-        className="flex w-full items-center justify-between bg-slate-50 px-4 py-3 text-left dark:bg-slate-900"
+        className="flex w-full items-center justify-between bg-slate-50 px-4 py-3 text-left transition hover:bg-slate-100/70 dark:bg-slate-900 dark:hover:bg-slate-800/60"
       >
         <span className="flex items-center gap-2 font-medium text-slate-900 dark:text-slate-100">
-          <Icon className="h-4 w-4 text-orange-700 dark:text-orange-400" />
+          <Icon className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
           {title}
           <span className="text-xs font-normal text-slate-400 dark:text-slate-500">
             ({items.length})
@@ -1244,9 +1244,9 @@ function ListEditor<T extends object>({
           {items.map((item, index) => (
             <details
               key={index}
-              className="rounded-lg border border-slate-200 p-3 dark:border-slate-800"
+              className="rounded-xl border border-slate-200 p-3 dark:border-slate-800"
             >
-              <summary className="flex cursor-pointer items-center justify-between gap-3 text-sm text-slate-700 dark:text-slate-200">
+              <summary className="flex cursor-pointer items-center justify-between gap-3 text-sm font-medium text-slate-700 dark:text-slate-200">
                 <span className="min-w-0 truncate">{renderSummary(item)}</span>
                 <button
                   type="button"
@@ -1256,7 +1256,7 @@ function ListEditor<T extends object>({
                   }}
                   aria-label={`Remove ${renderSummary(item)}`}
                   title={`Remove ${renderSummary(item)}`}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/40"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -1268,7 +1268,7 @@ function ListEditor<T extends object>({
           ))}
 
           {isAdding ? (
-            <div className="rounded-lg border border-dashed border-slate-300 p-3 dark:border-slate-700">
+            <div className="rounded-xl border border-dashed border-slate-300 p-3 dark:border-slate-700">
               <div className="flex flex-col gap-2">
                 {renderFields(draft, (patch) =>
                   setDraft({ ...draft, ...patch }),
@@ -1279,7 +1279,7 @@ function ListEditor<T extends object>({
                   type="button"
                   onClick={addDraft}
                   disabled={!isDraftValid(draft)}
-                  className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-orange-600 px-3 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-linear-to-r from-indigo-600 to-indigo-700 px-3 text-xs font-semibold text-white shadow-sm shadow-indigo-500/20 transition hover:from-indigo-500 hover:to-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Plus className="h-3.5 w-3.5" />
                   Add
@@ -1300,7 +1300,7 @@ function ListEditor<T extends object>({
             <button
               type="button"
               onClick={() => setIsAdding(true)}
-              className="inline-flex items-center gap-1.5 text-left text-sm font-semibold text-orange-700 hover:text-orange-800 dark:text-orange-400 dark:hover:text-orange-300"
+              className="inline-flex items-center gap-1.5 text-left text-sm font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
             >
               <Plus className="h-4 w-4" />
               Add {title.toLowerCase()}

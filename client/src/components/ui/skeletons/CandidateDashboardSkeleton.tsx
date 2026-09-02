@@ -2,7 +2,7 @@ import { Skeleton, SkeletonCard, SkeletonText } from "./Skeleton";
 
 export default function CandidateDashboardSkeleton() {
   return (
-    <main className="flex-1 bg-slate-50 dark:bg-slate-900" aria-busy="true">
+    <main className="flex-1 bg-slate-50 dark:bg-slate-950" aria-busy="true">
       <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
         <div className="space-y-3 border-b border-slate-200 pb-7 dark:border-slate-800">
           <SkeletonText className="w-32" />

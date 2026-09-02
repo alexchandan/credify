@@ -20,8 +20,8 @@ function JobCardSkeleton() {
 
 export default function JobBoardSkeleton() {
   return (
-    <main className="flex-1 bg-slate-50 dark:bg-slate-900" aria-busy="true">
-      <section className="border-b border-slate-200 bg-white px-4 py-10 sm:px-6 dark:border-slate-800 dark:bg-slate-950">
+    <main className="flex-1 bg-slate-50 dark:bg-slate-950" aria-busy="true">
+      <section className="border-b border-slate-200 bg-white px-4 py-10 sm:px-6 dark:border-white/10 dark:bg-slate-950/60">
         <div className="mx-auto max-w-6xl space-y-3">
           <SkeletonText className="w-24" />
           <Skeleton className="h-9 w-80 max-w-full" />
