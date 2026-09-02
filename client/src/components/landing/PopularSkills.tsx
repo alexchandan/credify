@@ -18,26 +18,28 @@ const SKILLS = [
     label: "JavaScript",
     icon: Code2,
     accent:
-      "bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-400",
+      "bg-cyan-50 dark:bg-cyan-950/50 text-cyan-600 dark:text-cyan-400 border border-cyan-100 dark:border-cyan-900/40",
   },
   {
     skill: "sql",
     label: "SQL & Data",
     icon: Database,
-    accent: "bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300",
+    accent:
+      "bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border border-sky-100 dark:border-sky-900/40",
   },
   {
     skill: "figma",
     label: "Product Design",
     icon: Palette,
-    accent: "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300",
+    accent:
+      "bg-rose-50 dark:bg-rose-950/50 text-rose-700 dark:text-rose-300 border border-rose-100 dark:border-rose-900/40",
   },
   {
     skill: "aws",
     label: "Cloud & AWS",
     icon: Cloud,
     accent:
-      "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400",
+      "bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-[#38d996] border border-emerald-100 dark:border-emerald-900/40",
   },
 ];
 
@@ -79,12 +81,12 @@ export function PopularSkills() {
   }, []);
 
   return (
-    <section className="bg-slate-50 px-5 py-14 sm:px-6 dark:bg-slate-900">
+    <section className="bg-slate-50/80 px-5 py-14 sm:px-6 dark:bg-slate-950/60">
       <div className="mx-auto max-w-5xl">
-        <p className="text-sm font-semibold text-orange-700 dark:text-orange-400">
+        <p className="text-xs font-bold tracking-wider text-cyan-600 uppercase dark:text-cyan-400">
           Explore by skill
         </p>
-        <h2 className="mt-1 text-2xl font-bold text-slate-950 dark:text-white">
+        <h2 className="mt-1 text-2xl font-bold tracking-tight text-slate-950 dark:text-white">
           Popular job categories
         </h2>
 
@@ -95,14 +97,14 @@ export function PopularSkills() {
               <Link
                 key={skill}
                 href={`/jobs?skill=${encodeURIComponent(skill)}`}
-                className="flex min-h-44 flex-col items-center justify-center rounded-lg border border-slate-200 bg-white p-4 text-center transition hover:border-orange-300 hover:shadow-sm sm:p-6 dark:border-slate-800 dark:bg-slate-950 dark:hover:border-orange-600"
+                className="group flex min-h-44 flex-col items-center justify-center rounded-xl border border-slate-200/90 bg-white p-4 text-center transition-all hover:border-cyan-300 hover:shadow-md hover:shadow-cyan-500/5 sm:p-6 dark:border-white/10 dark:bg-slate-900 dark:hover:border-cyan-500/60 dark:hover:shadow-cyan-500/10"
               >
                 <div
-                  className={`flex h-12 w-12 items-center justify-center rounded-lg ${accent}`}
+                  className={`flex h-12 w-12 items-center justify-center rounded-xl transition-transform group-hover:scale-105 ${accent}`}
                 >
                   <Icon className="h-6 w-6" strokeWidth={2} />
                 </div>
-                <h3 className="mt-3 text-base font-semibold text-slate-900 dark:text-slate-100">
+                <h3 className="mt-3 text-base font-semibold text-slate-900 transition-colors group-hover:text-cyan-600 dark:text-slate-100 dark:group-hover:text-cyan-400">
                   {label}
                 </h3>
                 <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">

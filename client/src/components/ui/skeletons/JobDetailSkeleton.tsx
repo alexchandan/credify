@@ -3,7 +3,7 @@ import { Skeleton, SkeletonCard, SkeletonText } from "./Skeleton";
 export default function JobDetailSkeleton() {
   return (
     <main
-      className="flex-1 bg-slate-50 px-4 py-8 sm:px-6 sm:py-12 dark:bg-slate-900"
+      className="flex-1 bg-slate-50 px-4 py-8 sm:px-6 sm:py-12 dark:bg-slate-950"
       aria-busy="true"
     >
       <div className="mx-auto max-w-5xl">

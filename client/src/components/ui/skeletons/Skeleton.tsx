@@ -25,7 +25,7 @@ export function SkeletonCard({ className = "", children }: SkeletonCardProps) {
   return (
     <div
       aria-hidden="true"
-      className={`rounded-lg border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 ${className}`}
+      className={`rounded-lg border border-slate-200 bg-white dark:border-white/10 dark:bg-slate-900 ${className}`}
     >
       {children}
     </div>
