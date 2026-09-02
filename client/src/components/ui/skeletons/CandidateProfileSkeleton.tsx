@@ -2,7 +2,7 @@ export default function CandidateProfileSkeleton() {
   const skeleton = "animate-pulse bg-slate-200 dark:bg-slate-700/50";
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-[#151e31] dark:text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-white">
       <main className="mx-auto max-w-5xl px-4 pt-8 pb-24 lg:px-6">
         {/* Page heading */}
         <div className="mb-6 space-y-3">
@@ -16,7 +16,7 @@ export default function CandidateProfileSkeleton() {
             {/* Left sidebar */}
             <aside className="space-y-4">
               {/* Profile card */}
-              <div className="rounded-md border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-[#080f1e]">
+              <div className="rounded-md border border-slate-200 bg-white p-5 dark:border-slate-700 dark:bg-slate-900">
                 <div className="flex flex-col items-center">
                   <div className={`h-20 w-20 rounded-full ${skeleton}`} />
 
@@ -30,7 +30,7 @@ export default function CandidateProfileSkeleton() {
               </div>
 
               {/* Profile strength */}
-              <div className="rounded-md border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-[#080f1e]">
+              <div className="rounded-md border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
                 <div className="flex items-center justify-between">
                   <div className={`h-3 w-24 rounded ${skeleton}`} />
                   <div className={`h-3 w-8 rounded ${skeleton}`} />
@@ -57,7 +57,7 @@ export default function CandidateProfileSkeleton() {
             {/* Main content */}
             <div className="space-y-4">
               {/* Basic Information */}
-              <section className="rounded-md border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-[#080f1e]">
+              <section className="rounded-md border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
                 <div className="flex items-center gap-2 border-b border-slate-200 pb-3 dark:border-slate-700">
                   <div className={`h-4 w-4 rounded ${skeleton}`} />
                   <div className={`h-3 w-28 rounded ${skeleton}`} />
@@ -74,7 +74,7 @@ export default function CandidateProfileSkeleton() {
               </section>
 
               {/* Account */}
-              <section className="rounded-md border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-[#080f1e]">
+              <section className="rounded-md border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
                 <div className="flex items-center gap-2 border-b border-slate-200 pb-3 dark:border-slate-700">
                   <div className={`h-4 w-4 rounded ${skeleton}`} />
                   <div className={`h-3 w-20 rounded ${skeleton}`} />
@@ -88,7 +88,7 @@ export default function CandidateProfileSkeleton() {
               </section>
 
               {/* Skills */}
-              <section className="rounded-md border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-[#080f1e]">
+              <section className="rounded-md border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
                 <div className="flex items-center gap-2 border-b border-slate-200 pb-3 dark:border-slate-700">
                   <div className={`h-4 w-4 rounded ${skeleton}`} />
                   <div className={`h-3 w-16 rounded ${skeleton}`} />
@@ -103,7 +103,7 @@ export default function CandidateProfileSkeleton() {
               </section>
 
               {/* Resume */}
-              <section className="rounded-md border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-[#080f1e]">
+              <section className="rounded-md border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
                 <div className="flex items-center gap-2 border-b border-slate-200 pb-3 dark:border-slate-700">
                   <div className={`h-4 w-4 rounded ${skeleton}`} />
                   <div className={`h-3 w-32 rounded ${skeleton}`} />
@@ -124,7 +124,7 @@ export default function CandidateProfileSkeleton() {
               </section>
 
               {/* Experience & Education */}
-              <section className="rounded-md border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-[#080f1e]">
+              <section className="rounded-md border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
                 <div className="flex items-center gap-2 border-b border-slate-200 pb-3 dark:border-slate-700">
                   <div className={`h-4 w-4 rounded ${skeleton}`} />
                   <div className={`h-3 w-40 rounded ${skeleton}`} />
@@ -137,7 +137,7 @@ export default function CandidateProfileSkeleton() {
               </section>
 
               {/* Professional Links */}
-              <section className="rounded-md border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-[#080f1e]">
+              <section className="rounded-md border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-900">
                 <div className="flex items-center gap-2 border-b border-slate-200 pb-3 dark:border-slate-700">
                   <div className={`h-4 w-4 rounded ${skeleton}`} />
                   <div className={`h-3 w-32 rounded ${skeleton}`} />
@@ -158,7 +158,7 @@ export default function CandidateProfileSkeleton() {
       </main>
 
       {/* Bottom action bar */}
-      <div className="fixed inset-x-0 bottom-0 border-t border-slate-200 bg-white/95 backdrop-blur dark:border-slate-700 dark:bg-[#080f1e]/95">
+      <div className="fixed inset-x-0 bottom-0 border-t border-slate-200 bg-white/95 backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
         <div className="mx-auto flex max-w-5xl items-center justify-end gap-3 px-4 py-3 lg:px-6">
           <div className={`h-3 w-24 rounded ${skeleton}`} />
           <div className={`h-9 w-20 rounded-md ${skeleton}`} />

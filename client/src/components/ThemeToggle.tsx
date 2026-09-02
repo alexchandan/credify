@@ -36,7 +36,7 @@ export function ThemeToggle({ className = "" }: { className?: string }) {
       title="Toggle color theme"
       className={[
         "inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-slate-600 transition dark:text-slate-300",
-        "hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500 dark:hover:bg-slate-800 dark:hover:text-white",
+        "hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400 dark:hover:bg-slate-800 dark:hover:text-white",
         className,
       ].join(" ")}
     >

@@ -53,14 +53,17 @@ function ForgotPasswordContent() {
     >
       {submitted ? (
         <div className="mt-7 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-400">
-            <Mail className="h-5 w-5" aria-hidden="true" />
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-200/80 bg-cyan-50/90 text-cyan-700 shadow-xs dark:border-cyan-900/40 dark:bg-cyan-950/50 dark:text-cyan-400">
+            <Mail className="h-6 w-6" aria-hidden="true" />
           </div>
           <Link
             href="/login"
-            className="mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-orange-700 hover:underline dark:text-orange-400"
+            className="group mt-6 inline-flex items-center gap-1.5 text-sm font-semibold text-cyan-700 hover:text-cyan-800 hover:underline dark:text-cyan-400 dark:hover:text-cyan-300"
           >
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            <ArrowLeft
+              className="h-4 w-4 transition-transform group-hover:-translate-x-0.5"
+              aria-hidden="true"
+            />
             Back to sign in
           </Link>
         </div>
@@ -92,7 +95,7 @@ function ForgotPasswordContent() {
                   autoFocus
                   aria-invalid={Boolean(error)}
                   aria-describedby={error ? "forgot-password-error" : undefined}
-                  className="w-full rounded-lg border border-slate-300 py-2.5 pr-3 pl-10 text-sm text-slate-950 transition outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:border-slate-700 dark:text-white dark:focus:ring-orange-900/50"
+                  className="w-full rounded-lg border border-slate-300 py-2.5 pr-3 pl-10 text-sm text-slate-950 transition outline-none focus:border-cyan-600 focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-700 dark:text-white dark:focus:ring-cyan-500/30"
                 />
               </div>
             </div>
@@ -101,7 +104,7 @@ function ForgotPasswordContent() {
               <p
                 id="forgot-password-error"
                 role="alert"
-                className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300"
+                className="rounded-lg border border-rose-200 bg-rose-50/80 px-3 py-2 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300"
               >
                 {error}
               </p>
@@ -110,7 +113,7 @@ function ForgotPasswordContent() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex min-h-11 items-center justify-center rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex min-h-11 items-center justify-center rounded-lg bg-linear-to-r from-cyan-600 via-cyan-600 to-cyan-700 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-cyan-600/20 transition hover:from-cyan-500 hover:to-cyan-600 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 dark:from-cyan-500 dark:via-cyan-500 dark:to-cyan-600 dark:text-slate-950 dark:shadow-cyan-500/25 dark:hover:from-cyan-400 dark:hover:to-cyan-500"
             >
               {isSubmitting ? "Sending..." : "Send reset link"}
             </button>
@@ -119,9 +122,12 @@ function ForgotPasswordContent() {
           <div className="mt-6 text-center text-sm text-slate-600 dark:text-slate-300">
             <Link
               href="/login"
-              className="inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-orange-700 hover:underline dark:text-orange-400"
+              className="group inline-flex items-center justify-center gap-1.5 text-sm font-semibold text-cyan-700 hover:text-cyan-800 hover:underline dark:text-cyan-400 dark:hover:text-cyan-300"
             >
-              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+              <ArrowLeft
+                className="h-4 w-4 transition-transform group-hover:-translate-x-0.5"
+                aria-hidden="true"
+              />
               Back to sign in
             </Link>
           </div>

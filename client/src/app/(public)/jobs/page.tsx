@@ -94,13 +94,13 @@ function JobBoard() {
   }
 
   return (
-    <div className="flex-1 bg-slate-50 dark:bg-slate-900">
-      <section className="border-b border-slate-200 bg-white px-4 py-10 sm:px-6 dark:border-slate-800 dark:bg-slate-950">
+    <div className="flex-1 bg-slate-50/70 dark:bg-slate-950">
+      <section className="border-b border-slate-200/80 bg-white px-4 py-10 sm:px-6 dark:border-white/10 dark:bg-slate-950/60">
         <div className="mx-auto max-w-6xl">
-          <p className="text-sm font-semibold text-orange-700 dark:text-orange-400">
+          <p className="text-xs font-bold tracking-wider text-cyan-600 uppercase dark:text-cyan-400">
             Job board
           </p>
-          <h1 className="mt-1 text-3xl font-bold text-slate-950 dark:text-white">
+          <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-950 dark:text-white">
             Find your next opportunity
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 dark:text-slate-300">
@@ -111,7 +111,7 @@ function JobBoard() {
           <form
             key={queryString}
             onSubmit={submitFilters}
-            className="mt-7 grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_0.8fr_0.8fr_auto] dark:border-slate-800 dark:bg-slate-900"
+            className="mt-7 grid gap-3 rounded-xl border border-slate-200/90 bg-slate-50/80 p-4 sm:grid-cols-2 lg:grid-cols-[1.3fr_1fr_0.8fr_0.8fr_auto] dark:border-white/10 dark:bg-slate-900"
           >
             <label className="relative">
               <span className="sr-only">Keywords</span>
@@ -124,7 +124,7 @@ function JobBoard() {
                 name="q"
                 defaultValue={searchParams.get("q") ?? ""}
                 placeholder="Title, skill, or keyword"
-                className="h-11 w-full rounded-lg border border-slate-300 bg-white pr-3 pl-9 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:border-slate-700 dark:bg-slate-950 dark:focus:ring-orange-900/50"
+                className="h-11 w-full rounded-lg border border-slate-300/90 bg-white pr-3 pl-9 text-sm text-slate-950 transition outline-none focus:border-cyan-600 focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:ring-cyan-500/30"
               />
             </label>
             <label>
@@ -134,7 +134,7 @@ function JobBoard() {
                 name="location"
                 defaultValue={searchParams.get("location") ?? ""}
                 placeholder="Location"
-                className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:border-slate-700 dark:bg-slate-950 dark:focus:ring-orange-900/50"
+                className="h-11 w-full rounded-lg border border-slate-300/90 bg-white px-3 text-sm text-slate-950 transition outline-none focus:border-cyan-600 focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:focus:ring-cyan-500/30"
               />
             </label>
             <label>
@@ -142,7 +142,7 @@ function JobBoard() {
               <select
                 name="employmentType"
                 defaultValue={searchParams.get("employmentType") ?? ""}
-                className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:ring-orange-900/50"
+                className="h-11 w-full rounded-lg border border-slate-300/90 bg-white px-3 text-sm text-slate-800 transition outline-none focus:border-cyan-600 focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:ring-cyan-500/30"
               >
                 <option value="">All types</option>
                 <option value="full_time">Full time</option>
@@ -156,7 +156,7 @@ function JobBoard() {
               <select
                 name="experienceLevel"
                 defaultValue={searchParams.get("experienceLevel") ?? ""}
-                className="h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-700 outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:ring-orange-900/50"
+                className="h-11 w-full rounded-lg border border-slate-300/90 bg-white px-3 text-sm text-slate-800 transition outline-none focus:border-cyan-600 focus:ring-2 focus:ring-cyan-500/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:focus:ring-cyan-500/30"
               >
                 <option value="">All levels</option>
                 <option value="entry">Entry</option>
@@ -167,7 +167,7 @@ function JobBoard() {
             </label>
             <button
               type="submit"
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-orange-600 px-5 text-sm font-semibold text-white hover:bg-orange-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-linear-to-r from-cyan-600 via-cyan-600 to-cyan-700 px-5 text-sm font-semibold text-white shadow-sm shadow-cyan-600/20 transition hover:from-cyan-500 hover:to-cyan-600 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400 active:scale-[0.99] dark:from-cyan-500 dark:via-cyan-500 dark:to-cyan-600 dark:text-slate-950 dark:shadow-cyan-500/20 dark:hover:from-cyan-400 dark:hover:to-cyan-500"
             >
               <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
               Apply
@@ -193,7 +193,7 @@ function JobBoard() {
         {error && (
           <div
             role="alert"
-            className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300"
+            className="mt-6 rounded-xl border border-rose-200 bg-rose-50/80 px-4 py-3 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300"
           >
             {error}
           </div>
@@ -208,7 +208,7 @@ function JobBoard() {
             ))}
           </div>
         ) : !error ? (
-          <div className="mt-6 rounded-lg border border-slate-200 bg-white px-6 py-12 text-center dark:border-slate-800 dark:bg-slate-950">
+          <div className="mt-6 rounded-xl border border-slate-200/80 bg-white px-6 py-12 text-center dark:border-white/10 dark:bg-slate-900">
             <h3 className="font-semibold text-slate-900 dark:text-slate-100">
               No matching jobs
             </h3>
@@ -227,7 +227,7 @@ function JobBoard() {
               type="button"
               disabled={meta.page <= 1}
               onClick={() => changePage(meta.page - 1)}
-              className="h-10 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800"
+              className="h-10 rounded-lg border border-slate-300/80 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-cyan-300 hover:text-cyan-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-cyan-500/60 dark:hover:text-cyan-400"
             >
               Previous
             </button>
@@ -238,7 +238,7 @@ function JobBoard() {
               type="button"
               disabled={meta.page >= meta.totalPages}
               onClick={() => changePage(meta.page + 1)}
-              className="h-10 rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200 dark:hover:bg-slate-800"
+              className="h-10 rounded-lg border border-slate-300/80 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-cyan-300 hover:text-cyan-600 disabled:cursor-not-allowed disabled:opacity-40 dark:border-white/10 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-cyan-500/60 dark:hover:text-cyan-400"
             >
               Next
             </button>

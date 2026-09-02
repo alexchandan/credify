@@ -62,8 +62,8 @@ function VerifyEmailInner() {
         description="We are confirming your verification link."
       >
         <div className="mt-7 text-center" role="status" aria-live="polite">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-orange-50 text-orange-700 dark:bg-orange-950/40 dark:text-orange-400">
-            <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-100/80 bg-indigo-50 text-indigo-600 shadow-sm dark:border-indigo-900/40 dark:bg-indigo-950/50 dark:text-indigo-400">
+            <Loader2 className="h-6 w-6 animate-spin" aria-hidden="true" />
           </div>
           <p className="mt-4 text-sm text-slate-600 dark:text-slate-300">
             This will only take a moment.
@@ -80,12 +80,12 @@ function VerifyEmailInner() {
         description="Your account is ready. You can now sign in to Credify."
       >
         <div className="mt-7 text-center" role="status">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
-            <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-200/80 bg-emerald-50 text-emerald-600 shadow-sm dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-400">
+            <CheckCircle2 className="h-6 w-6" aria-hidden="true" />
           </div>
           <Link
             href="/login"
-            className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
+            className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-linear-to-r from-indigo-600 via-indigo-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-500/25 transition hover:from-indigo-500 hover:to-violet-500 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 active:scale-[0.99]"
           >
             Go to sign in
           </Link>
@@ -105,14 +105,14 @@ function VerifyEmailInner() {
       }
     >
       <div className="mt-7 text-center" role="alert">
-        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300">
-          <XCircle className="h-5 w-5" aria-hidden="true" />
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-rose-200/80 bg-rose-50 text-rose-600 shadow-sm dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-400">
+          <XCircle className="h-6 w-6" aria-hidden="true" />
         </div>
         <p className="mt-5 text-sm leading-6 text-slate-600 dark:text-slate-300">
           <span>Need a new link? </span>
           <Link
             href="/register"
-            className="font-semibold text-orange-700 hover:underline dark:text-orange-400"
+            className="font-semibold text-indigo-600 hover:text-indigo-700 hover:underline dark:text-indigo-400 dark:hover:text-indigo-300"
           >
             Register again
           </Link>
@@ -133,7 +133,7 @@ export default function VerifyEmailPage() {
         >
           <div className="mt-7 flex justify-center" role="status">
             <Loader2
-              className="h-5 w-5 animate-spin text-orange-700 dark:text-orange-400"
+              className="h-6 w-6 animate-spin text-indigo-600 dark:text-indigo-400"
               aria-label="Loading"
             />
           </div>

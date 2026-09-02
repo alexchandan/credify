@@ -72,12 +72,12 @@ function ResetPasswordInner() {
         }
       >
         <div className="mt-7 text-center" role="status">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400">
-            <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-200/80 bg-emerald-50 text-emerald-600 shadow-sm dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-400">
+            <CheckCircle2 className="h-6 w-6" aria-hidden="true" />
           </div>
           <Link
             href="/login"
-            className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600"
+            className="mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-lg bg-linear-to-r from-indigo-600 via-indigo-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-500/25 transition hover:from-indigo-500 hover:to-violet-500 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 active:scale-[0.99]"
           >
             Go to sign in
           </Link>
@@ -122,7 +122,7 @@ function ResetPasswordInner() {
           <p
             id="reset-password-error"
             role="alert"
-            className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300"
+            className="rounded-lg border border-rose-200 bg-rose-50/80 px-3 py-2 text-sm text-rose-700 dark:border-rose-900/50 dark:bg-rose-950/40 dark:text-rose-300"
           >
             {error}
           </p>
@@ -131,7 +131,7 @@ function ResetPasswordInner() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="inline-flex min-h-11 items-center justify-center rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex min-h-11 items-center justify-center rounded-lg bg-linear-to-r from-indigo-600 via-indigo-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-indigo-500/25 transition hover:from-indigo-500 hover:to-violet-500 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSubmitting ? "Resetting..." : "Reset password"}
         </button>
@@ -139,9 +139,12 @@ function ResetPasswordInner() {
 
       <Link
         href="/login"
-        className="mt-6 flex items-center justify-center gap-1.5 text-sm font-semibold text-orange-700 hover:underline dark:text-orange-400"
+        className="group mt-6 flex items-center justify-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-700 hover:underline dark:text-indigo-400 dark:hover:text-indigo-300"
       >
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        <ArrowLeft
+          className="h-4 w-4 transition-transform group-hover:-translate-x-0.5"
+          aria-hidden="true"
+        />
         Back to sign in
       </Link>
     </AuthShell>
@@ -190,14 +193,14 @@ function PasswordField({
           maxLength={15}
           autoFocus={autoFocus}
           aria-describedby={describedBy}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2.5 pr-11 text-sm text-slate-950 transition outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-100 dark:border-slate-700 dark:text-white dark:focus:ring-orange-900/50"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2.5 pr-11 text-sm text-slate-950 transition outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 dark:border-slate-700 dark:text-white dark:focus:ring-indigo-900/50"
         />
         <button
           type="button"
           onClick={onToggle}
           aria-label={`${showPassword ? "Hide" : "Show"} ${label.toLowerCase()}`}
           aria-pressed={showPassword}
-          className="absolute top-1/2 right-1.5 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+          className="absolute top-1/2 right-1.5 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-200"
         >
           {showPassword ? (
             <EyeOff className="h-4 w-4" aria-hidden="true" />
