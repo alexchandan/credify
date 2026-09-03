@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
+import { AuthSkeleton } from "@/components/ui/skeletons";
 import { useAuth } from "@/context/AuthContext";
 import { getErrorMessage, parseFieldErrors } from "@/lib/formErrors";
 import { ApiError } from "@/lib/apiClient";
@@ -14,7 +15,7 @@ type Role = "candidate" | "recruiter";
 function RegisterPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, isLoading, register } = useAuth();
+  const { user, register } = useAuth();
   const [role, setRole] = useState<Role>(
     searchParams.get("role") === "recruiter" ? "recruiter" : "candidate",
   );
@@ -29,12 +30,7 @@ function RegisterPageContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (role === "recruiter") {
-      router.replace("/register?role=recruiter");
-    } else {
-      router.replace("/register?role=candidate");
-    }
-    if (!isLoading && user) {
+    if (user) {
       router.replace(
         user.role === "candidate"
           ? "/candidate/dashboard"
@@ -42,9 +38,8 @@ function RegisterPageContent() {
             ? "/recruiter/dashboard"
             : "/",
       );
-      return;
     }
-  }, [isLoading, router, user, role]);
+  }, [router, user]);
 
   function clearFieldError(field: string) {
     setFieldErrors((current) => {
@@ -94,7 +89,7 @@ function RegisterPageContent() {
     }
   }
 
-  if (isLoading || user) {
+  if (user) {
     return null;
   }
 
@@ -384,7 +379,7 @@ function RegisterPageContent() {
 
 export default function RegisterPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<AuthSkeleton isRegister />}>
       <RegisterPageContent />
     </Suspense>
   );

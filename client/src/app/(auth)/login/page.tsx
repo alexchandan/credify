@@ -10,6 +10,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
+import { AuthSkeleton } from "@/components/ui/skeletons";
 import { useAuth, type AuthUser } from "@/context/AuthContext";
 import { getErrorMessage } from "@/lib/formErrors";
 import { ApiError } from "@/lib/apiClient";
@@ -36,7 +37,7 @@ interface DeletionDetails {
 
 function LoginPageContent() {
   const router = useRouter();
-  const { user, isLoading, login, recoverAccount } = useAuth();
+  const { user, login, recoverAccount } = useAuth();
   const searchParams = useSearchParams();
   const next = searchParams.get("next");
   const isDeactivated = searchParams.get("deactivated") === "true";
@@ -54,11 +55,11 @@ function LoginPageContent() {
   const [recoverySuccess, setRecoverySuccess] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && user) {
+    if (user) {
       const destination = next?.startsWith("/") ? next : roleHome(user);
       router.replace(destination);
     }
-  }, [isLoading, router, user, next]);
+  }, [router, user, next]);
 
   async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -113,7 +114,7 @@ function LoginPageContent() {
     }
   }
 
-  if (isLoading || user) {
+  if (user) {
     return null;
   }
 
@@ -293,7 +294,7 @@ function LoginPageContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<AuthSkeleton />}>
       <LoginPageContent />
     </Suspense>
   );

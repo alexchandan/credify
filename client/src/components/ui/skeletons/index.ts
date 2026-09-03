@@ -10,3 +10,4 @@ export { default as JobDetailSkeleton } from "./JobDetailSkeleton";
 export { default as RecruiterDashboardSkeleton } from "./RecruiterDashboardSkeleton";
 export { default as RecruiterProfileSkeleton } from "./RecruiterProfileSkeleton";
 export { NotificationSkeleton } from "./NotificationSkeleton";
+export { AuthSkeleton } from "./AuthSkeleton";
