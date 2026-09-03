@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { sendSuccess } from "../../utils/apiResponse.js";
 import * as notificationService from "./notification.service.js";
+import { registerSseClient } from "./realtime.service.js";
 import type { NotificationListQuery } from "./notification.validation.js";
 
 export async function getMyNotifications(
@@ -40,5 +41,29 @@ export async function markAllAsRead(
   sendSuccess(res, {
     data: result,
     message: "All notifications marked as read",
+  });
+}
+
+export function streamNotifications(req: Request, res: Response): void {
+  const userId = req.user!.userId;
+
+  res.setHeader("Content-Type", "text/event-stream");
+  res.setHeader("Cache-Control", "no-cache");
+  res.setHeader("Connection", "keep-alive");
+  res.flushHeaders?.();
+
+  const cleanup = registerSseClient(userId, res);
+
+  const heartbeat = setInterval(() => {
+    try {
+      res.write(": keep-alive\n\n");
+    } catch {
+      clearInterval(heartbeat);
+    }
+  }, 25000);
+
+  req.on("close", () => {
+    clearInterval(heartbeat);
+    cleanup();
   });
 }

@@ -19,7 +19,13 @@ export function decodeAuthUserSnapshot(value?: string): AuthUser | null {
   if (!value) return null;
 
   try {
-    const parsed: unknown = JSON.parse(decodeURIComponent(value));
+    let str = value;
+    try {
+      str = decodeURIComponent(value);
+    } catch {
+      str = value;
+    }
+    const parsed: unknown = JSON.parse(str);
     return isAuthUser(parsed) ? parsed : null;
   } catch {
     return null;

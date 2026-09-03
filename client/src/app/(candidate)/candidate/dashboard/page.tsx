@@ -11,6 +11,7 @@ import {
   CalendarDays,
   Check,
   CheckCircle2,
+  ChevronRight,
   CircleDot,
   Clock3,
   FileText,
@@ -379,6 +380,15 @@ function ApplicationsSection({
       <SectionHeading
         title="Application activity"
         description="Your latest submissions and current pipeline"
+        action={
+          <Link
+            href="/candidate/applications"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-600 transition hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300"
+          >
+            View all
+            <ChevronRight className="h-3.5 w-3.5" />
+          </Link>
+        }
       />
 
       {total > 0 && (
