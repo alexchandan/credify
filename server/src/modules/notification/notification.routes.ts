@@ -18,7 +18,8 @@ router.get(
 );
 
 router.patch("/read-all", catchAsync(notificationController.markAllAsRead));
-
 router.patch("/:id/read", catchAsync(notificationController.markAsRead));
+
+router.get("/stream", notificationController.streamNotifications);
 
 export { router as notificationRouter };

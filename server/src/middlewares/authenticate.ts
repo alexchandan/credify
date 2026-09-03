@@ -5,8 +5,13 @@ import { verifyAccessToken } from "../utils/tokenUtils.js";
 
 export function extractBearerToken(req: Request): string | null {
   const header = req.headers.authorization;
-  if (!header || !header.startsWith("Bearer ")) return null;
-  return header.slice("Bearer ".length).trim() || null;
+  if (header && header.startsWith("Bearer ")) {
+    return header.slice("Bearer ".length).trim() || null;
+  }
+  if (typeof req.query?.token === "string" && req.query.token.trim()) {
+    return req.query.token.trim();
+  }
+  return null;
 }
 
 /**

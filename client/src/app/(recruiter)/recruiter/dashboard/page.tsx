@@ -206,11 +206,11 @@ export default function RecruiterDashboardPage() {
               Recruiter Profile
             </Link>
             <Link
-              href="/jobs"
+              href="/recruiter/jobs/new"
               className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-linear-to-r from-cyan-600 via-cyan-600 to-cyan-700 px-5 text-sm font-semibold text-white shadow-md shadow-cyan-600/20 transition hover:from-cyan-500 hover:to-cyan-600 active:scale-[0.99]"
             >
               <Plus className="h-4 w-4" />
-              Browse Job Board
+              Post a Job
             </Link>
           </div>
         </header>
@@ -539,10 +539,10 @@ export default function RecruiterDashboardPage() {
                       </p>
                     </div>
                     <Link
-                      href="/jobs"
+                      href="/recruiter/jobs"
                       className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-600 transition hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300"
                     >
-                      All roles
+                      Manage all
                       <ChevronRight className="h-3.5 w-3.5" />
                     </Link>
                   </div>
@@ -554,7 +554,7 @@ export default function RecruiterDashboardPage() {
                         return (
                           <Link
                             key={job._id}
-                            href={`/jobs/${job._id}`}
+                            href={`/recruiter/jobs/${job._id}/applications`}
                             className="group flex items-center justify-between gap-3 px-6 py-4 transition hover:bg-slate-50/70 dark:hover:bg-slate-800/40"
                           >
                             <div className="min-w-0 flex-1">

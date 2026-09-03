@@ -9,8 +9,16 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { apiRequest, configureApiClient } from "@/lib/apiClient";
-import { writeAuthUserSnapshot } from "@/lib/authUserSnapshot";
+import {
+  apiRequest,
+  configureApiClient,
+  refreshAccessToken,
+} from "@/lib/apiClient";
+import {
+  AUTH_USER_SNAPSHOT_COOKIE,
+  decodeAuthUserSnapshot,
+  writeAuthUserSnapshot,
+} from "@/lib/authUserSnapshot";
 
 export type UserRole = "candidate" | "recruiter" | "admin";
 
@@ -71,8 +79,37 @@ export function AuthProvider({
   initialUser?: AuthUser | null;
 }) {
   const tokenRef = useRef<string | null>(null);
-  const [user, setUser] = useState<AuthUser | null>(initialUser);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    if (initialUser) return initialUser;
+    if (typeof document !== "undefined") {
+      const match = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith(`${AUTH_USER_SNAPSHOT_COOKIE}=`));
+      if (match) {
+        return decodeAuthUserSnapshot(
+          match.slice(`${AUTH_USER_SNAPSHOT_COOKIE}=`.length),
+        );
+      }
+    }
+    return null;
+  });
+  const [isLoading, setIsLoading] = useState(() => {
+    if (initialUser) return false;
+    if (typeof document !== "undefined") {
+      const match = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith(`${AUTH_USER_SNAPSHOT_COOKIE}=`));
+      if (
+        match &&
+        decodeAuthUserSnapshot(
+          match.slice(`${AUTH_USER_SNAPSHOT_COOKIE}=`.length),
+        )
+      ) {
+        return false;
+      }
+    }
+    return false;
+  });
 
   const clearSession = useCallback(() => {
     tokenRef.current = null;
@@ -101,11 +138,8 @@ export function AuthProvider({
 
     async function restoreSession() {
       try {
-        const refreshResult = await apiRequest<RefreshResult>("/auth/refresh", {
-          method: "POST",
-          skipAuth: true,
-        });
-        tokenRef.current = refreshResult.data.accessToken;
+        const token = await refreshAccessToken();
+        tokenRef.current = token;
 
         const meResult = await apiRequest<AuthUser>("/auth/me");
         if (!cancelled) {

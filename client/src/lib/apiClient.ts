@@ -61,6 +61,10 @@ export function configureApiClient(options: {
   onUnauthorized = options.onUnauthorized ?? null;
 }
 
+export function getCurrentAccessToken(): string | null {
+  return getAccessToken();
+}
+
 export interface ApiRequestOptions extends Omit<RequestInit, "body"> {
   body?: unknown;
   /** Skip attaching the Authorization header (e.g. for login/register themselves). */
@@ -87,7 +91,17 @@ async function performRequest<T>(
   }
 
   if (!skipAuth) {
-    const token = getAccessToken();
+    let token = getAccessToken();
+    if (!token) {
+      // If an authenticated request is made before token is in memory (e.g. on page reload),
+      // seamlessly refresh the token first so we don't send a request destined to 401.
+      try {
+        token = await refreshAccessToken();
+      } catch (refreshErr) {
+        onUnauthorized?.();
+        throw refreshErr;
+      }
+    }
     if (token) {
       headers.set("Authorization", `Bearer ${token}`);
     }
@@ -124,13 +138,17 @@ async function performRequest<T>(
  */
 let refreshPromise: Promise<string> | null = null;
 
-async function performRefresh(): Promise<string> {
+export async function refreshAccessToken(): Promise<string> {
   if (!refreshPromise) {
     refreshPromise = performRequest<{ accessToken: string }>("/auth/refresh", {
       method: "POST",
       skipAuth: true,
     })
-      .then((result) => result.data.accessToken)
+      .then((result) => {
+        const token = result.data.accessToken;
+        onTokenRefreshed?.(token);
+        return token;
+      })
       .finally(() => {
         refreshPromise = null;
       });
@@ -146,28 +164,21 @@ export async function apiRequest<T>(
   try {
     return await performRequest<T>(path, options);
   } catch (err) {
-    const shouldAttemptRefresh =
+    const isAuthError =
       err instanceof ApiError &&
-      err.code === "AUTH_TOKEN_EXPIRED" &&
-      !options.skipAuth &&
-      !_isRetry;
+      (err.statusCode === 401 ||
+        err.code === "AUTH_TOKEN_EXPIRED" ||
+        err.code === "AUTH_UNAUTHORIZED" ||
+        err.code === "AUTH_TOKEN_INVALID");
+
+    const shouldAttemptRefresh = isAuthError && !options.skipAuth && !_isRetry;
 
     if (!shouldAttemptRefresh) {
-      // Only treat session as expired/unauthorized if the bearer token is rejected on authenticated routes.
-      // Do NOT trigger onUnauthorized on login/register/recover forms or when user enters wrong password (AUTH_INVALID_CREDENTIALS).
-      const isSessionAuthFailure =
-        err instanceof ApiError &&
-        !options.skipAuth &&
-        (err.code === "AUTH_UNAUTHORIZED" || err.code === "AUTH_TOKEN_INVALID");
-
-      if (isSessionAuthFailure && onUnauthorized) {
-        onUnauthorized();
-      }
       throw err;
     }
 
     try {
-      const newToken = await performRefresh();
+      const newToken = await refreshAccessToken();
       onTokenRefreshed?.(newToken);
     } catch {
       onUnauthorized?.();

@@ -20,7 +20,8 @@ import {
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useAuth, type AuthUser } from "@/context/AuthContext";
-import { apiRequest } from "@/lib/apiClient";
+import { apiRequest, getCurrentAccessToken } from "@/lib/apiClient";
+import { API_BASE_URL } from "@/lib/apiBaseUrl";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import type { DashboardNotification } from "@/types/dashboard";
 import { NotificationSkeleton } from "./ui/skeletons/NotificationSkeleton";
@@ -45,24 +46,34 @@ function shortDate(value: string): string {
   }).format(new Date(value));
 }
 
-function navItemsFor(user: AuthUser | null): NavItem[] {
-  if (user?.role === "candidate") {
+function navItemsFor(user: AuthUser | null, pathname: string): NavItem[] {
+  const role =
+    user?.role ??
+    (pathname.startsWith("/candidate")
+      ? "candidate"
+      : pathname.startsWith("/recruiter")
+        ? "recruiter"
+        : null);
+
+  if (role === "candidate") {
     return [
       { href: "/candidate/dashboard", label: "Dashboard" },
       { href: "/jobs", label: "Browse jobs" },
+      { href: "/candidate/applications", label: "My applications" },
       { href: "/candidate/profile", label: "My profile" },
     ];
   }
-  if (user?.role === "recruiter") {
+  if (role === "recruiter") {
     return [
       { href: "/recruiter/dashboard", label: "Dashboard" },
+      { href: "/recruiter/jobs", label: "Manage jobs" },
       { href: "/jobs", label: "Browse jobs" },
-      { href: "/recruiter/profile", label: "My profile" },
+      { href: "/recruiter/profile", label: "Company profile" },
     ];
   }
 
   const items: NavItem[] = [{ href: "/jobs", label: "Browse jobs" }];
-  if (!user) {
+  if (!user && !role) {
     items.push({ href: "/register?role=recruiter", label: "For employers" });
   }
   return items;
@@ -149,7 +160,10 @@ export function Nav() {
     useState(false);
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const notificationMenuRef = useRef<HTMLDivElement>(null);
-  const navItems = navItemsFor(user);
+  const isProtectedPath =
+    pathname.startsWith("/candidate") || pathname.startsWith("/recruiter");
+  const showAuthSkeleton = !user && (isLoading || isProtectedPath);
+  const navItems = navItemsFor(user, pathname);
   const unreadCount =
     user && notificationState?.userId === user.id
       ? notificationState.count
@@ -182,6 +196,77 @@ export function Nav() {
         }
       });
 
+    // Real-time notification SSE stream
+    let eventSource: EventSource | null = null;
+    const token = getCurrentAccessToken();
+    if (token && typeof window !== "undefined") {
+      try {
+        eventSource = new EventSource(
+          `${API_BASE_URL}/notification/stream?token=${encodeURIComponent(token)}`,
+        );
+
+        eventSource.addEventListener("notification", (e) => {
+          if (cancelled) return;
+          try {
+            const data = JSON.parse(e.data);
+            setNotificationState((prev) => ({
+              userId,
+              count: (prev?.count ?? 0) + 1,
+            }));
+            setNotifications((prev) => [
+              {
+                _id: String(data.relatedEntityId || Date.now()),
+                userId,
+                type: data.type,
+                message: data.message,
+                isRead: false,
+                readAt: null,
+                relatedEntityType: data.relatedEntityType,
+                relatedEntityId: data.relatedEntityId,
+                createdAt: data.createdAt || new Date().toISOString(),
+              },
+              ...prev,
+            ]);
+            window.dispatchEvent(
+              new CustomEvent("credify:notification-received", {
+                detail: data,
+              }),
+            );
+          } catch {
+            // ignore
+          }
+        });
+
+        eventSource.addEventListener("application_received", (e) => {
+          if (cancelled) return;
+          try {
+            const data = JSON.parse(e.data);
+            window.dispatchEvent(
+              new CustomEvent("credify:application-received", { detail: data }),
+            );
+          } catch {
+            // ignore
+          }
+        });
+
+        eventSource.addEventListener("application_status_updated", (e) => {
+          if (cancelled) return;
+          try {
+            const data = JSON.parse(e.data);
+            window.dispatchEvent(
+              new CustomEvent("credify:application-status-updated", {
+                detail: data,
+              }),
+            );
+          } catch {
+            // ignore
+          }
+        });
+      } catch {
+        // SSE not supported or network error
+      }
+    }
+
     window.addEventListener(
       "credify:notifications-read",
       handleNotificationsRead,
@@ -189,6 +274,9 @@ export function Nav() {
 
     return () => {
       cancelled = true;
+      if (eventSource) {
+        eventSource.close();
+      }
       window.removeEventListener(
         "credify:notifications-read",
         handleNotificationsRead,
@@ -292,6 +380,8 @@ export function Nav() {
   function toggleNotifications() {
     const willOpen = !isNotificationsOpen;
     if (willOpen) {
+      setIsMobileMenuOpen(false);
+      setIsAccountMenuOpen(false);
       setNotificationsLoaded(false);
       setNotificationsLoading(true);
       setNotificationsError(null);
@@ -368,7 +458,7 @@ export function Nav() {
 
           <ThemeToggle />
 
-          {user && (
+          {user ? (
             <div className="relative" ref={notificationMenuRef}>
               <button
                 type="button"
@@ -393,68 +483,125 @@ export function Nav() {
                 )}
               </button>
               {isNotificationsOpen && (
-                <div
-                  id="notifications-menu"
-                  role="region"
-                  aria-label="Notifications"
-                  className="absolute right-0 z-50 mt-2 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-xl border border-slate-200/80 bg-white/95 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-slate-900/95"
-                >
-                  <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
-                    <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-                      Notifications
-                    </h2>
-                    {unreadCount ? (
-                      <button
-                        type="button"
-                        onClick={() => void markAllNotificationsRead()}
-                        disabled={isMarkingNotificationsRead}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-indigo-600 hover:text-indigo-700 disabled:opacity-50 dark:text-indigo-400 dark:hover:text-indigo-300"
-                      >
-                        {isMarkingNotificationsRead ? (
-                          <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <Check className="h-3.5 w-3.5" />
+                <>
+                  {/* Backdrop for mobile */}
+                  <div
+                    className="fixed inset-0 z-40 bg-slate-950/25 backdrop-blur-xs sm:hidden"
+                    onClick={() => setIsNotificationsOpen(false)}
+                    aria-hidden="true"
+                  />
+
+                  <div
+                    id="notifications-menu"
+                    role="region"
+                    aria-label="Notifications"
+                    className="fixed inset-x-3 top-16 z-50 flex max-h-[calc(100dvh-5rem)] flex-col overflow-hidden rounded-2xl border border-slate-200/90 bg-white/95 shadow-2xl backdrop-blur-xl sm:absolute sm:inset-x-auto sm:top-full sm:right-0 sm:mt-2 sm:max-h-none sm:w-88 dark:border-slate-800 dark:bg-slate-900/95"
+                  >
+                    <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-800">
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                          Notifications
+                        </h2>
+                        {unreadCount !== null && unreadCount > 0 && (
+                          <span className="rounded-full bg-rose-500/10 px-2 py-0.5 text-[10px] font-bold text-rose-600 dark:bg-rose-500/20 dark:text-rose-400">
+                            {unreadCount} new
+                          </span>
                         )}
-                        Mark all as read
-                      </button>
-                    ) : null}
-                  </div>
-                  {notificationsLoading || !notificationsLoaded ? (
-                    <NotificationSkeleton />
-                  ) : notificationsError ? (
-                    <p
-                      role="alert"
-                      className="flex min-h-72 items-center justify-center px-4 py-8 text-center text-sm text-rose-600 dark:text-rose-400"
-                    >
-                      {notificationsError}
-                    </p>
-                  ) : notifications.length === 0 ? (
-                    <p className="flex min-h-72 items-center justify-center px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-                      No notifications yet.
-                    </p>
-                  ) : (
-                    <div className="max-h-80 min-h-72 divide-y divide-slate-100 overflow-y-auto dark:divide-slate-800">
-                      {notifications.map((notification) => (
-                        <div
-                          key={notification._id}
-                          className={`px-4 py-3 ${notification.isRead ? "" : "bg-indigo-50/70 dark:bg-indigo-950/30"}`}
-                        >
-                          <p
-                            className={`text-sm leading-5 ${notification.isRead ? "text-slate-600 dark:text-slate-400" : "font-medium text-slate-900 dark:text-slate-100"}`}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {unreadCount ? (
+                          <button
+                            type="button"
+                            onClick={() => void markAllNotificationsRead()}
+                            disabled={isMarkingNotificationsRead}
+                            className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-600 hover:text-cyan-700 disabled:opacity-50 dark:text-cyan-400 dark:hover:text-cyan-300"
                           >
-                            {notification.message}
-                          </p>
-                          <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
-                            {shortDate(notification.createdAt)}
-                          </p>
-                        </div>
-                      ))}
+                            {isMarkingNotificationsRead ? (
+                              <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Check className="h-3.5 w-3.5" />
+                            )}
+                            Mark all read
+                          </button>
+                        ) : null}
+
+                        <button
+                          type="button"
+                          onClick={() => setIsNotificationsOpen(false)}
+                          aria-label="Close notifications"
+                          className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 sm:hidden dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
-                  )}
-                </div>
+
+                    {notificationsLoading || !notificationsLoaded ? (
+                      <NotificationSkeleton />
+                    ) : notificationsError ? (
+                      <p
+                        role="alert"
+                        className="flex min-h-72 items-center justify-center px-4 py-8 text-center text-sm text-rose-600 dark:text-rose-400"
+                      >
+                        {notificationsError}
+                      </p>
+                    ) : notifications.length === 0 ? (
+                      <div className="flex min-h-72 flex-col items-center justify-center px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+                        <Bell className="h-8 w-8 text-slate-300 dark:text-slate-700" />
+                        <p className="mt-2 text-sm font-medium">
+                          No notifications yet
+                        </p>
+                        <p className="mt-0.5 text-xs text-slate-400 dark:text-slate-500">
+                          Updates on applications and roles will show up here.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="max-h-88 min-h-72 divide-y divide-slate-100 overflow-y-auto overscroll-contain dark:divide-slate-800">
+                        {notifications.map((notification) => (
+                          <div
+                            key={notification._id}
+                            className={`flex items-start gap-3 px-4 py-3.5 transition hover:bg-slate-50/80 dark:hover:bg-slate-800/50 ${
+                              notification.isRead
+                                ? ""
+                                : "bg-cyan-50/50 dark:bg-cyan-950/20"
+                            }`}
+                          >
+                            <span
+                              className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${
+                                notification.isRead
+                                  ? "bg-transparent"
+                                  : "bg-cyan-500 shadow-xs shadow-cyan-500/50"
+                              }`}
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p
+                                className={`text-xs leading-relaxed wrap-break-word sm:text-sm ${
+                                  notification.isRead
+                                    ? "text-slate-600 dark:text-slate-400"
+                                    : "font-semibold text-slate-900 dark:text-slate-100"
+                                }`}
+                              >
+                                {notification.message}
+                              </p>
+                              <p className="mt-1 text-[11px] font-medium text-slate-400 dark:text-slate-500">
+                                {shortDate(notification.createdAt)}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </>
               )}
             </div>
-          )}
+          ) : showAuthSkeleton ? (
+            <div
+              className="h-10 w-10 animate-pulse rounded-md bg-slate-200/60 dark:bg-slate-800/60"
+              aria-hidden="true"
+            />
+          ) : null}
 
           {user ? (
             <div className="relative hidden md:block" ref={accountMenuRef}>
@@ -559,6 +706,13 @@ export function Nav() {
                 </div>
               )}
             </div>
+          ) : showAuthSkeleton ? (
+            <div
+              className="hidden items-center gap-2 md:flex"
+              aria-hidden="true"
+            >
+              <div className="h-9 w-9 animate-pulse rounded-full bg-slate-200/80 dark:bg-slate-800/80" />
+            </div>
           ) : (
             <div className="hidden items-center gap-2 md:flex">
               <Link
@@ -639,6 +793,29 @@ export function Nav() {
 
           {user ? (
             <div className="pt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  toggleNotifications();
+                }}
+                className="mb-4 flex w-full items-center justify-between rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-2.5 text-sm font-semibold text-slate-800 transition hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Bell className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+                  <span>Notifications</span>
+                </div>
+                {unreadCount !== null && unreadCount > 0 ? (
+                  <span className="rounded-full bg-rose-500 px-2 py-0.5 text-xs font-bold text-white">
+                    {unreadCount} new
+                  </span>
+                ) : (
+                  <span className="text-xs font-normal text-slate-400">
+                    All caught up
+                  </span>
+                )}
+              </button>
+
               <div className="flex items-center gap-3">
                 <UserAvatar user={user} size="md" />
                 <div className="min-w-0">
@@ -658,6 +835,14 @@ export function Nav() {
                 <LogOut className="h-4 w-4" aria-hidden="true" />
                 Sign out
               </button>
+            </div>
+          ) : showAuthSkeleton ? (
+            <div className="flex items-center gap-3 pt-4" aria-hidden="true">
+              <div className="h-10 w-10 animate-pulse rounded-full bg-slate-200/80 dark:bg-slate-800/80" />
+              <div className="space-y-1.5">
+                <div className="h-3.5 w-28 animate-pulse rounded bg-slate-200/80 dark:bg-slate-800/80" />
+                <div className="h-2.5 w-36 animate-pulse rounded bg-slate-200/80 dark:bg-slate-800/80" />
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3 pt-4">
