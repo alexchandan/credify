@@ -7,6 +7,8 @@ import {
 import { Job, JobStatus } from "../../models/job.model.js";
 import { CandidateProfile } from "../../models/candidateProfile.model.js";
 import { RecruiterProfile } from "../../models/recruiterProfile.model.js";
+import { User } from "../../models/user.model.js";
+import { Company } from "../../models/company.model.js";
 import {
   Notification,
   NotificationType,
@@ -21,6 +23,9 @@ import {
   canUpdateApplicationStatus,
 } from "../../policies/applicationPolicy.js";
 import { canManageJob } from "../../policies/jobPolicy.js";
+import { emailService, sendEmailSafely } from "../../utils/emailService.js";
+import { emitRealtimeEvent } from "../notification/realtime.service.js";
+import { env } from "../../config/env.js";
 import type {
   ApplyToJobInput,
   ApplicationListQuery,
@@ -155,6 +160,45 @@ export async function applyToJob(
   }
 
   const created = await Application.findById(applicationId!);
+
+  // Emit real-time notification to recruiter
+  emitRealtimeEvent(recruiter.userId.toString(), "notification", {
+    type: NotificationType.APPLICATION_RECEIVED,
+    message: `New application received for "${job.title}"`,
+    relatedEntityType: RelatedEntityType.APPLICATION,
+    relatedEntityId: created!._id,
+    createdAt: new Date(),
+  });
+  emitRealtimeEvent(recruiter.userId.toString(), "application_received", {
+    jobId: job._id,
+    applicationId: created!._id,
+  });
+
+  // Send application confirmation email safely to candidate
+  void (async () => {
+    try {
+      const candidateUser = await User.findById(candidate.userId).select(
+        "email",
+      );
+      const company = await Company.findById(job.companyId).select("name");
+      if (candidateUser?.email) {
+        const clientOrigin = env.clientOrigins[0] || "http://localhost:3000";
+        const applicationsUrl = `${clientOrigin}/candidate/applications`;
+        await sendEmailSafely(() =>
+          emailService.sendApplicationConfirmationEmail(
+            candidateUser.email,
+            candidate.fullName || "Candidate",
+            job.title,
+            company?.name || "Company",
+            applicationsUrl,
+          ),
+        );
+      }
+    } catch {
+      // Ignored - email is best-effort
+    }
+  })();
+
   return created!;
 }
 
@@ -173,7 +217,40 @@ export async function getMyApplications(
   const filter: Record<string, unknown> = { candidateId: candidate._id };
   if (query.status) filter.status = query.status;
 
-  return paginateApplications(filter, query);
+  const result = await paginateApplications(filter, query);
+
+  const jobIds = [
+    ...new Set(result.applications.map((a) => a.jobId.toString())),
+  ];
+  const companyIds = [
+    ...new Set(result.applications.map((a) => a.companyId.toString())),
+  ];
+
+  const [jobs, companies] = await Promise.all([
+    Job.find({ _id: { $in: jobIds } }).select(
+      "title location employmentType experienceLevel isRemote salaryRange status",
+    ),
+    Company.find({ _id: { $in: companyIds } }).select("name logoUrl"),
+  ]);
+
+  const jobMap = new Map(jobs.map((j) => [j._id.toString(), j]));
+  const companyMap = new Map(companies.map((c) => [c._id.toString(), c]));
+
+  const enriched = result.applications.map((app) => {
+    const raw = (app as IApplication).toObject
+      ? (app as IApplication).toObject()
+      : app;
+    return {
+      ...raw,
+      job: jobMap.get(app.jobId.toString()) ?? null,
+      company: companyMap.get(app.companyId.toString()) ?? null,
+    };
+  });
+
+  return {
+    ...result,
+    applications: enriched as unknown as IApplication[],
+  };
 }
 
 /**
@@ -196,7 +273,48 @@ export async function getApplicationsForJob(
   const filter: Record<string, unknown> = { jobId: job._id };
   if (query.status) filter.status = query.status;
 
-  return paginateApplications(filter, query);
+  const result = await paginateApplications(filter, query);
+
+  const candidateIds = [
+    ...new Set(result.applications.map((a) => a.candidateId.toString())),
+  ];
+  const candidates = await CandidateProfile.find({
+    _id: { $in: candidateIds },
+  }).select("fullName headline avatarUrl skills location userId");
+
+  const userIds = candidates.map((c) => c.userId);
+  const users = await User.find({ _id: { $in: userIds } }).select("email");
+  const userEmailMap = new Map(users.map((u) => [u._id.toString(), u.email]));
+
+  const candidateMap = new Map(
+    candidates.map((c) => [
+      c._id.toString(),
+      {
+        _id: c._id,
+        fullName: c.fullName,
+        headline: c.headline,
+        avatarUrl: c.avatarUrl,
+        skills: c.skills,
+        location: c.location,
+        email: userEmailMap.get(c.userId.toString()) ?? null,
+      },
+    ]),
+  );
+
+  const enriched = result.applications.map((app) => {
+    const raw = (app as IApplication).toObject
+      ? (app as IApplication).toObject()
+      : app;
+    return {
+      ...raw,
+      candidate: candidateMap.get(app.candidateId.toString()) ?? null,
+    };
+  });
+
+  return {
+    ...result,
+    applications: enriched as unknown as IApplication[],
+  };
 }
 
 async function paginateApplications(
@@ -348,6 +466,48 @@ export async function updateApplicationStatus(
     });
   } finally {
     await session.endSession();
+  }
+
+  // Real-time SSE push notification
+  emitRealtimeEvent(notifyRecipientUserId.toString(), "notification", {
+    type: NotificationType.APPLICATION_STATUS_CHANGED,
+    message: `Application status for "${job.title}" changed to ${newStatus}`,
+    relatedEntityType: RelatedEntityType.APPLICATION,
+    relatedEntityId: application._id,
+    createdAt: new Date(),
+  });
+  emitRealtimeEvent(candidate.userId.toString(), "application_status_updated", {
+    applicationId: application._id,
+    status: newStatus,
+    jobId: job._id,
+  });
+
+  // Email status update to candidate if changed by recruiter
+  if (!isActorTheCandidate) {
+    void (async () => {
+      try {
+        const candidateUser = await User.findById(candidate.userId).select(
+          "email",
+        );
+        const company = await Company.findById(job.companyId).select("name");
+        if (candidateUser?.email) {
+          const clientOrigin = env.clientOrigins[0] || "http://localhost:3000";
+          const applicationsUrl = `${clientOrigin}/candidate/applications`;
+          await sendEmailSafely(() =>
+            emailService.sendApplicationStatusUpdateEmail(
+              candidateUser.email,
+              candidate.fullName || "Candidate",
+              job.title,
+              company?.name || "Company",
+              newStatus,
+              applicationsUrl,
+            ),
+          );
+        }
+      } catch {
+        // Ignored - email is best-effort
+      }
+    })();
   }
 
   return application;

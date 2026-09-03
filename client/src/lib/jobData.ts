@@ -1,5 +1,10 @@
 import { apiRequest } from "./apiClient";
-import type { CompanySummary, Job, JobWithCompany } from "@/types/job";
+import type {
+  CompanySummary,
+  Job,
+  JobWithCompany,
+  SalaryRange,
+} from "@/types/job";
 
 export function formatJobLabel(value: string): string {
   return value
@@ -8,8 +13,23 @@ export function formatJobLabel(value: string): string {
     .join(" ");
 }
 
-export function formatSalary(job: Job): string {
-  const { salaryRange } = job;
+function extractSalaryRange(
+  jobOrRange?: { salaryRange?: SalaryRange } | SalaryRange | null,
+): SalaryRange | undefined {
+  if (!jobOrRange) return undefined;
+  if ("salaryRange" in jobOrRange) {
+    return jobOrRange.salaryRange;
+  }
+  if ("min" in jobOrRange || "max" in jobOrRange || "currency" in jobOrRange) {
+    return jobOrRange as SalaryRange;
+  }
+  return undefined;
+}
+
+export function formatSalary(
+  jobOrRange?: { salaryRange?: SalaryRange } | SalaryRange | null,
+): string {
+  const salaryRange = extractSalaryRange(jobOrRange);
   if (
     !salaryRange ||
     (salaryRange.min === undefined && salaryRange.max === undefined)
