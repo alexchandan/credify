@@ -8,6 +8,7 @@ import {
   RotateCcw,
   AlertTriangle,
   CheckCircle2,
+  LoaderCircle,
 } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { AuthSkeleton } from "@/components/ui/skeletons";
@@ -48,6 +49,7 @@ function LoginPageContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   const [isRecovering, setIsRecovering] = useState(false);
   const [deletionInfo, setDeletionInfo] = useState<DeletionDetails | null>(
     null,
@@ -55,11 +57,16 @@ function LoginPageContent() {
   const [recoverySuccess, setRecoverySuccess] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    router.prefetch("/candidate/dashboard");
+    router.prefetch("/recruiter/dashboard");
+  }, [router]);
+
+  useEffect(() => {
+    if (user && !isRedirecting) {
       const destination = next?.startsWith("/") ? next : roleHome(user);
       router.replace(destination);
     }
-  }, [router, user, next]);
+  }, [router, user, next, isRedirecting]);
 
   async function handleSubmit(e: React.SubmitEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -69,8 +76,11 @@ function LoginPageContent() {
 
     try {
       const loggedInUser = await login(email.trim().toLowerCase(), password);
+      setIsRedirecting(true);
       router.replace(safeReturnPath(roleHome(loggedInUser)));
     } catch (err) {
+      setIsSubmitting(false);
+      setIsRedirecting(false);
       if (
         err instanceof ApiError &&
         err.code === "ACCOUNT_SCHEDULED_FOR_DELETION"
@@ -84,8 +94,6 @@ function LoginPageContent() {
       } else {
         setError(getErrorMessage(err));
       }
-    } finally {
-      setIsSubmitting(false);
     }
   }
 
@@ -104,6 +112,7 @@ function LoginPageContent() {
       );
       setRecoverySuccess(true);
       setDeletionInfo(null);
+      setIsRedirecting(true);
       setTimeout(() => {
         router.replace(safeReturnPath(roleHome(recoveredUser)));
       }, 1000);
@@ -114,8 +123,8 @@ function LoginPageContent() {
     }
   }
 
-  if (user) {
-    return null;
+  if (user && !isRedirecting) {
+    return <AuthSkeleton />;
   }
 
   return (
@@ -272,10 +281,22 @@ function LoginPageContent() {
 
         <button
           type="submit"
-          disabled={isSubmitting || isRecovering}
-          className="inline-flex min-h-11 items-center justify-center rounded-lg bg-linear-to-r from-cyan-600 via-cyan-600 to-cyan-700 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-cyan-600/20 transition hover:from-cyan-500 hover:to-cyan-600 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 dark:from-cyan-500 dark:via-cyan-500 dark:to-cyan-600 dark:text-slate-950 dark:shadow-cyan-500/25 dark:hover:from-cyan-400 dark:hover:to-cyan-500"
+          disabled={isSubmitting || isRecovering || isRedirecting}
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-linear-to-r from-cyan-600 via-cyan-600 to-cyan-700 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-cyan-600/20 transition hover:from-cyan-500 hover:to-cyan-600 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 dark:from-cyan-500 dark:via-cyan-500 dark:to-cyan-600 dark:text-slate-950 dark:shadow-cyan-500/25 dark:hover:from-cyan-400 dark:hover:to-cyan-500"
         >
-          {isSubmitting ? "Signing in..." : "Sign in"}
+          {isRedirecting ? (
+            <>
+              <LoaderCircle className="h-4 w-4 animate-spin" />
+              Redirecting to workspace...
+            </>
+          ) : isSubmitting ? (
+            <>
+              <LoaderCircle className="h-4 w-4 animate-spin" />
+              Signing in...
+            </>
+          ) : (
+            "Sign in"
+          )}
         </button>
       </form>
 

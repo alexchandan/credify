@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, LoaderCircle } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
 import { AuthSkeleton } from "@/components/ui/skeletons";
 import { useAuth } from "@/context/AuthContext";
@@ -28,9 +28,14 @@ function RegisterPageContent() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [generalError, setGeneralError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    router.prefetch("/check-email");
+  }, [router]);
+
+  useEffect(() => {
+    if (user && !isRedirecting) {
       router.replace(
         user.role === "candidate"
           ? "/candidate/dashboard"
@@ -39,7 +44,7 @@ function RegisterPageContent() {
             : "/",
       );
     }
-  }, [router, user]);
+  }, [router, user, isRedirecting]);
 
   function clearFieldError(field: string) {
     setFieldErrors((current) => {
@@ -71,10 +76,13 @@ function RegisterPageContent() {
         fullName: fullName.trim(),
         role,
       });
+      setIsRedirecting(true);
       router.replace(
         `/check-email?email=${encodeURIComponent(normalizedEmail)}`,
       );
     } catch (err) {
+      setIsSubmitting(false);
+      setIsRedirecting(false);
       if (err instanceof ApiError && err.code === "ACCOUNT_PENDING_DELETION") {
         router.push(
           `/login?email=${encodeURIComponent(normalizedEmail)}&deactivated=true`,
@@ -84,13 +92,11 @@ function RegisterPageContent() {
       const fields = parseFieldErrors(err);
       if (Object.keys(fields).length > 0) setFieldErrors(fields);
       else setGeneralError(getErrorMessage(err));
-    } finally {
-      setIsSubmitting(false);
     }
   }
 
-  if (user) {
-    return null;
+  if (user && !isRedirecting) {
+    return <AuthSkeleton isRegister />;
   }
 
   return (
@@ -357,10 +363,22 @@ function RegisterPageContent() {
 
         <button
           type="submit"
-          disabled={isSubmitting}
-          className="inline-flex min-h-11 items-center justify-center rounded-lg bg-linear-to-r from-cyan-600 via-cyan-600 to-cyan-700 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-cyan-600/20 transition hover:from-cyan-500 hover:to-cyan-600 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 dark:from-cyan-500 dark:via-cyan-500 dark:to-cyan-600 dark:text-slate-950 dark:shadow-cyan-500/25 dark:hover:from-cyan-400 dark:hover:to-cyan-500"
+          disabled={isSubmitting || isRedirecting}
+          className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-linear-to-r from-cyan-600 via-cyan-600 to-cyan-700 px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-cyan-600/20 transition hover:from-cyan-500 hover:to-cyan-600 hover:shadow-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60 dark:from-cyan-500 dark:via-cyan-500 dark:to-cyan-600 dark:text-slate-950 dark:shadow-cyan-500/25 dark:hover:from-cyan-400 dark:hover:to-cyan-500"
         >
-          {isSubmitting ? "Creating account..." : "Create account"}
+          {isRedirecting ? (
+            <span className="inline-flex items-center gap-2">
+              <LoaderCircle className="h-4 w-4 animate-spin" />
+              Redirecting...
+            </span>
+          ) : isSubmitting ? (
+            <span className="inline-flex items-center gap-2">
+              <LoaderCircle className="h-4 w-4 animate-spin" />
+              Creating account...
+            </span>
+          ) : (
+            "Create account"
+          )}
         </button>
       </form>
 
