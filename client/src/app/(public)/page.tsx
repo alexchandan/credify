@@ -1,13 +1,31 @@
-import { Hero } from "@/components/landing/Hero";
-import { FeaturedJobs } from "@/components/landing/FeaturedJobs";
-import { PopularSkills } from "@/components/landing/PopularSkills";
+import {
+  Hero,
+  CompanyMarquee,
+  TrustMetrics,
+  PopularSkills,
+  FeaturedJobs,
+  SalaryExplorer,
+  HowItWorks,
+  FeaturesBento,
+  Testimonials,
+  FaqSection,
+  CallToAction,
+} from "@/components/landing";
 
 export default function Home() {
   return (
     <>
       <Hero />
+      <CompanyMarquee />
+      <TrustMetrics />
       <PopularSkills />
       <FeaturedJobs />
+      <SalaryExplorer />
+      <HowItWorks />
+      <FeaturesBento />
+      <Testimonials />
+      <FaqSection />
+      <CallToAction />
     </>
   );
 }
