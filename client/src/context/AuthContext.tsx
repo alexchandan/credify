@@ -36,10 +36,6 @@ interface LoginResult {
   user: AuthUser;
 }
 
-interface RefreshResult {
-  accessToken: string;
-}
-
 export interface RegisterInput {
   email: string;
   password: string;
