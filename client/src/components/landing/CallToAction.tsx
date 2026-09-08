@@ -13,11 +13,11 @@ export function CallToAction() {
   return (
     <section className="relative overflow-hidden px-5 py-20 sm:px-6 sm:py-28 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className="relative overflow-hidden rounded-3xl border border-cyan-500/20 bg-gradient-to-b from-slate-900 via-slate-950 to-slate-950 px-6 py-16 shadow-2xl sm:px-12 sm:py-20 lg:px-16 dark:border-white/10">
+        <div className="relative overflow-hidden rounded-3xl border border-cyan-500/20 bg-linear-to-b from-slate-900 via-slate-950 to-slate-950 px-6 py-16 shadow-2xl sm:px-12 sm:py-20 lg:px-16 dark:border-white/10">
           {/* Ambient Glows */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute -top-24 left-1/2 h-96 w-[700px] -translate-x-1/2 rounded-full bg-gradient-to-r from-cyan-500/30 via-emerald-500/20 to-sky-500/30 blur-3xl"
+            className="pointer-events-none absolute -top-24 left-1/2 h-96 w-175 -translate-x-1/2 rounded-full bg-linear-to-r from-cyan-500/30 via-emerald-500/20 to-sky-500/30 blur-3xl"
           />
 
           <div className="relative mx-auto max-w-3xl text-center">
@@ -39,7 +39,7 @@ export function CallToAction() {
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Link
                 href="/jobs"
-                className="inline-flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 via-cyan-500 to-emerald-400 px-8 text-sm font-bold text-slate-950 shadow-lg shadow-cyan-500/25 transition-all hover:opacity-95 hover:shadow-cyan-500/40 active:scale-[0.98] sm:w-auto"
+                className="inline-flex h-13 w-full items-center justify-center gap-2 rounded-xl bg-linear-to-r from-cyan-400 via-cyan-500 to-emerald-400 px-8 text-sm font-bold text-slate-950 shadow-lg shadow-cyan-500/25 transition-all hover:opacity-95 hover:shadow-cyan-500/40 active:scale-[0.98] sm:w-auto"
               >
                 <span>Explore Verified Opportunities</span>
                 <ArrowRight className="h-4 w-4" />
