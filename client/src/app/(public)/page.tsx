@@ -1,3 +1,6 @@
+"use client";
+
+import { useAuth } from "@/context/AuthContext";
 import {
   Hero,
   CompanyMarquee,
@@ -10,9 +13,12 @@ import {
   Testimonials,
   FaqSection,
   CallToAction,
+  LoggedInMemberHub,
 } from "@/components/landing";
 
 export default function Home() {
+  const { user } = useAuth();
+
   return (
     <>
       <Hero />
@@ -21,11 +27,17 @@ export default function Home() {
       <PopularSkills />
       <FeaturedJobs />
       <SalaryExplorer />
-      <HowItWorks />
-      <FeaturesBento />
-      <Testimonials />
-      <FaqSection />
-      <CallToAction />
+      {user ? (
+        <LoggedInMemberHub user={user} />
+      ) : (
+        <>
+          <HowItWorks />
+          <FeaturesBento />
+          <Testimonials />
+          <FaqSection />
+          <CallToAction />
+        </>
+      )}
     </>
   );
 }
