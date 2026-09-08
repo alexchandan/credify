@@ -1,11 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ExternalLink, Mail } from "lucide-react";
+import { ArrowLeft, Clock, ExternalLink, Loader2, Mail } from "lucide-react";
 import { AuthShell } from "@/components/auth/AuthShell";
-import { apiRequest } from "@/lib/apiClient";
+import { ApiError, apiRequest } from "@/lib/apiClient";
 import { getErrorMessage } from "@/lib/formErrors";
+
+const RESEND_COOLDOWN_SECONDS = 30;
+
+function getCooldownKey(email: string): string {
+  const normalized = email.trim().toLowerCase();
+  return normalized
+    ? `credify_resend_cooldown_${normalized}`
+    : "credify_resend_cooldown";
+}
 
 function webmailUrlFor(email: string): string {
   const domain = email.split("@")[1]?.toLowerCase() ?? "";
@@ -24,9 +33,50 @@ function webmailUrlFor(email: string): string {
 export default function CheckEmailClient({ email }: { email: string }) {
   const [isResending, setIsResending] = useState(false);
   const [resendMessage, setResendMessage] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState(0);
+
+  useEffect(() => {
+    const storageKey = getCooldownKey(email);
+    const timerId = setTimeout(() => {
+      const savedExpiry = sessionStorage.getItem(storageKey);
+      if (savedExpiry) {
+        const remainingMs = Number(savedExpiry) - Date.now();
+        const remainingSec = Math.ceil(remainingMs / 1000);
+        if (remainingSec > 0 && remainingSec <= RESEND_COOLDOWN_SECONDS) {
+          setCountdown(remainingSec);
+        } else {
+          sessionStorage.removeItem(storageKey);
+        }
+      }
+    }, 0);
+
+    return () => clearTimeout(timerId);
+  }, [email]);
+
+  useEffect(() => {
+    if (countdown <= 0) return;
+
+    const storageKey = getCooldownKey(email);
+    const timer = setInterval(() => {
+      const savedExpiry = sessionStorage.getItem(storageKey);
+      if (savedExpiry) {
+        const remaining = Math.ceil((Number(savedExpiry) - Date.now()) / 1000);
+        if (remaining > 0) {
+          setCountdown(remaining);
+        } else {
+          sessionStorage.removeItem(storageKey);
+          setCountdown(0);
+        }
+      } else {
+        setCountdown((prev) => Math.max(0, prev - 1));
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [countdown, email]);
 
   async function handleResend() {
-    if (!email) return;
+    if (!email || isResending || countdown > 0) return;
     setIsResending(true);
     setResendMessage(null);
     try {
@@ -36,8 +86,23 @@ export default function CheckEmailClient({ email }: { email: string }) {
         skipAuth: true,
       });
       setResendMessage("A new verification link has been sent.");
+      setCountdown(RESEND_COOLDOWN_SECONDS);
+      sessionStorage.setItem(
+        getCooldownKey(email),
+        String(Date.now() + RESEND_COOLDOWN_SECONDS * 1000),
+      );
     } catch (error) {
       setResendMessage(getErrorMessage(error));
+      if (
+        error instanceof ApiError &&
+        (error.statusCode === 429 || error.code === "RATE_LIMITED")
+      ) {
+        setCountdown(RESEND_COOLDOWN_SECONDS);
+        sessionStorage.setItem(
+          getCooldownKey(email),
+          String(Date.now() + RESEND_COOLDOWN_SECONDS * 1000),
+        );
+      }
     } finally {
       setIsResending(false);
     }
@@ -78,10 +143,23 @@ export default function CheckEmailClient({ email }: { email: string }) {
         <button
           type="button"
           onClick={handleResend}
-          disabled={isResending || !email}
-          className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-cyan-400 hover:text-cyan-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:border-cyan-600 dark:hover:text-cyan-400"
+          disabled={isResending || countdown > 0 || !email}
+          aria-disabled={isResending || countdown > 0 || !email}
+          className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-cyan-400 hover:text-cyan-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-cyan-400 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:border-cyan-600 dark:hover:text-cyan-400"
         >
-          {isResending ? "Sending..." : "Resend verification link"}
+          {isResending ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+              <span>Sending...</span>
+            </>
+          ) : countdown > 0 ? (
+            <>
+              <Clock className="h-4 w-4" aria-hidden="true" />
+              <span>Resend link in {countdown}s</span>
+            </>
+          ) : (
+            <span>Resend verification link</span>
+          )}
         </button>
 
         {resendMessage ? (

@@ -9,3 +9,4 @@ export { FeaturesBento } from "./FeaturesBento";
 export { Testimonials } from "./Testimonials";
 export { FaqSection } from "./FaqSection";
 export { CallToAction } from "./CallToAction";
+export { LoggedInMemberHub } from "./LoggedInMemberHub";
