@@ -17,6 +17,8 @@ import {
   X,
   Check,
   LoaderCircle,
+  Bookmark,
+  Users,
 } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { useAuth, type AuthUser } from "@/context/AuthContext";
@@ -66,8 +68,9 @@ function navItemsFor(user: AuthUser | null, pathname: string): NavItem[] {
   if (role === "recruiter") {
     return [
       { href: "/recruiter/dashboard", label: "Dashboard" },
+      { href: "/recruiter/candidates", label: "Find Talent" },
+      { href: "/recruiter/saved-candidates", label: "Saved Talent" },
       { href: "/recruiter/jobs", label: "Manage jobs" },
-      { href: "/jobs", label: "Browse jobs" },
       { href: "/recruiter/profile", label: "Company profile" },
     ];
   }
@@ -675,6 +678,22 @@ export function Nav() {
                       >
                         <LayoutDashboard className="h-4 w-4" />
                         Dashboard
+                      </Link>
+                      <Link
+                        href="/recruiter/candidates"
+                        onClick={() => setIsAccountMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                      >
+                        <Users className="h-4 w-4" />
+                        Find Talent
+                      </Link>
+                      <Link
+                        href="/recruiter/saved-candidates"
+                        onClick={() => setIsAccountMenuOpen(false)}
+                        className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-200 dark:hover:bg-slate-800"
+                      >
+                        <Bookmark className="h-4 w-4" />
+                        Saved Candidates
                       </Link>
                       <Link
                         href="/recruiter/profile"

@@ -71,8 +71,12 @@ export async function saveCandidate(
   }
 }
 
+interface EnrichedSavedCandidate extends ISavedCandidate {
+  candidate?: unknown;
+}
+
 interface SavedCandidateListResult {
-  savedCandidates: ISavedCandidate[];
+  savedCandidates: EnrichedSavedCandidate[];
   page: number;
   limit: number;
   totalCount: number;
@@ -96,8 +100,30 @@ export async function getMySavedCandidates(
     SavedCandidate.countDocuments(filter),
   ]);
 
+  const candidateIds = [
+    ...new Set(savedCandidates.map((s) => s.candidateId.toString())),
+  ];
+  const candidates = await CandidateProfile.find({
+    _id: { $in: candidateIds },
+    deletedAt: null,
+  }).select(
+    "fullName headline avatarUrl skills location availability experience education projects certifications socialLinks resumeUrl",
+  );
+
+  const candidateMap = new Map(candidates.map((c) => [c._id.toString(), c]));
+
+  const enriched = savedCandidates.map((item) => {
+    const raw = (item as ISavedCandidate).toObject
+      ? (item as ISavedCandidate).toObject()
+      : item;
+    return {
+      ...raw,
+      candidate: candidateMap.get(item.candidateId.toString()) ?? null,
+    };
+  });
+
   return {
-    savedCandidates,
+    savedCandidates: enriched as EnrichedSavedCandidate[],
     page: query.page,
     limit: query.limit,
     totalCount,

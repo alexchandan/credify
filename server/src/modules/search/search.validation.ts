@@ -3,7 +3,8 @@ import { Availability } from "../../models/candidateProfile.model.js";
 import { EmploymentType, ExperienceLevel } from "../../models/job.model.js";
 
 export const searchCandidatesQuerySchema = z.object({
-  q: z.string().trim().min(1, "A search query is required"),
+  q: z.string().trim().optional(),
+  skill: z.string().trim().optional(),
   location: z.string().trim().optional(),
   availability: z
     .enum(Object.values(Availability) as [Availability, ...Availability[]])

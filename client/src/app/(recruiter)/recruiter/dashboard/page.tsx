@@ -199,6 +199,13 @@ export default function RecruiterDashboardPage() {
 
           <div className="flex flex-wrap items-center gap-3">
             <Link
+              href="/recruiter/candidates"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-xs transition hover:border-slate-300 hover:text-slate-950 active:scale-[0.99] dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-700 dark:hover:text-white"
+            >
+              <Users className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+              Find Talent
+            </Link>
+            <Link
               href="/recruiter/profile"
               className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 shadow-xs transition hover:border-slate-300 hover:text-slate-950 active:scale-[0.99] dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-700 dark:hover:text-white"
             >
@@ -251,6 +258,7 @@ export default function RecruiterDashboardPage() {
                 value={dashboard.savedCandidatesCount}
                 detail="In your talent pool"
                 tone="amber"
+                href="/recruiter/saved-candidates"
               />
             </section>
 
@@ -640,12 +648,14 @@ function StatCard({
   value,
   detail,
   tone,
+  href,
 }: {
   icon: typeof BriefcaseBusiness;
   label: string;
   value: number;
   detail: string;
   tone: "cyan" | "indigo" | "emerald" | "amber";
+  href?: string;
 }) {
   const tones = {
     cyan: {
@@ -666,14 +676,23 @@ function StatCard({
     },
   };
 
-  return (
-    <div className="group relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm transition hover:border-slate-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700">
+  const cardContent = (
+    <div
+      className={`group relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm transition hover:border-slate-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700 ${
+        href ? "cursor-pointer" : ""
+      }`}
+    >
       <div className="flex items-center justify-between">
         <span
           className={`flex h-11 w-11 items-center justify-center rounded-xl ${tones[tone].bg}`}
         >
           <Icon className="h-5 w-5" />
         </span>
+        {href && (
+          <span className="text-xs font-semibold text-slate-400 transition group-hover:text-amber-600 dark:group-hover:text-amber-400">
+            View &rarr;
+          </span>
+        )}
       </div>
       <p className="mt-4 text-3xl font-bold tracking-tight text-slate-950 dark:text-white">
         {value}
@@ -686,6 +705,15 @@ function StatCard({
       </p>
     </div>
   );
+
+  if (href) {
+    return (
+      <Link href={href} className="block">
+        {cardContent}
+      </Link>
+    );
+  }
+  return cardContent;
 }
 
 function CompanyPrompt() {

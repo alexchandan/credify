@@ -26,61 +26,117 @@ interface SearchResult<T> {
   totalPages: number;
 }
 
-export async function searchCandidates(
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+async function searchCandidatesMongoFallback(
   query: SearchCandidatesQuery,
 ): Promise<SearchResult<ICandidateProfile>> {
   const skip = (query.page - 1) * query.limit;
-
-  const compound = {
-    must: [
-      {
-        text: {
-          query: query.q,
-          path: ["fullName", "headline", "skills"],
-          fuzzy: {},
-        },
-      },
-    ],
-    filter: [
-      ...(query.location
-        ? [{ text: { query: query.location, path: "location" } }]
-        : []),
-      ...(query.availability
-        ? [{ equals: { path: "availability", value: query.availability } }]
-        : []),
-    ],
+  const filter: Record<string, unknown> = {
+    deletedAt: null,
   };
 
-  const [results, countResult] = await Promise.all([
-    CandidateProfile.aggregate([
-      { $search: { index: CANDIDATE_SEARCH_INDEX, compound } },
-      // deletedAt filtering happens here, via a normal $match against the
-      // existing deletedAt index — not inside the Atlas Search query
-      // itself, which handles null-matching on non-string fields awkwardly.
-      { $match: { deletedAt: null } },
-      { $skip: skip },
-      { $limit: query.limit },
-    ]),
-    CandidateProfile.aggregate([
-      {
-        $searchMeta: {
-          index: CANDIDATE_SEARCH_INDEX,
-          compound,
-          count: { type: "total" },
-        },
-      },
-    ]),
+  if (query.q) {
+    const qPattern = new RegExp(escapeRegex(query.q), "i");
+    filter.$or = [
+      { fullName: qPattern },
+      { headline: qPattern },
+      { skills: qPattern },
+    ];
+  }
+
+  if (query.skill) {
+    filter.skills = new RegExp(escapeRegex(query.skill.trim()), "i");
+  }
+
+  if (query.location) {
+    filter.location = new RegExp(escapeRegex(query.location.trim()), "i");
+  }
+
+  if (query.availability) {
+    filter.availability = query.availability;
+  }
+
+  const [results, totalCount] = await Promise.all([
+    CandidateProfile.find(filter)
+      .sort({ updatedAt: -1, _id: -1 })
+      .skip(skip)
+      .limit(query.limit)
+      .lean(),
+    CandidateProfile.countDocuments(filter),
   ]);
 
-  const totalCount: number = countResult[0]?.count?.total ?? 0;
-
   return {
-    results,
+    results: results as ICandidateProfile[],
     page: query.page,
     limit: query.limit,
     totalCount,
     totalPages: Math.ceil(totalCount / query.limit),
   };
+}
+
+export async function searchCandidates(
+  query: SearchCandidatesQuery,
+): Promise<SearchResult<ICandidateProfile>> {
+  if (!query.q) {
+    return searchCandidatesMongoFallback(query);
+  }
+
+  try {
+    const skip = (query.page - 1) * query.limit;
+
+    const compound = {
+      must: [
+        {
+          text: {
+            query: query.q,
+            path: ["fullName", "headline", "skills"],
+            fuzzy: {},
+          },
+        },
+      ],
+      filter: [
+        ...(query.location
+          ? [{ text: { query: query.location, path: "location" } }]
+          : []),
+        ...(query.availability
+          ? [{ equals: { path: "availability", value: query.availability } }]
+          : []),
+      ],
+    };
+
+    const [results, countResult] = await Promise.all([
+      CandidateProfile.aggregate([
+        { $search: { index: CANDIDATE_SEARCH_INDEX, compound } },
+        { $match: { deletedAt: null } },
+        { $skip: skip },
+        { $limit: query.limit },
+      ]),
+      CandidateProfile.aggregate([
+        {
+          $searchMeta: {
+            index: CANDIDATE_SEARCH_INDEX,
+            compound,
+            count: { type: "total" },
+          },
+        },
+      ]),
+    ]);
+
+    const totalCount: number = countResult[0]?.count?.total ?? 0;
+
+    return {
+      results,
+      page: query.page,
+      limit: query.limit,
+      totalCount,
+      totalPages: Math.ceil(totalCount / query.limit),
+    };
+  } catch {
+    return searchCandidatesMongoFallback(query);
+  }
 }
 
 export async function searchJobs(
