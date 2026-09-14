@@ -13,6 +13,8 @@ import {
   ChevronLeft,
   ChevronRight,
   RotateCcw,
+  LayoutGrid,
+  List,
 } from "lucide-react";
 import Link from "next/link";
 import { apiRequest } from "@/lib/apiClient";
@@ -57,6 +59,7 @@ export default function RecruiterCandidatesPage() {
     Availability | "all"
   >("all");
   const [page, setPage] = useState(1);
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
 
   // Data State
   const [candidates, setCandidates] = useState<CandidateProfile[]>([]);
@@ -409,8 +412,39 @@ export default function RecruiterCandidatesPage() {
             )}
           </div>
 
-          <div className="text-xs text-slate-400">
-            Page {page} of {totalPages || 1}
+          <div className="flex items-center gap-3">
+            <div className="text-xs text-slate-400">
+              Page {page} of {totalPages || 1}
+            </div>
+
+            <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+              <button
+                type="button"
+                onClick={() => setViewMode("list")}
+                title="List view"
+                aria-label="List view"
+                className={`rounded-lg p-1.5 transition ${
+                  viewMode === "list"
+                    ? "bg-cyan-50 text-cyan-700 shadow-xs dark:bg-cyan-950/60 dark:text-cyan-400"
+                    : "text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                }`}
+              >
+                <List className="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("grid")}
+                title="Grid view"
+                aria-label="Grid view"
+                className={`rounded-lg p-1.5 transition ${
+                  viewMode === "grid"
+                    ? "bg-cyan-50 text-cyan-700 shadow-xs dark:bg-cyan-950/60 dark:text-cyan-400"
+                    : "text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                }`}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -423,7 +457,7 @@ export default function RecruiterCandidatesPage() {
 
         {/* Loading Skeleton */}
         {loading ? (
-          <CandidateBoardSkeleton />
+          <CandidateBoardSkeleton variant={viewMode} />
         ) : candidates.length === 0 ? (
           /* Empty State */
           <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-white p-12 text-center dark:border-slate-800 dark:bg-slate-900/40">
@@ -445,6 +479,24 @@ export default function RecruiterCandidatesPage() {
               <RotateCcw className="h-3.5 w-3.5" /> Reset all filters
             </button>
           </div>
+        ) : viewMode === "list" ? (
+          /* Candidate List */
+          <div className="space-y-3.5">
+            {candidates.map((cand) => {
+              const savedItem = savedMap.get(cand._id);
+              return (
+                <CandidateCard
+                  key={cand._id}
+                  candidate={cand}
+                  variant="list"
+                  isSaved={Boolean(savedItem)}
+                  savedNote={savedItem?.note}
+                  onViewProfile={handleViewProfile}
+                  onToggleSave={handleToggleSave}
+                />
+              );
+            })}
+          </div>
         ) : (
           /* Candidate Cards Grid */
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -454,6 +506,7 @@ export default function RecruiterCandidatesPage() {
                 <CandidateCard
                   key={cand._id}
                   candidate={cand}
+                  variant="card"
                   isSaved={Boolean(savedItem)}
                   savedNote={savedItem?.note}
                   onViewProfile={handleViewProfile}

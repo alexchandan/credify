@@ -16,6 +16,7 @@ interface CandidateCardProps {
   candidate: CandidateProfile;
   isSaved?: boolean;
   savedNote?: string;
+  variant?: "card" | "list";
   onViewProfile: (candidate: CandidateProfile) => void;
   onToggleSave: (candidate: CandidateProfile) => void;
 }
@@ -24,6 +25,7 @@ export function CandidateCard({
   candidate,
   isSaved = false,
   savedNote = "",
+  variant = "list",
   onViewProfile,
   onToggleSave,
 }: CandidateCardProps) {
@@ -50,6 +52,146 @@ export function CandidateCard({
     .toUpperCase();
 
   const latestExp = candidate.experience?.[0];
+
+  if (variant === "list") {
+    return (
+      <div className="group relative flex flex-col justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white p-4.5 shadow-xs transition hover:border-slate-300 hover:shadow-md sm:p-5 lg:flex-row lg:items-center dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700">
+        <div className="flex min-w-0 flex-1 items-start gap-4">
+          {candidate.avatarUrl ? (
+            <div className="relative h-13 w-13 shrink-0 overflow-hidden rounded-2xl border border-slate-100 shadow-xs dark:border-slate-800">
+              <Image
+                src={candidate.avatarUrl}
+                alt={candidate.fullName}
+                fill
+                className="object-cover"
+              />
+            </div>
+          ) : (
+            <div className="flex h-13 w-13 shrink-0 items-center justify-center rounded-2xl bg-linear-to-tr from-cyan-600 to-blue-600 text-base font-bold text-white shadow-xs">
+              {initials}
+            </div>
+          )}
+
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <h3
+                onClick={() => onViewProfile(candidate)}
+                className="cursor-pointer text-base font-bold text-slate-950 transition hover:text-cyan-600 dark:text-white dark:hover:text-cyan-400"
+              >
+                {candidate.fullName}
+              </h3>
+              <span
+                className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-medium ${
+                  availabilityColorMap[candidate.availability] ||
+                  availabilityColorMap.immediate
+                }`}
+              >
+                <Clock className="h-3 w-3" />
+                {availabilityLabel}
+              </span>
+              {candidate.location && (
+                <span className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                  <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                  {candidate.location}
+                </span>
+              )}
+            </div>
+
+            <p className="mt-0.5 line-clamp-1 text-xs font-medium text-slate-600 dark:text-slate-300">
+              {candidate.headline || "Talented Candidate"}
+            </p>
+
+            <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-600 dark:text-slate-300">
+              {latestExp && (
+                <div className="flex items-center gap-1.5">
+                  <Briefcase className="h-3.5 w-3.5 shrink-0 text-cyan-600 dark:text-cyan-400" />
+                  <span className="line-clamp-1">
+                    <span className="font-semibold text-slate-900 dark:text-white">
+                      {latestExp.title}
+                    </span>{" "}
+                    at {latestExp.company}
+                  </span>
+                </div>
+              )}
+
+              {candidate.skills && candidate.skills.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {latestExp && (
+                    <span className="hidden text-slate-300 sm:inline dark:text-slate-700">
+                      •
+                    </span>
+                  )}
+                  {candidate.skills.slice(0, 4).map((skill) => (
+                    <span
+                      key={skill}
+                      className="rounded-lg border border-slate-200/80 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-300"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                  {candidate.skills.length > 4 && (
+                    <span className="rounded-lg bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                      +{candidate.skills.length - 4}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {isSaved && savedNote && (
+              <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-xl border border-amber-200/60 bg-amber-50/50 px-2.5 py-1 text-[11px] text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300">
+                <span className="font-semibold">Note:</span>{" "}
+                <span className="line-clamp-1">{savedNote}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex shrink-0 items-center justify-between gap-2.5 border-t border-slate-100 pt-3 sm:justify-end lg:border-t-0 lg:pt-0 dark:border-slate-800/80">
+          {candidate.resumeUrl && (
+            <a
+              href={candidate.resumeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:border-cyan-300 hover:bg-cyan-50/50 hover:text-cyan-700 dark:border-slate-800 dark:text-slate-400 dark:hover:border-cyan-800 dark:hover:bg-cyan-950/40 dark:hover:text-cyan-300"
+            >
+              <FileText className="h-3.5 w-3.5" />
+              Resume
+            </a>
+          )}
+
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleSave(candidate);
+            }}
+            title={
+              isSaved
+                ? "Saved candidate (Click to manage)"
+                : "Save candidate to talent pool"
+            }
+            className={`rounded-xl p-2 transition ${
+              isSaved
+                ? "bg-amber-50 text-amber-600 hover:bg-amber-100 dark:bg-amber-950/40 dark:text-amber-400 dark:hover:bg-amber-900/60"
+                : "text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+            }`}
+          >
+            <Bookmark className={`h-4 w-4 ${isSaved ? "fill-current" : ""}`} />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onViewProfile(candidate)}
+            className="inline-flex items-center gap-1 rounded-xl bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
+          >
+            View Profile
+            <ArrowRight className="h-3 w-3" />
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition hover:-translate-y-1 hover:border-slate-300 hover:shadow-md sm:p-6 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700">

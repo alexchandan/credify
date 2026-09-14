@@ -18,6 +18,40 @@ function JobCardSkeleton() {
   );
 }
 
+function JobListItemSkeleton() {
+  return (
+    <SkeletonCard className="flex flex-col justify-between gap-4 rounded-2xl border border-slate-200/90 p-4.5 shadow-xs sm:flex-row sm:items-center sm:p-5">
+      <div className="flex flex-1 items-start gap-3.5 sm:items-center">
+        <Skeleton className="h-12 w-12 shrink-0 rounded-2xl" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-5 w-48 rounded-md" />
+            <Skeleton className="h-4 w-28 rounded-md" />
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Skeleton className="h-5 w-20 rounded-full" />
+            <Skeleton className="h-4 w-24 rounded-md" />
+            <Skeleton className="h-4 w-28 rounded-md" />
+          </div>
+        </div>
+      </div>
+      <div className="flex shrink-0 items-center justify-end">
+        <Skeleton className="h-9 w-24 rounded-xl" />
+      </div>
+    </SkeletonCard>
+  );
+}
+
+function JobListSkeleton({ count = 6 }: { count?: number }) {
+  return (
+    <div className="mt-6 space-y-3.5">
+      {Array.from({ length: count }, (_, index) => (
+        <JobListItemSkeleton key={index} />
+      ))}
+    </div>
+  );
+}
+
 export default function JobBoardSkeleton() {
   return (
     <main className="flex-1 bg-slate-50 dark:bg-slate-950" aria-busy="true">
@@ -32,13 +66,17 @@ export default function JobBoardSkeleton() {
       <section className="mx-auto w-full max-w-6xl px-4 py-10 sm:px-6">
         <Skeleton className="h-7 w-44" />
         <SkeletonText className="mt-3 w-28" />
-        <JobGridSkeleton />
+        <JobGridSkeleton variant="list" />
       </section>
     </main>
   );
 }
 
-function JobGridSkeleton() {
+function JobGridSkeleton({ variant = "list" }: { variant?: "list" | "grid" }) {
+  if (variant === "list") {
+    return <JobListSkeleton />;
+  }
+
   return (
     <div>
       <SkeletonText className="mt-2 w-24" />
@@ -51,4 +89,9 @@ function JobGridSkeleton() {
   );
 }
 
-export { JobCardSkeleton, JobGridSkeleton };
+export {
+  JobCardSkeleton,
+  JobGridSkeleton,
+  JobListItemSkeleton,
+  JobListSkeleton,
+};

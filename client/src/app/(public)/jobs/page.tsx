@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { LayoutGrid, List, Search, SlidersHorizontal } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { JobCard } from "@/components/jobs/JobCard";
 import { apiRequest } from "@/lib/apiClient";
@@ -34,6 +34,7 @@ function JobBoard() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -177,7 +178,7 @@ function JobBoard() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-        <div className="flex items-end justify-between gap-4">
+        <div className="flex items-center justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold text-slate-950 dark:text-white">
               Available roles
@@ -187,6 +188,35 @@ function JobBoard() {
                 {meta.totalCount} role{meta.totalCount === 1 ? "" : "s"} found
               </p>
             )}
+          </div>
+
+          <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+            <button
+              type="button"
+              onClick={() => setViewMode("list")}
+              title="List view"
+              aria-label="List view"
+              className={`rounded-lg p-1.5 transition ${
+                viewMode === "list"
+                  ? "bg-cyan-50 text-cyan-700 shadow-xs dark:bg-cyan-950/60 dark:text-cyan-400"
+                  : "text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              }`}
+            >
+              <List className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("grid")}
+              title="Grid view"
+              aria-label="Grid view"
+              className={`rounded-lg p-1.5 transition ${
+                viewMode === "grid"
+                  ? "bg-cyan-50 text-cyan-700 shadow-xs dark:bg-cyan-950/60 dark:text-cyan-400"
+                  : "text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+              }`}
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </button>
           </div>
         </div>
 
@@ -200,13 +230,21 @@ function JobBoard() {
         )}
 
         {isLoading ? (
-          <JobGridSkeleton />
+          <JobGridSkeleton variant={viewMode} />
         ) : jobs.length > 0 ? (
-          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {jobs.map((job) => (
-              <JobCard key={job._id} job={job} />
-            ))}
-          </div>
+          viewMode === "list" ? (
+            <div className="mt-6 space-y-3.5">
+              {jobs.map((job) => (
+                <JobCard key={job._id} job={job} variant="list" />
+              ))}
+            </div>
+          ) : (
+            <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {jobs.map((job) => (
+                <JobCard key={job._id} job={job} variant="card" />
+              ))}
+            </div>
+          )
         ) : !error ? (
           <div className="mt-6 rounded-xl border border-slate-200/80 bg-white px-6 py-12 text-center dark:border-white/10 dark:bg-slate-900">
             <h3 className="font-semibold text-slate-900 dark:text-slate-100">

@@ -249,8 +249,8 @@ export default function RecruiterSavedCandidatesPage() {
             </button>
           </div>
         ) : (
-          /* Saved Candidate Grid */
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          /* Saved Candidate List */
+          <div className="space-y-3.5">
             {filteredList.map((item) => {
               const cand = item.candidate;
               const initials = cand?.fullName
@@ -271,87 +271,108 @@ export default function RecruiterSavedCandidatesPage() {
               return (
                 <div
                   key={item._id}
-                  className="flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition hover:border-slate-300 hover:shadow-md sm:p-6 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
+                  className="group relative flex flex-col justify-between gap-4 rounded-2xl border border-slate-200/80 bg-white p-4.5 shadow-xs transition hover:border-slate-300 hover:shadow-md sm:p-5 lg:flex-row lg:items-center dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
                 >
-                  <div>
-                    {/* Top row: Avatar & Identity */}
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3">
-                        {cand?.avatarUrl ? (
-                          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-slate-100 shadow-xs dark:border-slate-800">
-                            <Image
-                              src={cand.avatarUrl}
-                              alt={cand.fullName}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                        ) : (
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-linear-to-tr from-cyan-600 to-blue-600 text-sm font-bold text-white shadow-xs">
-                            {initials}
-                          </div>
-                        )}
-                        <div>
-                          <h3
-                            onClick={() => {
-                              if (cand) {
-                                setActiveProfile(cand);
-                                setIsDrawerOpen(true);
-                              }
-                            }}
-                            className="cursor-pointer text-sm font-bold text-slate-950 transition hover:text-cyan-600 sm:text-base dark:text-white dark:hover:text-cyan-400"
-                          >
-                            {cand?.fullName ?? "Unknown Candidate"}
-                          </h3>
-                          <p className="mt-0.5 line-clamp-1 text-xs font-medium text-slate-500 dark:text-slate-400">
-                            {cand?.headline ?? "Software Professional"}
-                          </p>
-                        </div>
+                  {/* Left / Info section */}
+                  <div className="flex min-w-0 flex-1 items-start gap-4">
+                    {cand?.avatarUrl ? (
+                      <div className="relative h-13 w-13 shrink-0 overflow-hidden rounded-2xl border border-slate-100 shadow-xs dark:border-slate-800">
+                        <Image
+                          src={cand.avatarUrl}
+                          alt={cand.fullName}
+                          fill
+                          className="object-cover"
+                        />
                       </div>
-
-                      {/* Remove button */}
-                      <button
-                        type="button"
-                        onClick={() => handleQuickUnsave(item)}
-                        title="Remove from saved talent"
-                        className="rounded-lg p-1.5 text-slate-400 transition hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 dark:hover:text-red-400"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-
-                    {/* Badges */}
-                    {cand && (
-                      <div className="mt-3.5 flex flex-wrap items-center gap-2 text-xs">
-                        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/50 dark:text-emerald-300">
-                          <Clock className="h-2.5 w-2.5" />
-                          {availabilityLabel}
-                        </span>
-                        {cand.location && (
-                          <span className="inline-flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400">
-                            <MapPin className="h-3 w-3 text-slate-400" />
-                            {cand.location}
-                          </span>
-                        )}
+                    ) : (
+                      <div className="flex h-13 w-13 shrink-0 items-center justify-center rounded-2xl bg-linear-to-tr from-cyan-600 to-blue-600 text-base font-bold text-white shadow-xs">
+                        {initials}
                       </div>
                     )}
 
-                    {/* Latest Exp */}
-                    {cand?.experience?.[0] && (
-                      <div className="mt-3 flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
-                        <Briefcase className="h-3.5 w-3.5 shrink-0 text-cyan-600 dark:text-cyan-400" />
-                        <span className="line-clamp-1">
-                          {cand.experience[0].title} at{" "}
-                          {cand.experience[0].company}
-                        </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <h3
+                          onClick={() => {
+                            if (cand) {
+                              setActiveProfile(cand);
+                              setIsDrawerOpen(true);
+                            }
+                          }}
+                          className="cursor-pointer text-base font-bold text-slate-950 transition hover:text-cyan-600 dark:text-white dark:hover:text-cyan-400"
+                        >
+                          {cand?.fullName ?? "Unknown Candidate"}
+                        </h3>
+                        {cand && (
+                          <>
+                            <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-medium text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/50 dark:text-emerald-300">
+                              <Clock className="h-3 w-3" />
+                              {availabilityLabel}
+                            </span>
+                            {cand.location && (
+                              <span className="inline-flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                                <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                                {cand.location}
+                              </span>
+                            )}
+                          </>
+                        )}
                       </div>
-                    )}
 
-                    {/* Private Recruiter Note Card */}
-                    <div className="mt-4 rounded-xl border border-amber-200/80 bg-amber-50/60 p-3 dark:border-amber-900/50 dark:bg-amber-950/30">
-                      <div className="flex items-center justify-between">
+                      <p className="mt-0.5 line-clamp-1 text-xs font-medium text-slate-600 dark:text-slate-300">
+                        {cand?.headline ?? "Software Professional"}
+                      </p>
+
+                      <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-600 dark:text-slate-300">
+                        {cand?.experience?.[0] && (
+                          <div className="flex items-center gap-1.5">
+                            <Briefcase className="h-3.5 w-3.5 shrink-0 text-cyan-600 dark:text-cyan-400" />
+                            <span className="line-clamp-1">
+                              <span className="font-semibold text-slate-900 dark:text-white">
+                                {cand.experience[0].title}
+                              </span>{" "}
+                              at {cand.experience[0].company}
+                            </span>
+                          </div>
+                        )}
+
+                        {cand?.skills && cand.skills.length > 0 && (
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            {cand.experience?.[0] && (
+                              <span className="hidden text-slate-300 sm:inline dark:text-slate-700">
+                                •
+                              </span>
+                            )}
+                            {cand.skills.slice(0, 4).map((skill) => (
+                              <span
+                                key={skill}
+                                className="rounded-lg border border-slate-200/80 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:border-slate-800 dark:bg-slate-800/60 dark:text-slate-300"
+                              >
+                                {skill}
+                              </span>
+                            ))}
+                            {cand.skills.length > 4 && (
+                              <span className="rounded-lg bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                                +{cand.skills.length - 4}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Recruiter Note Badge */}
+                      <div className="mt-2.5 inline-flex flex-wrap items-center gap-2 rounded-xl border border-amber-200/80 bg-amber-50/60 px-3 py-1.5 dark:border-amber-900/50 dark:bg-amber-950/30">
                         <span className="text-[10px] font-bold tracking-wider text-amber-900 uppercase dark:text-amber-300">
-                          Recruiter Note
+                          Note:
+                        </span>
+                        <span className="text-xs text-amber-950 dark:text-amber-200">
+                          {item.note ? (
+                            item.note
+                          ) : (
+                            <span className="text-amber-700/70 italic dark:text-amber-400/60">
+                              No notes added.
+                            </span>
+                          )}
                         </span>
                         <button
                           type="button"
@@ -359,36 +380,37 @@ export default function RecruiterSavedCandidatesPage() {
                             setEditingCandidate(item);
                             setIsModalOpen(true);
                           }}
-                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-800 hover:underline dark:text-amber-400"
+                          className="ml-1 inline-flex items-center gap-0.5 text-[11px] font-semibold text-amber-800 hover:underline dark:text-amber-400"
                         >
-                          <Edit3 className="h-3 w-3" /> Edit
+                          <Edit3 className="h-2.5 w-2.5" /> Edit
                         </button>
                       </div>
-                      <p className="mt-1 text-xs leading-relaxed text-amber-950 dark:text-amber-200">
-                        {item.note || (
-                          <span className="text-amber-700/70 italic dark:text-amber-400/60">
-                            No notes added yet.
-                          </span>
-                        )}
-                      </p>
                     </div>
                   </div>
 
-                  {/* Card Footer */}
-                  <div className="mt-5 flex items-center justify-between border-t border-slate-100 pt-3.5 dark:border-slate-800/80">
-                    {cand?.resumeUrl ? (
+                  {/* Right Actions */}
+                  <div className="flex shrink-0 items-center justify-between gap-2.5 border-t border-slate-100 pt-3 sm:justify-end lg:border-t-0 lg:pt-0 dark:border-slate-800/80">
+                    {cand?.resumeUrl && (
                       <a
                         href={cand.resumeUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-cyan-600 dark:text-slate-400 dark:hover:text-cyan-400"
+                        className="inline-flex items-center gap-1 rounded-xl border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:border-cyan-300 hover:bg-cyan-50/50 hover:text-cyan-700 dark:border-slate-800 dark:text-slate-400 dark:hover:border-cyan-800 dark:hover:bg-cyan-950/40 dark:hover:text-cyan-300"
                       >
-                        <FileText className="h-3.5 w-3.5" /> Resume
+                        <FileText className="h-3.5 w-3.5" />
+                        Resume
                         <ExternalLink className="h-2.5 w-2.5 opacity-60" />
                       </a>
-                    ) : (
-                      <span />
                     )}
+
+                    <button
+                      type="button"
+                      onClick={() => handleQuickUnsave(item)}
+                      title="Remove from saved talent"
+                      className="rounded-xl border border-transparent p-2 text-slate-400 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 dark:hover:border-red-900/50 dark:hover:bg-red-950/40 dark:hover:text-red-400"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
 
                     <button
                       type="button"
@@ -398,7 +420,7 @@ export default function RecruiterSavedCandidatesPage() {
                           setIsDrawerOpen(true);
                         }
                       }}
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-600 hover:text-cyan-700 dark:text-cyan-400 dark:hover:text-cyan-300"
+                      className="inline-flex items-center gap-1 rounded-xl bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
                     >
                       View Profile
                       <ChevronRight className="h-3.5 w-3.5" />
