@@ -254,19 +254,26 @@ export default function RecruiterJobsPage() {
 
       {/* Content Area */}
       {isLoading ? (
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 space-y-3.5">
           {[1, 2, 3, 4, 5, 6].map((idx) => (
             <div
               key={idx}
-              className="animate-pulse rounded-2xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900"
+              className="flex animate-pulse flex-col justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-4.5 sm:flex-row sm:items-center dark:border-slate-800 dark:bg-slate-900"
             >
-              <div className="h-5 w-2/3 rounded-md bg-slate-200 dark:bg-slate-800" />
-              <div className="mt-3 h-4 w-1/3 rounded-md bg-slate-100 dark:bg-slate-800/60" />
-              <div className="mt-6 flex gap-2">
-                <div className="h-6 w-16 rounded-md bg-slate-200 dark:bg-slate-800" />
-                <div className="h-6 w-20 rounded-md bg-slate-200 dark:bg-slate-800" />
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div className="h-5 w-20 rounded-full bg-slate-200 dark:bg-slate-800" />
+                  <div className="h-5 w-48 rounded-md bg-slate-200 dark:bg-slate-800" />
+                </div>
+                <div className="flex gap-2">
+                  <div className="h-4 w-24 rounded-md bg-slate-100 dark:bg-slate-800/60" />
+                  <div className="h-4 w-20 rounded-md bg-slate-100 dark:bg-slate-800/60" />
+                </div>
               </div>
-              <div className="mt-6 h-9 w-full rounded-lg bg-slate-100 dark:bg-slate-800/80" />
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-24 rounded-xl bg-slate-200 dark:bg-slate-800" />
+                <div className="h-8 w-20 rounded-xl bg-slate-200 dark:bg-slate-800" />
+              </div>
             </div>
           ))}
         </div>
@@ -294,177 +301,182 @@ export default function RecruiterJobsPage() {
           </Link>
         </div>
       ) : (
-        <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-6 space-y-3.5">
           {filteredJobs.map((job) => {
             const isProcessing = actionLoadingId === job._id;
             return (
               <div
                 key={job._id}
-                className="group relative flex flex-col justify-between rounded-2xl border border-slate-200/90 bg-white p-5 shadow-xs transition hover:border-slate-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
+                className="group relative flex flex-col justify-between gap-4 rounded-2xl border border-slate-200/90 bg-white p-4.5 shadow-xs transition hover:border-slate-300 hover:shadow-md sm:p-5 lg:flex-row lg:items-center dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
               >
-                <div>
-                  {/* Top Bar: Status and Actions */}
-                  <div className="flex items-center justify-between">
-                    <span
-                      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${
-                        job.status === "published"
-                          ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-500/30"
-                          : job.status === "draft"
-                            ? "bg-amber-50 text-amber-700 ring-1 ring-amber-600/20 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-500/30"
-                            : "bg-slate-100 text-slate-700 ring-1 ring-slate-400/20 dark:bg-slate-800 dark:text-slate-300"
-                      }`}
-                    >
+                {/* Left: Job Info */}
+                <div className="flex min-w-0 flex-1 items-start gap-4">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                       <span
-                        className={`h-1.5 w-1.5 rounded-full ${
+                        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${
                           job.status === "published"
-                            ? "bg-emerald-500"
+                            ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-500/30"
                             : job.status === "draft"
-                              ? "bg-amber-500"
-                              : "bg-slate-400"
+                              ? "bg-amber-50 text-amber-700 ring-1 ring-amber-600/20 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-500/30"
+                              : "bg-slate-100 text-slate-700 ring-1 ring-slate-400/20 dark:bg-slate-800 dark:text-slate-300"
                         }`}
-                      />
-                      {job.status}
-                    </span>
-
-                    <div className="flex items-center gap-1">
-                      <Link
-                        href={`/jobs/${job._id}`}
-                        target="_blank"
-                        title="View public posting"
-                        className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
                       >
-                        <ExternalLink className="h-4 w-4" />
-                      </Link>
-                      <Link
-                        href={`/recruiter/jobs/${job._id}/edit`}
-                        title="Edit job details"
-                        className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
-                      >
-                        <Edit3 className="h-4 w-4" />
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => setDeletingJob(job)}
-                        title="Delete job"
-                        className="rounded-lg p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/50 dark:hover:text-rose-400"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Title */}
-                  <h3 className="mt-3 line-clamp-1 text-base font-bold text-slate-900 dark:text-white">
-                    {job.title}
-                  </h3>
-
-                  {/* Meta Details */}
-                  <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-500 dark:text-slate-400">
-                    <span className="flex items-center gap-1 capitalize">
-                      <BriefcaseBusiness className="h-3.5 w-3.5" />
-                      {job.employmentType.replace("_", " ")}
-                    </span>
-                    <span className="flex items-center gap-1 capitalize">
-                      {job.experienceLevel} level
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <MapPin className="h-3.5 w-3.5" />
-                      {job.isRemote
-                        ? "Remote"
-                        : job.location[0] || "Undisclosed"}
-                    </span>
-                  </div>
-
-                  {/* Salary if present */}
-                  {job.salaryRange && (
-                    <div className="mt-2 flex items-center gap-1 text-xs font-medium text-slate-600 dark:text-slate-300">
-                      <Wallet className="h-3.5 w-3.5 text-slate-400" />
-                      {formatSalary(job.salaryRange)}
-                    </div>
-                  )}
-
-                  {/* Skills tags */}
-                  {job.skillsRequired.length > 0 && (
-                    <div className="mt-3.5 flex flex-wrap gap-1.5">
-                      {job.skillsRequired.slice(0, 3).map((skill) => (
                         <span
-                          key={skill}
-                          className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                          className={`h-1.5 w-1.5 rounded-full ${
+                            job.status === "published"
+                              ? "bg-emerald-500"
+                              : job.status === "draft"
+                                ? "bg-amber-500"
+                                : "bg-slate-400"
+                          }`}
+                        />
+                        {job.status}
+                      </span>
+
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                        <Link
+                          href={`/jobs/${job._id}`}
+                          className="transition hover:text-cyan-600 dark:hover:text-cyan-400"
                         >
-                          {skill}
-                        </span>
-                      ))}
-                      {job.skillsRequired.length > 3 && (
-                        <span className="rounded-md bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">
-                          +{job.skillsRequired.length - 3}
+                          {job.title}
+                        </Link>
+                      </h3>
+                    </div>
+
+                    {/* Meta Details */}
+                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-slate-500 dark:text-slate-400">
+                      <span className="flex items-center gap-1 capitalize">
+                        <BriefcaseBusiness className="h-3.5 w-3.5" />
+                        {job.employmentType.replace("_", " ")}
+                      </span>
+                      <span className="flex items-center gap-1 capitalize">
+                        {job.experienceLevel} level
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-3.5 w-3.5" />
+                        {job.isRemote
+                          ? "Remote"
+                          : job.location[0] || "Undisclosed"}
+                      </span>
+
+                      {job.salaryRange && (
+                        <span className="flex items-center gap-1 font-medium text-slate-700 dark:text-slate-300">
+                          <Wallet className="h-3.5 w-3.5 text-slate-400" />
+                          {formatSalary(job.salaryRange)}
                         </span>
                       )}
+
+                      {job.skillsRequired.length > 0 && (
+                        <div className="hidden items-center gap-1.5 md:flex">
+                          <span className="text-slate-300 dark:text-slate-700">
+                            •
+                          </span>
+                          {job.skillsRequired.slice(0, 3).map((skill) => (
+                            <span
+                              key={skill}
+                              className="rounded-md bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                          {job.skillsRequired.length > 3 && (
+                            <span className="rounded-md bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium text-slate-500 dark:bg-slate-800/60 dark:text-slate-400">
+                              +{job.skillsRequired.length - 3}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
 
-                {/* Bottom Actions */}
-                <div className="mt-6 border-t border-slate-100 pt-4 dark:border-slate-800/80">
-                  <div className="flex items-center justify-between gap-2">
-                    {/* Applicant Count CTA */}
-                    <Link
-                      href={`/recruiter/jobs/${job._id}/applications`}
-                      className="inline-flex items-center gap-2 rounded-xl bg-cyan-50 px-3 py-2 text-xs font-bold text-cyan-700 transition hover:bg-cyan-100 dark:bg-cyan-950/60 dark:text-cyan-300 dark:hover:bg-cyan-900/60"
+                {/* Right: Actions */}
+                <div className="flex shrink-0 flex-wrap items-center justify-between gap-2.5 border-t border-slate-100 pt-3 sm:justify-end lg:border-t-0 lg:pt-0 dark:border-slate-800/80">
+                  {/* Applicant Count CTA */}
+                  <Link
+                    href={`/recruiter/jobs/${job._id}/applications`}
+                    className="inline-flex items-center gap-2 rounded-xl bg-cyan-50 px-3 py-2 text-xs font-bold text-cyan-700 transition hover:bg-cyan-100 dark:bg-cyan-950/60 dark:text-cyan-300 dark:hover:bg-cyan-900/60"
+                  >
+                    <Users className="h-4 w-4" />
+                    {job.applicationCount === 1
+                      ? "1 Applicant"
+                      : `${job.applicationCount} Applicants`}
+                  </Link>
+
+                  {/* Publish / Close status button */}
+                  {job.status === "draft" && (
+                    <button
+                      type="button"
+                      disabled={isProcessing}
+                      onClick={() => handlePublish(job._id)}
+                      className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-emerald-500 disabled:opacity-50"
                     >
-                      <Users className="h-4 w-4" />
-                      {job.applicationCount === 1
-                        ? "1 Applicant"
-                        : `${job.applicationCount} Applicants`}
+                      {isProcessing ? (
+                        <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                      )}
+                      Publish
+                    </button>
+                  )}
+
+                  {job.status === "published" && (
+                    <button
+                      type="button"
+                      disabled={isProcessing}
+                      onClick={() => handleClose(job._id)}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                    >
+                      {isProcessing ? (
+                        <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <XCircle className="h-3.5 w-3.5" />
+                      )}
+                      Close
+                    </button>
+                  )}
+
+                  {job.status === "closed" && (
+                    <button
+                      type="button"
+                      disabled={isProcessing}
+                      onClick={() => handlePublish(job._id)}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+                    >
+                      {isProcessing ? (
+                        <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                      )}
+                      Reopen
+                    </button>
+                  )}
+
+                  <div className="flex items-center gap-1">
+                    <Link
+                      href={`/jobs/${job._id}`}
+                      target="_blank"
+                      title="View public posting"
+                      className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                    >
+                      <ExternalLink className="h-4 w-4" />
                     </Link>
-
-                    {/* Publish / Close status button */}
-                    {job.status === "draft" && (
-                      <button
-                        type="button"
-                        disabled={isProcessing}
-                        onClick={() => handlePublish(job._id)}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white shadow-xs transition hover:bg-emerald-500 disabled:opacity-50"
-                      >
-                        {isProcessing ? (
-                          <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                        )}
-                        Publish
-                      </button>
-                    )}
-
-                    {job.status === "published" && (
-                      <button
-                        type="button"
-                        disabled={isProcessing}
-                        onClick={() => handleClose(job._id)}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-                      >
-                        {isProcessing ? (
-                          <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <XCircle className="h-3.5 w-3.5" />
-                        )}
-                        Close
-                      </button>
-                    )}
-
-                    {job.status === "closed" && (
-                      <button
-                        type="button"
-                        disabled={isProcessing}
-                        onClick={() => handlePublish(job._id)}
-                        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:opacity-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-                      >
-                        {isProcessing ? (
-                          <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                        )}
-                        Reopen
-                      </button>
-                    )}
+                    <Link
+                      href={`/recruiter/jobs/${job._id}/edit`}
+                      title="Edit job details"
+                      className="rounded-lg p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+                    >
+                      <Edit3 className="h-4 w-4" />
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={() => setDeletingJob(job)}
+                      title="Delete job"
+                      className="rounded-lg p-1.5 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/50 dark:hover:text-rose-400"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
                 </div>
               </div>
