@@ -14,4 +14,5 @@ export { AuthSkeleton } from "./AuthSkeleton";
 export { default as RecruiterJobsSkeleton } from "./RecruiterJobsSkeleton";
 export { default as JobApplicationsPipelineSkeleton } from "./JobApplicationsPipelineSkeleton";
 export { default as CandidateApplicationsSkeleton } from "./CandidateApplicationsSkeleton";
+export { default as CandidateBoardSkeleton } from "./CandidateBoardSkeleton";
 export { default as JobFormSkeleton } from "./JobFormSkeleton";

@@ -109,6 +109,32 @@ export default function RecruiterProfilePage() {
     return () => controller.abort();
   }, [updateUser]);
 
+  // Handle scrolling and focusing hash target after client-side profile load
+  useEffect(() => {
+    if (loading) return;
+
+    function handleHashScroll() {
+      const hash = window.location.hash;
+      if (!hash) return;
+      const targetId = hash.replace(/^#/, "");
+      if (!targetId) return;
+
+      const element = document.getElementById(targetId);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
+        element.focus({ preventScroll: true });
+      }
+    }
+
+    const timer = setTimeout(handleHashScroll, 120);
+
+    window.addEventListener("hashchange", handleHashScroll);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("hashchange", handleHashScroll);
+    };
+  }, [loading]);
+
   const isProfileDirty = Boolean(
     profile &&
     savedProfile &&
@@ -495,7 +521,8 @@ export default function RecruiterProfilePage() {
             {/* Section 1: Personal Information */}
             <section
               id="personal"
-              className="scroll-mt-24 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+              tabIndex={-1}
+              className="scroll-mt-24 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm transition-all duration-300 outline-none target:border-cyan-400 target:ring-2 target:ring-cyan-500/50 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/50 dark:border-slate-800 dark:bg-slate-900 dark:target:border-cyan-500 dark:target:ring-cyan-400/40 dark:focus:border-cyan-500 dark:focus:ring-cyan-400/40"
             >
               <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-5 dark:border-slate-800">
                 <div className="flex items-start gap-3">
@@ -566,7 +593,8 @@ export default function RecruiterProfilePage() {
             {/* Section 2: Company Details & Branding */}
             <section
               id="company"
-              className="scroll-mt-24 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900"
+              tabIndex={-1}
+              className="scroll-mt-24 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm transition-all duration-300 outline-none target:border-cyan-400 target:ring-2 target:ring-cyan-500/50 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/50 dark:border-slate-800 dark:bg-slate-900 dark:target:border-cyan-500 dark:target:ring-cyan-400/40 dark:focus:border-cyan-500 dark:focus:ring-cyan-400/40"
             >
               <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-5 dark:border-slate-800">
                 <div className="flex items-start gap-3">
