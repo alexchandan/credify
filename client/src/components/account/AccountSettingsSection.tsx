@@ -10,7 +10,8 @@ export function AccountSettingsSection() {
   return (
     <section
       id="account-settings"
-      className="mb-4 scroll-mt-24 rounded-lg border border-red-200 bg-white p-5 dark:border-red-800 dark:bg-slate-900"
+      tabIndex={-1}
+      className="mb-4 scroll-mt-24 rounded-lg border border-red-200 bg-white p-5 shadow-sm transition-all duration-300 outline-none target:border-rose-400 target:ring-2 target:ring-rose-500/50 focus:border-rose-400 focus:ring-2 focus:ring-rose-500/50 dark:border-red-800 dark:bg-slate-900 dark:target:border-rose-500 dark:target:ring-rose-400/40 dark:focus:border-rose-500 dark:focus:ring-rose-400/40"
     >
       <div className="mb-4 flex items-center gap-2 border-b border-red-100 pb-3 dark:border-red-900">
         <ShieldAlert className="h-4 w-4 text-red-600 dark:text-red-400" />

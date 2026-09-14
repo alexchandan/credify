@@ -11,7 +11,6 @@ import {
   MapPin,
   Search,
   ShieldCheck,
-  Sparkles,
   TrendingUp,
 } from "lucide-react";
 
@@ -59,18 +58,6 @@ export function Hero() {
         <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-8">
           {/* Left Column: Headline, Search & Trust Points */}
           <div className="lg:col-span-7">
-            {/* Live Verification Badge */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200/80 bg-cyan-50/80 px-3.5 py-1.5 text-xs font-semibold text-cyan-800 shadow-xs backdrop-blur-md transition-all hover:bg-cyan-100/80 dark:border-cyan-500/30 dark:bg-cyan-950/50 dark:text-cyan-300">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-              </span>
-              <span className="font-medium tracking-wide">
-                Credify 2.0 • The Verified Career Network
-              </span>
-              <Sparkles className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" />
-            </div>
-
             {/* Main Headline */}
             <h1 className="mt-5 text-4xl font-extrabold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl dark:text-white">
               Where verified talent meets{" "}

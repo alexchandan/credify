@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { TopProgressBar } from "@/components/ui/TopProgressBar";
 import {
   AUTH_USER_SNAPSHOT_COOKIE,
   decodeAuthUserSnapshot,
@@ -71,6 +72,7 @@ export default async function RootLayout({
               "radial-gradient(ellipse at center, rgba(52, 211, 153, 0.06) 0%, rgba(52, 211, 153, 0) 70%)",
           }}
         />
+        <TopProgressBar />
         <AuthProvider initialUser={initialUser}>{children}</AuthProvider>
       </body>
     </html>

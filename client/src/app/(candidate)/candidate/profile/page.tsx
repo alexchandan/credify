@@ -124,6 +124,33 @@ export default function CandidateProfilePage() {
       .finally(() => setIsLoading(false));
   }, [updateUser]);
 
+  // Handle scrolling and focusing hash target after client-side profile load
+  useEffect(() => {
+    if (isLoading) return;
+
+    function handleHashScroll() {
+      const hash = window.location.hash;
+      if (!hash) return;
+      const targetId = hash.replace(/^#/, "");
+      if (!targetId) return;
+
+      const element = document.getElementById(targetId);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
+        element.focus({ preventScroll: true });
+      }
+    }
+
+    // Delay slightly to let the browser compute layout after React mounts the content DOM
+    const timer = setTimeout(handleHashScroll, 120);
+
+    window.addEventListener("hashchange", handleHashScroll);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("hashchange", handleHashScroll);
+    };
+  }, [isLoading]);
+
   const isDirty = Boolean(
     profile &&
     savedProfile &&
@@ -1002,7 +1029,8 @@ function Card({
   return (
     <section
       id={id}
-      className="mb-4 scroll-mt-24 rounded-xl border border-slate-200/90 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-slate-900"
+      tabIndex={-1}
+      className="mb-4 scroll-mt-24 rounded-xl border border-slate-200/90 bg-white p-5 shadow-sm transition-all duration-300 outline-none target:border-indigo-400 target:ring-2 target:ring-indigo-500/50 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/50 dark:border-white/10 dark:bg-slate-900 dark:target:border-indigo-500 dark:target:ring-indigo-400/40 dark:focus:border-indigo-500 dark:focus:ring-indigo-400/40"
     >
       <div className="mb-4 flex items-center gap-2.5 border-b border-slate-100 pb-3 dark:border-slate-800">
         <Icon

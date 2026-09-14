@@ -9,14 +9,12 @@ import {
   Bell,
   BriefcaseBusiness,
   CalendarDays,
-  Check,
   CheckCircle2,
   ChevronRight,
   CircleDot,
   Clock3,
   FileText,
   Inbox,
-  LoaderCircle,
   MapPin,
   RefreshCw,
   UserRoundCheck,
@@ -33,7 +31,6 @@ import CandidateDashboardSkeleton from "@/components/ui/skeletons/CandidateDashb
 import type {
   ApplicationStatus,
   CandidateDashboard,
-  DashboardNotification,
   RecentApplication,
 } from "@/types/dashboard";
 import type { Job, JobWithCompany } from "@/types/job";
@@ -58,10 +55,6 @@ export default function CandidateDashboardPage() {
   const [areJobsLoading, setAreJobsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
-  const [isMarkingRead, setIsMarkingRead] = useState(false);
-  const [notificationError, setNotificationError] = useState<string | null>(
-    null,
-  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -143,31 +136,6 @@ export default function CandidateDashboardPage() {
     loadJobs();
     return () => controller.abort();
   }, [reloadKey]);
-
-  async function markAllNotificationsRead() {
-    if (!dashboard || dashboard.unreadNotificationsCount === 0) return;
-    setIsMarkingRead(true);
-    setNotificationError(null);
-    try {
-      await apiRequest("/notification/read-all", { method: "PATCH" });
-      setDashboard({
-        ...dashboard,
-        unreadNotificationsCount: 0,
-        recentNotifications: dashboard.recentNotifications.map(
-          (notification) => ({
-            ...notification,
-            isRead: true,
-            readAt: notification.readAt ?? new Date().toISOString(),
-          }),
-        ),
-      });
-      window.dispatchEvent(new Event("credify:notifications-read"));
-    } catch (err) {
-      setNotificationError(getErrorMessage(err));
-    } finally {
-      setIsMarkingRead(false);
-    }
-  }
 
   if (isLoading) return <CandidateDashboardSkeleton />;
 
@@ -282,14 +250,6 @@ export default function CandidateDashboardPage() {
             />
 
             <ResumePanel resume={dashboard.resumeStatus} />
-
-            <NotificationsPanel
-              notifications={dashboard.recentNotifications}
-              unreadCount={dashboard.unreadNotificationsCount}
-              isMarkingRead={isMarkingRead}
-              error={notificationError}
-              onMarkAllRead={markAllNotificationsRead}
-            />
           </div>
         </div>
       </div>
@@ -590,86 +550,6 @@ function ResumePanel({
           {resume.hasResume ? "Replace" : "Upload resume"}
         </Link>
       </div>
-    </section>
-  );
-}
-
-function NotificationsPanel({
-  notifications,
-  unreadCount,
-  isMarkingRead,
-  error,
-  onMarkAllRead,
-}: {
-  notifications: DashboardNotification[];
-  unreadCount: number;
-  isMarkingRead: boolean;
-  error: string | null;
-  onMarkAllRead: () => void;
-}) {
-  return (
-    <section
-      id="updates"
-      className="scroll-mt-24 overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-sm dark:border-white/10 dark:bg-slate-900"
-    >
-      <SectionHeading
-        title="Recent updates"
-        description={`${unreadCount} unread notification${unreadCount === 1 ? "" : "s"}`}
-        action={
-          unreadCount > 0 ? (
-            <button
-              type="button"
-              onClick={onMarkAllRead}
-              disabled={isMarkingRead}
-              title="Mark all notifications as read"
-              aria-label="Mark all notifications as read"
-              className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-indigo-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500 disabled:opacity-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-indigo-400"
-            >
-              {isMarkingRead ? (
-                <LoaderCircle className="h-4 w-4 animate-spin" />
-              ) : (
-                <Check className="h-4 w-4" />
-              )}
-            </button>
-          ) : undefined
-        }
-      />
-      {error && (
-        <p
-          role="alert"
-          className="border-b border-rose-100 bg-rose-50 px-5 py-2.5 text-xs text-rose-700 dark:border-rose-950 dark:bg-rose-950/40 dark:text-rose-300"
-        >
-          {error}
-        </p>
-      )}
-      {notifications.length > 0 ? (
-        <div className="divide-y divide-slate-100 dark:divide-slate-800">
-          {notifications.map((notification) => (
-            <div key={notification._id} className="flex gap-3 px-5 py-4">
-              <span
-                className={`mt-1 h-2 w-2 shrink-0 rounded-full ${notification.isRead ? "bg-slate-300 dark:bg-slate-700" : "bg-indigo-600 shadow-sm shadow-indigo-500/50 dark:bg-indigo-400"}`}
-              />
-              <div className="min-w-0">
-                <p
-                  className={`text-sm leading-5 ${notification.isRead ? "text-slate-600 dark:text-slate-400" : "font-medium text-slate-900 dark:text-slate-100"}`}
-                >
-                  {notification.message}
-                </p>
-                <p className="mt-1 text-xs text-slate-400 dark:text-slate-500">
-                  {formatDate(notification.createdAt)}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="px-5 py-8 text-center">
-          <Bell className="mx-auto h-6 w-6 text-slate-300 dark:text-slate-700" />
-          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-            No updates yet
-          </p>
-        </div>
-      )}
     </section>
   );
 }
