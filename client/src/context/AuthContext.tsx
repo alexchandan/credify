@@ -7,8 +7,10 @@ import {
   useEffect,
   useRef,
   useState,
+  startTransition,
   type ReactNode,
 } from "react";
+import { useRouter } from "next/navigation";
 import {
   apiRequest,
   configureApiClient,
@@ -74,6 +76,7 @@ export function AuthProvider({
   children: ReactNode;
   initialUser?: AuthUser | null;
 }) {
+  const router = useRouter();
   const tokenRef = useRef<string | null>(null);
   const [user, setUser] = useState<AuthUser | null>(() => {
     if (initialUser) return initialUser;
@@ -121,9 +124,17 @@ export function AuthProvider({
       onTokenRefreshed: (token) => {
         tokenRef.current = token;
       },
-      onUnauthorized: clearSession,
+      onUnauthorized: () => {
+        tokenRef.current = null;
+        writeAuthUserSnapshot(null);
+        startTransition(() => {
+          setUser(null);
+          router.replace("/");
+          router.refresh();
+        });
+      },
     });
-  }, [clearSession]);
+  }, [router]);
 
   // The access token lives only in memory and is lost on every page
   // reload — but the httpOnly refresh cookie persists. A silent refresh
@@ -183,20 +194,33 @@ export function AuthProvider({
   }, []);
 
   const logout = useCallback(async () => {
-    try {
-      await apiRequest("/auth/logout", { method: "POST" });
-    } finally {
-      clearSession();
-    }
-  }, [clearSession]);
+    tokenRef.current = null;
+    writeAuthUserSnapshot(null);
+
+    // Fire backend logout in the background without blocking the UI transition
+    void apiRequest("/auth/logout", { method: "POST" }).catch(() => {});
+
+    // Batch React state update and Next.js page transition seamlessly
+    startTransition(() => {
+      setUser(null);
+      router.replace("/");
+      router.refresh();
+    });
+  }, [router]);
 
   const logoutEverywhere = useCallback(async () => {
     try {
       await apiRequest("/auth/logout-everywhere", { method: "POST" });
     } finally {
-      clearSession();
+      tokenRef.current = null;
+      writeAuthUserSnapshot(null);
+      startTransition(() => {
+        setUser(null);
+        router.replace("/");
+        router.refresh();
+      });
     }
-  }, [clearSession]);
+  }, [router]);
 
   const changePassword = useCallback(
     async (currentPassword: string, newPassword: string) => {
