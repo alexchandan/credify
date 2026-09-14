@@ -100,6 +100,7 @@ function LoginPageContent() {
     if (user && !isRedirecting) {
       const destination = next?.startsWith("/") ? next : roleHome(user);
       router.replace(destination);
+      router.refresh();
     }
   }, [router, user, next, isRedirecting]);
 

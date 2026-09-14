@@ -69,7 +69,7 @@ export function proxy(request: NextRequest) {
   return NextResponse.redirect(previousOrWorkspace(request, user.role));
 }
 
-export const proxyConfig = {
+export const config = {
   matcher: [
     "/login",
     "/register",
@@ -81,3 +81,5 @@ export const proxyConfig = {
     "/recruiter/:path*",
   ],
 };
+
+export const proxyConfig = config;

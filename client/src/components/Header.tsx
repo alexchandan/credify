@@ -48,14 +48,8 @@ function shortDate(value: string): string {
   }).format(new Date(value));
 }
 
-function navItemsFor(user: AuthUser | null, pathname: string): NavItem[] {
-  const role =
-    user?.role ??
-    (pathname.startsWith("/candidate")
-      ? "candidate"
-      : pathname.startsWith("/recruiter")
-        ? "recruiter"
-        : null);
+function navItemsFor(user: AuthUser | null): NavItem[] {
+  const role = user?.role ?? null;
 
   if (role === "candidate") {
     return [
@@ -76,7 +70,7 @@ function navItemsFor(user: AuthUser | null, pathname: string): NavItem[] {
   }
 
   const items: NavItem[] = [{ href: "/jobs", label: "Browse jobs" }];
-  if (!user && !role) {
+  if (!user) {
     items.push({ href: "/register?role=recruiter", label: "For employers" });
   }
   return items;
@@ -163,10 +157,8 @@ export function Nav() {
     useState(false);
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const notificationMenuRef = useRef<HTMLDivElement>(null);
-  const isProtectedPath =
-    pathname.startsWith("/candidate") || pathname.startsWith("/recruiter");
-  const showAuthSkeleton = !user && (isLoading || isProtectedPath);
-  const navItems = navItemsFor(user, pathname);
+  const showAuthSkeleton = !user && isLoading;
+  const navItems = navItemsFor(user);
   const unreadCount =
     user && notificationState?.userId === user.id
       ? notificationState.count
@@ -396,12 +388,14 @@ export function Nav() {
   async function handleLogout() {
     setIsAccountMenuOpen(false);
     setIsMobileMenuOpen(false);
+    setIsNotificationsOpen(false);
+    setNotificationState(null);
+    setNotifications([]);
+
     try {
       await logout();
     } catch {
-      // AuthContext clears local state even when the server cannot respond.
-    } finally {
-      router.replace("/");
+      // Handled in AuthContext
     }
   }
 

@@ -35,7 +35,10 @@ export function RequireRole({ allowedRoles, children }: RequireRoleProps) {
   }, [isAllowed, isLoading, pathname, router, user]);
 
   if (!isAllowed) {
-    return <RolePageSkeleton pathname={pathname} />;
+    if (isLoading) {
+      return <RolePageSkeleton pathname={pathname} />;
+    }
+    return null;
   }
 
   return children;
