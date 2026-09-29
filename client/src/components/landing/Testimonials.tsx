@@ -1,121 +1,118 @@
 "use client";
 
-import { CheckCircle2, Star } from "lucide-react";
+import { Check, Star } from "lucide-react";
 
-interface Testimonial {
-  quote: string;
-  author: string;
-  role: string;
-  company: string;
-  metric: string;
-  initials: string;
-  accent: string;
-}
-
-const TESTIMONIALS: Testimonial[] = [
+const TESTIMONIALS = [
   {
     quote:
-      "Credify completely eliminated the worst part of job hunting—the endless void of unanswered applications. Having real-time milestone radar and knowing the exact salary before applying felt like a breath of fresh air.",
-    author: "Maya Chen",
-    role: "Staff Frontend Architect",
-    company: "Hired at Linear via Credify",
-    metric: "+35% compensation • Offer in 12 days",
-    initials: "MC",
-    accent: "from-cyan-500 to-blue-600",
+      "On other job boards, I sent 120 applications and received 3 automated rejection emails 2 months later. On Credify, I received 3 interview requests in 72 hours, all matching my stated $170k baseline.",
+    name: "Marcus R.",
+    role: "Staff Distributed Systems",
+    initials: "MR",
+    avatarBg: "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300",
+    badgeText: "Hired @ Linear",
+    badgeType: "success",
   },
   {
     quote:
-      "As a hiring manager, our inbound on standard boards was 95% AI-generated spam. On Credify, every candidate's GitHub and technical credentials were verified. We closed two critical senior distributed systems roles in 3 weeks.",
-    author: "David Vance",
+      "The upfront salary transparency saved me dozens of awkward recruiter screens. When a company reached out, their escrow bond was already active and interview stages were confirmed upfront.",
+    name: "Sophia L.",
+    role: "Lead Frontend Architect",
+    initials: "SL",
+    avatarBg:
+      "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300",
+    badgeText: "Hired @ Vercel",
+    badgeType: "success",
+  },
+  {
+    quote:
+      "As an engineering director, the difference is night and day. Every single candidate on Credify has verified skills and real intent. We filled 3 senior backend roles in under 16 calendar days.",
+    name: "Derek Elden",
     role: "VP of Engineering",
-    company: "Supabase Ecosystem Team",
-    metric: "65% faster hiring cycle • 0 spam applicants",
-    initials: "DV",
-    accent: "from-emerald-500 to-teal-600",
-  },
-  {
-    quote:
-      "No awkward salary negotiation games where companies lowball you at the end. The pay was right on the job card, verified by leadership. The technical interview was respectful, prompt, and directly evaluated my actual code.",
-    author: "Elena Rostova",
-    role: "Senior AI / ML Engineer",
-    company: "Hired at Frontier AI Labs",
-    metric: "$215k base + equity • Verified role",
-    initials: "ER",
-    accent: "from-purple-500 to-pink-600",
+    initials: "DE",
+    avatarBg: "bg-teal-100 text-teal-700 dark:bg-teal-950 dark:text-teal-300",
+    badgeText: "Team Sponsor",
+    badgeType: "sponsor",
   },
 ];
 
 export function Testimonials() {
   return (
-    <section className="relative px-5 py-16 sm:px-6 sm:py-24 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="text-xs font-bold tracking-wider text-cyan-600 uppercase dark:text-cyan-400">
-            Real Stories, Real Careers
-          </p>
-          <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl dark:text-white">
-            Loved by engineers and visionary hiring teams
+    <section
+      aria-label="Verified engineer testimonials"
+      className="relative py-16 sm:py-24"
+    >
+      <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+        {/* Section Header */}
+        <div className="mx-auto max-w-3xl text-center">
+          <div className="inline-flex items-center rounded-full border border-emerald-500/25 bg-emerald-50 px-3.5 py-1 text-xs font-bold tracking-wider text-emerald-700 uppercase dark:border-emerald-500/30 dark:bg-emerald-950/60 dark:text-emerald-300">
+            VERIFIED STORIES
+          </div>
+          <h2 className="mt-4 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl dark:text-white">
+            Placed Engineers Speak Up
           </h2>
-          <p className="mt-3 text-sm text-slate-600 sm:text-base dark:text-slate-300">
-            Read how professionals accelerated their careers and how engineering
-            teams found top tier talent with zero ghosting.
+          <p className="mt-3.5 text-base text-slate-600 dark:text-slate-300">
+            Real feedback from engineers who refused ghosting and secured roles
+            with locked compensation.
           </p>
         </div>
 
-        <div className="mt-14 grid grid-cols-1 gap-8 md:grid-cols-3">
-          {TESTIMONIALS.map(
-            ({ quote, author, role, company, metric, initials, accent }) => (
-              <div
-                key={author}
-                className="group relative flex flex-col justify-between rounded-3xl border border-slate-200/90 bg-white p-8 shadow-sm transition-all hover:-translate-y-1 hover:border-cyan-300 hover:shadow-xl dark:border-white/10 dark:bg-slate-900 dark:hover:border-cyan-500/50"
-              >
-                <div>
-                  {/* 5-star Rating */}
-                  <div className="flex items-center gap-1 text-amber-400">
-                    {Array.from({ length: 5 }, (_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-current" />
-                    ))}
-                  </div>
-
-                  <p className="mt-5 text-sm leading-relaxed text-slate-700 italic dark:text-slate-300">
-                    &ldquo;{quote}&rdquo;
-                  </p>
+        {/* Testimonials Cards Grid */}
+        <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3">
+          {TESTIMONIALS.map((item) => (
+            <div
+              key={item.name}
+              className="flex flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-7 shadow-xs transition hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:border-slate-700"
+            >
+              <div>
+                {/* 5 Stars */}
+                <div className="flex items-center gap-1 text-amber-400">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className="h-4 w-4 fill-amber-400 text-amber-400"
+                    />
+                  ))}
                 </div>
 
-                <div className="mt-8 border-t border-slate-100 pt-5 dark:border-white/5">
-                  {/* Highlight Metric Pill */}
-                  <div className="mb-4 inline-flex items-center gap-1 rounded-full border border-emerald-300/60 bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-950/40 dark:text-emerald-300">
-                    <CheckCircle2 className="h-3 w-3" />
-                    {metric}
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-linear-to-tr ${accent} text-sm font-bold text-white shadow-xs`}
-                    >
-                      {initials}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1">
-                        <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                          {author}
-                        </h3>
-                        <span className="py-0.2 rounded-full bg-cyan-100 px-1.5 text-[9px] font-extrabold text-cyan-800 dark:bg-cyan-950/70 dark:text-cyan-300">
-                          VERIFIED
-                        </span>
-                      </div>
-                      <p className="text-xs font-medium text-slate-600 dark:text-slate-400">
-                        {role}
-                      </p>
-                      <p className="text-[11px] text-slate-400 dark:text-slate-500">
-                        {company}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                {/* Quote */}
+                <p className="mt-4 text-sm leading-relaxed text-slate-600 italic dark:text-slate-300">
+                  &ldquo;{item.quote}&rdquo;
+                </p>
               </div>
-            ),
-          )}
+
+              {/* Author Row */}
+              <div className="mt-8 flex items-center justify-between border-t border-slate-100 pt-5 dark:border-slate-800">
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-xs font-bold ${item.avatarBg}`}
+                  >
+                    {item.initials}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-950 dark:text-white">
+                      {item.name}
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {item.role}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Verified badge */}
+                <span
+                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                    item.badgeType === "success"
+                      ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300"
+                      : "bg-cyan-50 text-cyan-700 dark:bg-cyan-950/70 dark:text-cyan-300"
+                  }`}
+                >
+                  <Check className="h-3 w-3 stroke-[2.5]" />
+                  <span>{item.badgeText}</span>
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
