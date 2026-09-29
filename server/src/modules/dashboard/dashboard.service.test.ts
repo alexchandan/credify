@@ -1,9 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  calculateMedian,
   calculateProfileCompletion,
   statusCountsToMap,
 } from "./dashboard.service.js";
+
+test("median calculation supports empty, odd, and even salary samples", () => {
+  assert.equal(calculateMedian([]), null);
+  assert.equal(calculateMedian([900000]), 900000);
+  assert.equal(calculateMedian([1200000, 600000, 900000]), 900000);
+  assert.equal(calculateMedian([600000, 900000, 1200000, 1800000]), 1050000);
+});
 
 type CompletionInput = Parameters<typeof calculateProfileCompletion>[0];
 

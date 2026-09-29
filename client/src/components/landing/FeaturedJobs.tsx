@@ -1,155 +1,21 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Sparkles } from "lucide-react";
 import { JobCard } from "@/components/jobs/JobCard";
-import { apiRequest } from "@/lib/apiClient";
 import { JobCardSkeleton } from "@/components/ui/skeletons/JobBoardSkeleton";
-import { addCompanyNames } from "@/lib/jobData";
-import type { Job, JobWithCompany } from "@/types/job";
-
-const CURATED_SPOTLIGHT_JOBS: JobWithCompany[] = [
-  {
-    _id: "spotlight-1",
-    companyId: "comp-1",
-    companyName: "Linear Technologies",
-    title: "Senior Full-Stack Engineer",
-    description:
-      "Build high-speed collaborative workflows with Next.js, TypeScript, and distributed systems.",
-    status: "published",
-    employmentType: "full_time",
-    experienceLevel: "senior",
-    skillsRequired: ["React", "TypeScript", "Node.js", "PostgreSQL"],
-    location: ["San Francisco, CA"],
-    isRemote: true,
-    salaryRange: { min: 175000, max: 215000, currency: "USD" },
-    publishedAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-    applicationCount: 14,
-  },
-  {
-    _id: "spotlight-2",
-    companyId: "comp-2",
-    companyName: "Supabase Core",
-    title: "Staff Distributed Systems Architect",
-    description:
-      "Scale realtime database streaming, multi-region failovers, and developer infrastructure.",
-    status: "published",
-    employmentType: "full_time",
-    experienceLevel: "lead",
-    skillsRequired: ["Go", "PostgreSQL", "Rust", "Kubernetes"],
-    location: ["Seattle, WA"],
-    isRemote: true,
-    salaryRange: { min: 190000, max: 245000, currency: "USD" },
-    publishedAt: new Date(Date.now() - 3600000 * 12).toISOString(),
-    applicationCount: 9,
-  },
-  {
-    _id: "spotlight-3",
-    companyId: "comp-3",
-    companyName: "Vercel Labs",
-    title: "Lead Frontend Platform Engineer",
-    description:
-      "Architect Next.js performance optimizations, Turbopack runtimes, and developer tooling.",
-    status: "published",
-    employmentType: "full_time",
-    experienceLevel: "lead",
-    skillsRequired: ["Next.js", "React", "WebAssembly", "TypeScript"],
-    location: ["New York, NY"],
-    isRemote: true,
-    salaryRange: { min: 180000, max: 220000, currency: "USD" },
-    publishedAt: new Date(Date.now() - 3600000 * 20).toISOString(),
-    applicationCount: 21,
-  },
-  {
-    _id: "spotlight-4",
-    companyId: "comp-4",
-    companyName: "Raycast Design",
-    title: "Senior Product Designer",
-    description:
-      "Craft ultra-polished developer desktop interactions, keyboard-first UX, and fluid animations.",
-    status: "published",
-    employmentType: "full_time",
-    experienceLevel: "senior",
-    skillsRequired: ["Figma", "Design Systems", "Prototyping", "UI/UX"],
-    location: ["London, UK"],
-    isRemote: true,
-    salaryRange: { min: 140000, max: 180000, currency: "USD" },
-    publishedAt: new Date(Date.now() - 3600000 * 28).toISOString(),
-    applicationCount: 8,
-  },
-  {
-    _id: "spotlight-5",
-    companyId: "comp-5",
-    companyName: "Anthropic Partner AI",
-    title: "Applied AI / LLM Systems Engineer",
-    description:
-      "Implement high-throughput inference caching, evaluation pipelines, and model fine-tuning.",
-    status: "published",
-    employmentType: "full_time",
-    experienceLevel: "senior",
-    skillsRequired: ["Python", "PyTorch", "LLMs", "Vector DBs"],
-    location: ["San Francisco, CA"],
-    isRemote: false,
-    salaryRange: { min: 195000, max: 260000, currency: "USD" },
-    publishedAt: new Date(Date.now() - 3600000 * 36).toISOString(),
-    applicationCount: 32,
-  },
-  {
-    _id: "spotlight-6",
-    companyId: "comp-6",
-    companyName: "Datadog Cloud",
-    title: "Platform Infrastructure & SRE Lead",
-    description:
-      "Orchestrate global Kubernetes clusters, zero-downtime rollouts, and observability meshes.",
-    status: "published",
-    employmentType: "full_time",
-    experienceLevel: "lead",
-    skillsRequired: ["AWS", "Kubernetes", "Terraform", "Go"],
-    location: ["Austin, TX"],
-    isRemote: true,
-    salaryRange: { min: 165000, max: 210000, currency: "USD" },
-    publishedAt: new Date(Date.now() - 3600000 * 48).toISOString(),
-    applicationCount: 17,
-  },
-];
+import type { JobWithCompany } from "@/types/job";
 
 type FilterCategory = "all" | "remote" | "engineering" | "design";
 
-export function FeaturedJobs() {
-  const [jobs, setJobs] = useState<JobWithCompany[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+interface FeaturedJobsProps {
+  jobs: JobWithCompany[];
+  isLoading: boolean;
+}
+
+export function FeaturedJobs({ jobs, isLoading }: FeaturedJobsProps) {
   const [activeFilter, setActiveFilter] = useState<FilterCategory>("all");
-
-  useEffect(() => {
-    const controller = new AbortController();
-    apiRequest<Job[]>("/jobs?limit=6", {
-      skipAuth: true,
-      signal: controller.signal,
-    })
-      .then((result) => {
-        if (result.data && result.data.length > 0) {
-          return addCompanyNames(result.data, controller.signal);
-        }
-        return CURATED_SPOTLIGHT_JOBS;
-      })
-      .then((enriched) => {
-        if (!controller.signal.aborted) {
-          setJobs(enriched.length > 0 ? enriched : CURATED_SPOTLIGHT_JOBS);
-        }
-      })
-      .catch(() => {
-        if (!controller.signal.aborted) {
-          // Graceful fallback to verified curated spotlight roles
-          setJobs(CURATED_SPOTLIGHT_JOBS);
-        }
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setIsLoading(false);
-      });
-
-    return () => controller.abort();
-  }, []);
 
   const filteredJobs = useMemo(() => {
     if (activeFilter === "remote") {
@@ -187,8 +53,8 @@ export function FeaturedJobs() {
               Featured opportunities
             </h2>
             <p className="mt-2 text-sm text-slate-600 sm:text-base dark:text-slate-300">
-              Every listing includes explicit compensation, verified hiring team
-              identity, and direct recruiter contact.
+              The newest published roles, with salary ranges shown whenever an
+              employer has disclosed them.
             </p>
           </div>
 
