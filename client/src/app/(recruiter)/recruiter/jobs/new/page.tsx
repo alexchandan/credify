@@ -58,7 +58,7 @@ export default function PostJobPage() {
   const [skills, setSkills] = useState<string[]>([]);
   const [salaryMin, setSalaryMin] = useState<string>("");
   const [salaryMax, setSalaryMax] = useState<string>("");
-  const [currency, setCurrency] = useState("USD");
+  const [currency, setCurrency] = useState("INR");
   const [description, setDescription] = useState("");
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});

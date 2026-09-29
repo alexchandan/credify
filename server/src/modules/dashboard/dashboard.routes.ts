@@ -7,6 +7,8 @@ import * as dashboardController from "./dashboard.controller.js";
 
 const router: Router = Router();
 
+router.get("/public", catchAsync(dashboardController.getPublicDashboard));
+
 router.use(authenticate);
 
 router.get(

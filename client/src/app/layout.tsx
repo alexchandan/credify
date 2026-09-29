@@ -41,7 +41,7 @@ export default async function RootLayout({
   );
 
   return (
-    <html lang="en" suppressHydrationWarning className="h-full antialiased">
+    <html lang="en-IN" suppressHydrationWarning className="h-full antialiased">
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>

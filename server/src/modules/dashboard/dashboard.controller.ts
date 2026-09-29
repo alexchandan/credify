@@ -2,6 +2,14 @@ import type { Request, Response } from "express";
 import { sendSuccess } from "../../utils/apiResponse.js";
 import * as dashboardService from "./dashboard.service.js";
 
+export async function getPublicDashboard(
+  _req: Request,
+  res: Response,
+): Promise<void> {
+  const data = await dashboardService.getPublicDashboard();
+  sendSuccess(res, { data });
+}
+
 export async function getCandidateDashboard(
   req: Request,
   res: Response,

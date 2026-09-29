@@ -5,6 +5,7 @@ import type {
   JobWithCompany,
   SalaryRange,
 } from "@/types/job";
+import { formatIndianCurrency } from "./formatters";
 
 export function formatJobLabel(value: string): string {
   return value
@@ -37,15 +38,17 @@ export function formatSalary(
     return "Salary not disclosed";
   }
 
-  const formatter = new Intl.NumberFormat("en-IN", {
-    maximumFractionDigits: 0,
-  });
+  const currency = salaryRange.currency ?? "INR";
   const min =
-    salaryRange.min === undefined ? null : formatter.format(salaryRange.min);
+    salaryRange.min === undefined
+      ? null
+      : formatIndianCurrency(salaryRange.min, currency);
   const max =
-    salaryRange.max === undefined ? null : formatter.format(salaryRange.max);
+    salaryRange.max === undefined
+      ? null
+      : formatIndianCurrency(salaryRange.max, currency);
   const amount = min && max ? `${min} - ${max}` : (min ?? max ?? "");
-  return `${amount} ${salaryRange.currency ?? "INR"}`.trim();
+  return amount;
 }
 
 export async function addCompanyNames(

@@ -1,49 +1,51 @@
-"use client";
+import { Building2, IndianRupee, Search, Wifi } from "lucide-react";
+import { formatIndianCurrency, formatIndianNumber } from "@/lib/formatters";
+import type { PublicLandingSummary } from "@/types/landing";
 
-import { Ban, CheckCircle2, DollarSign, Search } from "lucide-react";
+interface TrustMetricsProps {
+  metrics: PublicLandingSummary["metrics"] | null;
+  isLoading: boolean;
+}
 
-const METRICS_DATA = [
-  {
-    metric: "10,000+",
-    title: "Verified Opportunities",
-    description:
-      "Active positions backed by escrow and engineering leadership sponsorship.",
-    icon: Search,
-    iconBg: "bg-sky-50 text-sky-600 dark:bg-sky-950/60 dark:text-sky-400",
-    metricColor: "text-slate-950 dark:text-white",
-  },
-  {
-    metric: "98.4%",
-    title: "Candidate Response Rate",
-    description:
-      "Companies that fail to reply inside 48 hours forfeit platform hiring quota.",
-    icon: CheckCircle2,
-    iconBg:
-      "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400",
-    metricColor: "text-emerald-500 dark:text-emerald-400",
-  },
-  {
-    metric: "$145k",
-    title: "Median Verified Compensation",
-    description:
-      "Audited salary benchmarks with transparent equity and bonus brackets.",
-    icon: DollarSign,
-    iconBg:
-      "bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400",
-    metricColor: "text-slate-950 dark:text-white",
-  },
-  {
-    metric: "0%",
-    title: "Ghost Jobs or Phantom Listings",
-    description:
-      "Continuous automated ATS sync unpublishes closed roles instantaneously.",
-    icon: Ban,
-    iconBg: "bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400",
-    metricColor: "text-slate-950 dark:text-white",
-  },
-];
+export function TrustMetrics({ metrics, isLoading }: TrustMetricsProps) {
+  const metricsData = [
+    {
+      metric: metrics ? formatIndianNumber(metrics.publishedJobsCount) : "0",
+      title: "Open Opportunities",
+      description: "Published roles currently available on Credify.",
+      icon: Search,
+      iconBg: "bg-sky-50 text-sky-600 dark:bg-sky-950/60 dark:text-sky-400",
+    },
+    {
+      metric: metrics ? formatIndianNumber(metrics.hiringCompaniesCount) : "0",
+      title: "Hiring Companies",
+      description: "Companies with at least one active job listing.",
+      icon: Building2,
+      iconBg:
+        "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400",
+    },
+    {
+      metric:
+        metrics?.medianAnnualSalaryInr === null || !metrics
+          ? "Not available"
+          : formatIndianCurrency(metrics.medianAnnualSalaryInr),
+      title: "Median Annual Salary",
+      description: metrics
+        ? `Calculated from ${formatIndianNumber(metrics.salaryListingsCount)} INR salary listings.`
+        : "Calculated from live INR salary listings.",
+      icon: IndianRupee,
+      iconBg:
+        "bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400",
+    },
+    {
+      metric: metrics ? formatIndianNumber(metrics.remoteJobsCount) : "0",
+      title: "Remote Opportunities",
+      description: "Published jobs currently marked as remote-friendly.",
+      icon: Wifi,
+      iconBg: "bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400",
+    },
+  ];
 
-export function TrustMetrics() {
   return (
     <section
       aria-label="Why Candidates and Employers Choose Credify"
@@ -63,7 +65,7 @@ export function TrustMetrics() {
 
         {/* 4 Metrics Cards Grid */}
         <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {METRICS_DATA.map((item) => {
+          {metricsData.map((item) => {
             const Icon = item.icon;
             return (
               <div
@@ -78,11 +80,13 @@ export function TrustMetrics() {
                 </div>
 
                 {/* Big Metric */}
-                <p
-                  className={`text-4xl font-extrabold tracking-tight ${item.metricColor}`}
-                >
-                  {item.metric}
-                </p>
+                {isLoading ? (
+                  <div className="h-10 w-28 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+                ) : (
+                  <p className="text-3xl font-extrabold tracking-tight text-slate-950 dark:text-white">
+                    {item.metric}
+                  </p>
+                )}
 
                 {/* Title */}
                 <h3 className="mt-2 text-base font-bold text-slate-950 dark:text-white">

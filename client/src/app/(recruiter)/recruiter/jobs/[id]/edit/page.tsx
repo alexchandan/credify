@@ -63,7 +63,7 @@ export default function EditJobPage() {
   const [skills, setSkills] = useState<string[]>([]);
   const [salaryMin, setSalaryMin] = useState<string>("");
   const [salaryMax, setSalaryMax] = useState<string>("");
-  const [currency, setCurrency] = useState("USD");
+  const [currency, setCurrency] = useState("INR");
   const [description, setDescription] = useState("");
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -87,7 +87,7 @@ export default function EditJobPage() {
         if (job.salaryRange) {
           setSalaryMin(job.salaryRange.min?.toString() || "");
           setSalaryMax(job.salaryRange.max?.toString() || "");
-          setCurrency(job.salaryRange.currency || "USD");
+          setCurrency(job.salaryRange.currency || "INR");
         }
       } catch (err) {
         setLoadError(getErrorMessage(err));

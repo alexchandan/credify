@@ -6,7 +6,7 @@ import {
   ArrowRight,
   Building2,
   Clock,
-  DollarSign,
+  IndianRupee,
   MapPin,
   Search,
   ShieldCheck,
@@ -206,7 +206,7 @@ export function Hero() {
           {/* Badge 2: 100% Upfront Pay */}
           <div className="flex items-center gap-3.5 rounded-2xl border border-slate-200/80 bg-white/80 p-4 text-left shadow-xs backdrop-blur-sm transition hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900/80 dark:hover:border-slate-700">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400">
-              <DollarSign className="h-5 w-5" />
+              <IndianRupee className="h-5 w-5" />
             </div>
             <div>
               <p className="text-sm font-bold text-slate-950 dark:text-white">
