@@ -3,20 +3,7 @@ import {
   AUTH_USER_SNAPSHOT_COOKIE,
   decodeAuthUserSnapshot,
 } from "@/lib/authUserSnapshot";
-import {
-  Hero,
-  CompanyMarquee,
-  TrustMetrics,
-  PopularSkills,
-  FeaturedJobs,
-  SalaryExplorer,
-  HowItWorks,
-  FeaturesBento,
-  Testimonials,
-  FaqSection,
-  CallToAction,
-  LoggedInMemberHub,
-} from "@/components/landing";
+import { LandingView } from "@/components/landing";
 
 export default async function Home() {
   const cookieStore = await cookies();
@@ -24,25 +11,5 @@ export default async function Home() {
     cookieStore.get(AUTH_USER_SNAPSHOT_COOKIE)?.value,
   );
 
-  return (
-    <>
-      <Hero />
-      <CompanyMarquee />
-      <TrustMetrics />
-      <PopularSkills />
-      <FeaturedJobs />
-      <SalaryExplorer />
-      {user ? (
-        <LoggedInMemberHub user={user} />
-      ) : (
-        <>
-          <HowItWorks />
-          <FeaturesBento />
-          <Testimonials />
-          <FaqSection />
-          <CallToAction />
-        </>
-      )}
-    </>
-  );
+  return <LandingView initialUser={user} />;
 }
