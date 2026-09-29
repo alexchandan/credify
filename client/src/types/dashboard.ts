@@ -56,3 +56,17 @@ export interface RecruiterDashboard {
   savedCandidatesCount: number;
   recentApplications: RecentApplication[];
 }
+
+export interface AdminDashboard {
+  users: {
+    total: number;
+    candidates: number;
+    recruiters: number;
+  };
+  totalCompanies: number;
+  jobs: {
+    total: number;
+    byStatus: Partial<Record<"draft" | "published" | "closed", number>>;
+  };
+  totalApplications: number;
+}

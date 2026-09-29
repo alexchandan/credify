@@ -297,6 +297,7 @@ contract.
 
 | Method | Path         | Access    | Result                                                                                                         |
 | ------ | ------------ | --------- | -------------------------------------------------------------------------------------------------------------- |
+| `GET`  | `/public`    | Public    | Published/remote job totals, hiring-company total, INR salary median, top skills, companies, and featured jobs |
 | `GET`  | `/candidate` | Candidate | Profile completion, resume state, application counts/history, unread count, and five most recent notifications |
 | `GET`  | `/recruiter` | Recruiter | Company state, job/application counts, saved count, recent applications                                        |
 | `GET`  | `/admin`     | Admin     | User/profile/company/job/application totals                                                                    |

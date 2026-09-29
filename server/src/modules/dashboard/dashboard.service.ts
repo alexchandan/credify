@@ -13,6 +13,127 @@ import { SavedCandidate } from "../../models/savedCandidate.model.js";
 import { Notification } from "../../models/notification.model.js";
 import { AppError } from "../../utils/AppError.js";
 
+export function calculateMedian(values: number[]): number | null {
+  if (values.length === 0) return null;
+
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  const middleValue = sorted[middle];
+  if (middleValue === undefined) return null;
+
+  if (sorted.length % 2 === 1) return Math.round(middleValue);
+
+  const lowerValue = sorted[middle - 1];
+  if (lowerValue === undefined) return Math.round(middleValue);
+  return Math.round((lowerValue + middleValue) / 2);
+}
+
+export async function getPublicDashboard() {
+  const publishedFilter = {
+    status: JobStatus.PUBLISHED,
+    isDeleted: false,
+  };
+
+  const [
+    publishedJobsCount,
+    remoteJobsCount,
+    hiringCompanyIds,
+    salaryRows,
+    topSkills,
+    topCompanyRows,
+    featuredJobRows,
+  ] = await Promise.all([
+    Job.countDocuments(publishedFilter),
+    Job.countDocuments({ ...publishedFilter, isRemote: true }),
+    Job.distinct("companyId", publishedFilter),
+    Job.find({
+      ...publishedFilter,
+      "salaryRange.currency": "INR",
+      $or: [
+        { "salaryRange.min": { $exists: true } },
+        { "salaryRange.max": { $exists: true } },
+      ],
+    })
+      .select("salaryRange")
+      .lean(),
+    Job.aggregate<{ _id: string; count: number }>([
+      { $match: publishedFilter },
+      { $unwind: "$skillsRequired" },
+      { $group: { _id: "$skillsRequired", count: { $sum: 1 } } },
+      { $sort: { count: -1, _id: 1 } },
+      { $limit: 6 },
+    ]),
+    Job.aggregate<{ _id: Types.ObjectId; openJobsCount: number }>([
+      { $match: publishedFilter },
+      { $group: { _id: "$companyId", openJobsCount: { $sum: 1 } } },
+      { $sort: { openJobsCount: -1, _id: 1 } },
+      { $limit: 8 },
+    ]),
+    Job.find(publishedFilter)
+      .sort({ publishedAt: -1, _id: -1 })
+      .limit(6)
+      .lean(),
+  ]);
+
+  const salaryMidpoints = salaryRows.flatMap(({ salaryRange }) => {
+    if (!salaryRange) return [];
+    if (salaryRange.min !== undefined && salaryRange.max !== undefined) {
+      return [(salaryRange.min + salaryRange.max) / 2];
+    }
+    const disclosedAmount = salaryRange.min ?? salaryRange.max;
+    return disclosedAmount === undefined ? [] : [disclosedAmount];
+  });
+
+  const companyIds = [
+    ...new Set([
+      ...topCompanyRows.map((row) => row._id.toString()),
+      ...featuredJobRows.map((job) => job.companyId.toString()),
+    ]),
+  ];
+  const companies = await Company.find({
+    _id: { $in: companyIds },
+    deletedAt: null,
+  })
+    .select("name logoUrl industry")
+    .lean();
+  const companyById = new Map(
+    companies.map((company) => [company._id.toString(), company]),
+  );
+
+  return {
+    metrics: {
+      publishedJobsCount,
+      hiringCompaniesCount: hiringCompanyIds.length,
+      remoteJobsCount,
+      medianAnnualSalaryInr: calculateMedian(salaryMidpoints),
+      salaryListingsCount: salaryMidpoints.length,
+    },
+    topSkills: topSkills.map((row) => ({
+      skill: row._id,
+      openJobsCount: row.count,
+    })),
+    hiringCompanies: topCompanyRows.flatMap((row) => {
+      const company = companyById.get(row._id.toString());
+      if (!company) return [];
+      return [
+        {
+          _id: company._id,
+          name: company.name,
+          logoUrl: company.logoUrl,
+          industry: company.industry,
+          openJobsCount: row.openJobsCount,
+        },
+      ];
+    }),
+    featuredJobs: featuredJobRows.map((job) => ({
+      ...job,
+      companyName:
+        companyById.get(job.companyId.toString())?.name ??
+        "Company unavailable",
+    })),
+  };
+}
+
 type ProfileCompletionSource = Pick<
   ICandidateProfile,
   "headline" | "skills" | "location" | "resumeUrl" | "education" | "experience"
