@@ -1,107 +1,101 @@
 "use client";
 
-import { CheckCircle, Clock4, DollarSign, ShieldCheck } from "lucide-react";
+import { Ban, CheckCircle2, DollarSign, Search } from "lucide-react";
 
-interface MetricItem {
-  id: string;
-  value: string;
-  label: string;
-  description: string;
-  icon: typeof ShieldCheck;
-  accent: string;
-}
-
-const METRICS: MetricItem[] = [
+const METRICS_DATA = [
   {
-    id: "verified-jobs",
-    value: "10,000+",
-    label: "Verified Opportunities",
+    metric: "10,000+",
+    title: "Verified Opportunities",
     description:
-      "Every role is published by an audited team with genuine hiring intent.",
-    icon: ShieldCheck,
-    accent:
-      "text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/50 border-cyan-200 dark:border-cyan-800/40",
+      "Active positions backed by escrow and engineering leadership sponsorship.",
+    icon: Search,
+    iconBg: "bg-sky-50 text-sky-600 dark:bg-sky-950/60 dark:text-sky-400",
+    metricColor: "text-slate-950 dark:text-white",
   },
   {
-    id: "response-rate",
-    value: "98.4%",
-    label: "Candidate Response Rate",
+    metric: "98.4%",
+    title: "Candidate Response Rate",
     description:
-      "Milestone radars hold hiring teams accountable to quick decisions.",
-    icon: Clock4,
-    accent:
-      "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800/40",
+      "Companies that fail to reply inside 48 hours forfeit platform hiring quota.",
+    icon: CheckCircle2,
+    iconBg:
+      "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400",
+    metricColor: "text-emerald-500 dark:text-emerald-400",
   },
   {
-    id: "median-comp",
-    value: "$145k",
-    label: "Median Compensation",
+    metric: "$145k",
+    title: "Median Verified Compensation",
     description:
-      "Full salary bands posted upfront. No surprises in late round interviews.",
+      "Audited salary benchmarks with transparent equity and bonus brackets.",
     icon: DollarSign,
-    accent:
-      "text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-950/50 border-sky-200 dark:border-sky-800/40",
+    iconBg:
+      "bg-purple-50 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400",
+    metricColor: "text-slate-950 dark:text-white",
   },
   {
-    id: "zero-ghost",
-    value: "0%",
-    label: "Ghost Jobs or Spam",
+    metric: "0%",
+    title: "Ghost Jobs or Phantom Listings",
     description:
-      "Algorithmic screening and employer verification eliminate phantom roles.",
-    icon: CheckCircle,
-    accent:
-      "text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/50 border-teal-200 dark:border-teal-800/40",
+      "Continuous automated ATS sync unpublishes closed roles instantaneously.",
+    icon: Ban,
+    iconBg: "bg-rose-50 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400",
+    metricColor: "text-slate-950 dark:text-white",
   },
 ];
 
 export function TrustMetrics() {
   return (
-    <section className="relative px-5 py-16 sm:px-6 sm:py-20 lg:px-8">
-      <div className="mx-auto max-w-7xl">
-        <div className="mx-auto max-w-2xl text-center">
-          <p className="text-xs font-bold tracking-wider text-cyan-600 uppercase dark:text-cyan-400">
-            A hiring market built on trust
-          </p>
-          <h2 className="mt-2 text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl dark:text-white">
-            Numbers that prove why candidates choose Credify
+    <section
+      aria-label="Why Candidates and Employers Choose Credify"
+      className="relative py-20 sm:py-28"
+    >
+      <div className="mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
+        {/* Section Header */}
+        <div className="mx-auto max-w-3xl text-center">
+          <h2 className="text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl dark:text-white">
+            Why Candidates & Employers Choose Credify
           </h2>
-          <p className="mt-3 text-base text-slate-600 dark:text-slate-300">
-            Traditional job boards profit from volume and phantom listings.
-            Credify is engineered around verified proof, prompt feedback, and
-            salary transparency.
+          <p className="mt-3.5 text-base text-slate-600 dark:text-slate-300">
+            Engineered to replace slow recruiter middle-men with transparent,
+            deterministic hiring benchmarks.
           </p>
         </div>
 
-        <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {METRICS.map(
-            ({ id, value, label, description, icon: Icon, accent }) => (
+        {/* 4 Metrics Cards Grid */}
+        <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {METRICS_DATA.map((item) => {
+            const Icon = item.icon;
+            return (
               <div
-                key={id}
-                className="group relative rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:border-cyan-300 hover:shadow-xl hover:shadow-cyan-500/5 dark:border-white/10 dark:bg-slate-900 dark:hover:border-cyan-500/50 dark:hover:shadow-cyan-500/10"
+                key={item.title}
+                className="group relative rounded-2xl border border-slate-200/80 bg-white p-7 shadow-xs transition-all hover:-translate-y-1 hover:border-slate-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/80 dark:hover:border-slate-700"
               >
+                {/* Top-left Icon */}
                 <div
-                  className={`inline-flex h-12 w-12 items-center justify-center rounded-xl border ${accent}`}
+                  className={`inline-flex h-11 w-11 items-center justify-center rounded-xl ${item.iconBg} mb-5`}
                 >
-                  <Icon className="h-6 w-6" />
+                  <Icon className="h-5 w-5" />
                 </div>
 
-                <div className="mt-5">
-                  <p className="text-3xl font-extrabold tracking-tight text-slate-950 dark:text-white">
-                    {value}
-                  </p>
-                  <h3 className="mt-1 text-base font-semibold text-slate-800 dark:text-slate-200">
-                    {label}
-                  </h3>
-                  <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
-                    {description}
-                  </p>
-                </div>
+                {/* Big Metric */}
+                <p
+                  className={`text-4xl font-extrabold tracking-tight ${item.metricColor}`}
+                >
+                  {item.metric}
+                </p>
 
-                {/* Bottom subtle glow line */}
-                <div className="absolute inset-x-6 bottom-0 h-0.5 rounded-full bg-transparent transition-all group-hover:bg-linear-to-r group-hover:from-cyan-500 group-hover:to-emerald-400" />
+                {/* Title */}
+                <h3 className="mt-2 text-base font-bold text-slate-950 dark:text-white">
+                  {item.title}
+                </h3>
+
+                {/* Description */}
+                <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+                  {item.description}
+                </p>
               </div>
-            ),
-          )}
+            );
+          })}
         </div>
       </div>
     </section>

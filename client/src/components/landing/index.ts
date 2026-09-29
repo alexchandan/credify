@@ -1,12 +1,15 @@
 export { Hero } from "./Hero";
 export { CompanyMarquee } from "./CompanyMarquee";
 export { TrustMetrics } from "./TrustMetrics";
+export { TwoPathways } from "./TwoPathways";
+export { EngineeringClusters } from "./EngineeringClusters";
+export { Testimonials } from "./Testimonials";
 export { PopularSkills } from "./PopularSkills";
 export { FeaturedJobs } from "./FeaturedJobs";
 export { SalaryExplorer } from "./SalaryExplorer";
 export { HowItWorks } from "./HowItWorks";
 export { FeaturesBento } from "./FeaturesBento";
-export { Testimonials } from "./Testimonials";
 export { FaqSection } from "./FaqSection";
 export { CallToAction } from "./CallToAction";
 export { LoggedInMemberHub } from "./LoggedInMemberHub";
+export { LandingView } from "./LandingView";
