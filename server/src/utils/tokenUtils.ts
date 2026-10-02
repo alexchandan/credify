@@ -41,7 +41,8 @@ export function refreshCookieOptions() {
   return {
     httpOnly: true,
     secure: env.nodeEnv === "production",
-    sameSite: "strict" as const,
+    sameSite: (env.nodeEnv === "production" ? "none" : "lax") as
+      "none" | "lax" | "strict",
     path: "/api/v1/auth",
     maxAge: 30 * 24 * 60 * 60 * 1000,
   };
