@@ -4,13 +4,16 @@ This document describes the API mounted by `server/src/app.ts`. It is the
 source of truth for response envelopes, authentication conventions, request
 validation, error codes, and the current REST surface.
 
+**Last reviewed:** 2026-10-03 · **Workspace version:** 1.6.1
+
 The API base URL is `/api/v1`. The health endpoint is mounted at `/health`.
 
 ## Response Envelopes
 
 Controllers send responses through `sendSuccess()` and the global error
 handler sends failures through `sendError()`. Controllers must not call
-`res.json()` directly.
+`res.json()` directly. The notification SSE stream and the plain-text `GET /`
+service probe are exceptions to the JSON envelope.
 
 ### Success
 
@@ -61,6 +64,7 @@ handler sends failures through `sendError()`. Controllers must not call
 | `403`  | The authenticated role or actor cannot perform the action |
 | `404`  | The resource or route is not visible/found                |
 | `409`  | Duplicate data or an invalid state transition             |
+| `410`  | Account recovery period expired                           |
 | `429`  | A rate limit was exceeded                                 |
 | `500`  | An unexpected server failure                              |
 
@@ -78,10 +82,19 @@ last 30 days and contain `userId` and `tokenVersion`.
 The refresh token is stored in the `refreshToken` cookie with these options:
 
 - HTTP-only
-- `SameSite=Strict`
+- `SameSite=None` in production; `SameSite=Lax` in development/test
 - `Secure` in production
 - path `/api/v1/auth`
 - maximum age 30 days
+
+Cookie requests use `credentials: "include"`. The same-origin Next.js rewrite
+is the default client topology; direct cross-origin calls also require an exact
+`CLIENT_ORIGIN` allowlist entry and browser acceptance of the cookie.
+
+The authentication middleware also accepts a `token` query parameter, used by
+the header's native `EventSource` connection to `/notification/stream`. Header
+authentication takes precedence. The query fallback currently applies wherever
+that middleware is used.
 
 `POST /auth/refresh` rotates the access/refresh pair. Rotation currently does
 not blacklist the refresh token that was just consumed; see ADR-014 and
@@ -99,6 +112,7 @@ client IP. These sensitive auth endpoints additionally allow 10 requests per
 
 - `POST /auth/register`
 - `POST /auth/login`
+- `POST /auth/recover-account`
 - `POST /auth/resend-verification`
 - `POST /auth/forgot-password`
 - `POST /auth/change-password`
@@ -127,30 +141,42 @@ company-membership checks after the role gate.
 
 ### Service
 
-| Method | Path      | Access | Result                     |
-| ------ | --------- | ------ | -------------------------- |
-| `GET`  | `/health` | Public | `{ status: "ok", uptime }` |
-| `GET`  | `/api/v1` | Public | API identity response      |
+| Method | Path      | Access | Result                            |
+| ------ | --------- | ------ | --------------------------------- |
+| `GET`  | `/`       | Public | Plain text: `Credify is running!` |
+| `GET`  | `/health` | Public | `{ status: "ok", uptime }`        |
+| `GET`  | `/api/v1` | Public | API identity response             |
 
 ### Authentication: `/api/v1/auth`
 
-| Method   | Path                   | Access                      | Input                                 | Result/side effect                                                                               |
-| -------- | ---------------------- | --------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `POST`   | `/register`            | Public, rate-limited        | `{ email, password, fullName, role }` | Creates a user and role profile in a transaction; returns `{ userId }`; sends verification email |
-| `POST`   | `/login`               | Public, rate-limited        | `{ email, password }`                 | Sets refresh cookie; returns `{ accessToken, user }`                                             |
-| `POST`   | `/refresh`             | Refresh cookie              | None                                  | Rotates cookie; returns `{ accessToken }`                                                        |
-| `POST`   | `/logout`              | Public                      | None                                  | Clears refresh cookie                                                                            |
-| `POST`   | `/logout-everywhere`   | Authenticated               | None                                  | Increments `tokenVersion` and clears refresh cookie                                              |
-| `POST`   | `/verify-email`        | Public                      | `{ token }`                           | Marks a matching account verified and consumes the token                                         |
-| `POST`   | `/resend-verification` | Public, rate-limited        | `{ email }`                           | Enumeration-safe resend; always returns the same success shape                                   |
-| `POST`   | `/forgot-password`     | Public, rate-limited        | `{ email }`                           | Enumeration-safe reset request; token expires in 30 minutes                                      |
-| `POST`   | `/reset-password`      | Public                      | `{ token, newPassword }`              | Changes password, consumes reset token, increments `tokenVersion`                                |
-| `GET`    | `/me`                  | Authenticated               | None                                  | `{ id, email, role, isVerified }`                                                                |
-| `POST`   | `/change-password`     | Authenticated, rate-limited | `{ currentPassword, newPassword }`    | Changes password, increments `tokenVersion`, returns a fresh token/user pair, rotates cookie     |
-| `DELETE` | `/delete-account`      | Authenticated, rate-limited | `{ password }`                        | Soft-deletes user and matching candidate/recruiter profile; clears refresh cookie                |
+| Method   | Path                   | Access                      | Input                                                  | Result/side effect                                                                                                                    |
+| -------- | ---------------------- | --------------------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `POST`   | `/register`            | Public, rate-limited        | `{ email, password, confirmPassword, fullName, role }` | Creates a user and role profile in a transaction; returns `{ userId }`; sends verification email                                      |
+| `POST`   | `/login`               | Public, rate-limited        | `{ email, password }`                                  | Sets refresh cookie; returns `{ accessToken, user }`                                                                                  |
+| `POST`   | `/recover-account`     | Public, rate-limited        | `{ email, password }`                                  | Restores an eligible deleted account, rotates cookie, returns `{ accessToken, user }`                                                 |
+| `POST`   | `/refresh`             | Refresh cookie              | None                                                   | Rotates cookie; returns `{ accessToken }`                                                                                             |
+| `POST`   | `/logout`              | Public                      | None                                                   | Clears refresh cookie                                                                                                                 |
+| `POST`   | `/logout-everywhere`   | Authenticated               | None                                                   | Increments `tokenVersion` and clears refresh cookie                                                                                   |
+| `POST`   | `/verify-email`        | Public                      | `{ token }`                                            | Marks a matching account verified and consumes the token                                                                              |
+| `POST`   | `/resend-verification` | Public, rate-limited        | `{ email }`                                            | Enumeration-safe resend; always returns the same success shape                                                                        |
+| `POST`   | `/forgot-password`     | Public, rate-limited        | `{ email }`                                            | Enumeration-safe reset request; token expires in 30 minutes                                                                           |
+| `POST`   | `/reset-password`      | Public                      | `{ token, newPassword }`                               | Returns `{ accountRecovered }`; changes password, consumes token, increments `tokenVersion`, and restores an eligible deleted account |
+| `GET`    | `/me`                  | Authenticated               | None                                                   | `{ id, email, role, isVerified, fullName?, avatarUrl? }`                                                                              |
+| `POST`   | `/change-password`     | Authenticated, rate-limited | `{ currentPassword, newPassword }`                     | Changes password, increments `tokenVersion`, returns a fresh token/user pair, rotates cookie                                          |
+| `DELETE` | `/delete-account`      | Authenticated, rate-limited | `{ password }`                                         | Soft-deletes user/profile, increments `tokenVersion`, clears cookie; returns `{ scheduledPermanentDeletion, daysRemaining: 7 }`       |
 
-Registration accepts only `candidate` and `recruiter`. Password constraints are
-8-15 characters for registration, reset, and authenticated password changes.
+Registration accepts only `candidate` and `recruiter` and requires a matching
+`confirmPassword`. Auth identity responses enrich candidates with `fullName`
+and `avatarUrl` when present, and recruiters with `fullName`.
+
+Deleted accounts can be recovered with credentials or a password-reset token
+within seven days. The API sweeps expired `User.deletedAt` records on startup
+and every hour, and also purges lazily in auth flows. Recruiter recovery can
+restore a company created by that recruiter. The same deletion field is used
+by admin suspension; see the moderation risk in [Project Status](./PROJECT_STATUS.md).
+
+Passwords must contain 8-15 characters for registration, reset, and
+authenticated password changes.
 
 ### Candidates: `/api/v1/candidates`
 
@@ -230,7 +256,7 @@ Job create/update fields are `title`, `description`, `employmentType`,
 optional `salaryRange { min?, max?, currency? }`. Status changes are separate
 actions and cannot be supplied to the generic create/update body.
 
-Public list filters are `skill`, `location`, `employmentType`,
+Public list filters are `q`, `skill`, `location`, `employmentType`,
 `experienceLevel`, `isRemote`, and `companyId`, plus pagination.
 
 ### Applications: `/api/v1/applications`
@@ -262,10 +288,14 @@ The resume URL is copied into `resumeSnapshotUrl` at application time.
 | Method | Path          | Access             | Query                                                                              | Result                               |
 | ------ | ------------- | ------------------ | ---------------------------------------------------------------------------------- | ------------------------------------ |
 | `GET`  | `/jobs`       | Public             | Required `q`; optional `location`, `employmentType`, `experienceLevel`, pagination | Fuzzy Atlas Search job results       |
-| `GET`  | `/candidates` | Recruiter or admin | Required `q`; optional `location`, `availability`, pagination                      | Fuzzy Atlas Search candidate results |
+| `GET`  | `/candidates` | Recruiter or admin | Optional `q`, `skill`, `location`, `availability`, pagination                      | Fuzzy Atlas Search candidate results |
 
-These routes require the `job_search` and `candidate_search` Atlas Search
-indexes created by `pnpm --dir server search:setup`.
+Fuzzy queries use the `job_search` and `candidate_search` indexes created by
+`pnpm --dir server search:setup`. Candidate discovery without `q`, or after an
+Atlas exception, falls back to MongoDB regex filters with counts and newest
+profile updates first. The `skill` filter is applied only in that fallback;
+the successful candidate Atlas pipeline currently ignores it. Job fuzzy search
+requires Atlas and has no fallback; public `/jobs?q=...` uses ordinary MongoDB.
 
 ### Saved Candidates: `/api/v1/savedCandidate`
 
@@ -287,11 +317,29 @@ Notes have a maximum length of 1,000 characters. The pair
 The singular mount path reflects the current server and is part of the current
 contract.
 
-| Method  | Path        | Access             | Input/query                      | Result                                   |
-| ------- | ----------- | ------------------ | -------------------------------- | ---------------------------------------- |
-| `GET`   | `/me`       | Authenticated      | Pagination and optional `isRead` | Notification page plus true unread count |
-| `PATCH` | `/read-all` | Authenticated      | None                             | `{ modifiedCount }`                      |
-| `PATCH` | `/:id/read` | Notification owner | Notification ID                  | Updated notification                     |
+| Method  | Path        | Access             | Input/query                              | Result                                   |
+| ------- | ----------- | ------------------ | ---------------------------------------- | ---------------------------------------- |
+| `GET`   | `/me`       | Authenticated      | Pagination and optional `isRead`         | Notification page plus true unread count |
+| `PATCH` | `/read-all` | Authenticated      | None                                     | `{ modifiedCount }`                      |
+| `PATCH` | `/:id/read` | Notification owner | Notification ID                          | Updated notification                     |
+| `GET`   | `/stream`   | Authenticated      | Bearer header or `?token=<access-token>` | `text/event-stream` connection           |
+
+The SSE stream sends these named events with JSON `data`:
+
+| Event                        | Payload                                                            | Trigger                                      |
+| ---------------------------- | ------------------------------------------------------------------ | -------------------------------------------- |
+| `connected`                  | `{ timestamp }`                                                    | Connection registration                      |
+| `notification`               | `{ type, message, relatedEntityType, relatedEntityId, createdAt }` | Application submission or status change      |
+| `application_received`       | `{ jobId, applicationId }`                                         | New application, delivered to the job author |
+| `application_status_updated` | `{ applicationId, status, jobId }`                                 | Status change, delivered to the candidate    |
+
+Heartbeat comments arrive every 25 seconds. Connections are stored in an
+in-process map, with no replay cursor or shared event bus. The client header
+forwards application events as browser custom events to the history/pipeline
+screens. Initial connection after reload and reconnection after JWT expiry
+need runtime verification; the current client captures the token when its
+header effect runs. Tokens in stream URLs are not covered by the logger's
+header/body redaction paths.
 
 ### Dashboards: `/api/v1/dashboard`
 
@@ -374,16 +422,20 @@ All routes in this group require the `admin` role.
 
 ### Users and profiles
 
-| Code                            | Meaning                                                   |
-| ------------------------------- | --------------------------------------------------------- |
-| `USER_404`                      | User not found                                            |
-| `USER_ALREADY_EXISTS`           | Active account already uses the email                     |
-| `CANDIDATE_404`                 | Candidate profile not found                               |
-| `CANDIDATE_RESUME_REQUIRED`     | Applying requires an uploaded resume                      |
-| `RECRUITER_404`                 | Recruiter profile not found                               |
-| `RECRUITER_NO_COMPANY`          | Action requires company membership                        |
-| `RECRUITER_ALREADY_IN_COMPANY`  | Recruiter attempted to create a second company membership |
-| `RECRUITER_OWNER_MUST_TRANSFER` | Owner cannot leave while other active recruiters remain   |
+| Code                             | Meaning                                                         |
+| -------------------------------- | --------------------------------------------------------------- |
+| `ACCOUNT_PENDING_DELETION`       | Registration blocked during the seven-day recovery period (409) |
+| `ACCOUNT_SCHEDULED_FOR_DELETION` | Login offers recovery for a deleted account (403)               |
+| `ACCOUNT_ALREADY_ACTIVE`         | Recovery requested for an active account (400)                  |
+| `ACCOUNT_DELETION_EXPIRED`       | Recovery period expired (410)                                   |
+| `USER_404`                       | User not found                                                  |
+| `USER_ALREADY_EXISTS`            | Active account already uses the email                           |
+| `CANDIDATE_404`                  | Candidate profile not found                                     |
+| `CANDIDATE_RESUME_REQUIRED`      | Applying requires an uploaded resume                            |
+| `RECRUITER_404`                  | Recruiter profile not found                                     |
+| `RECRUITER_NO_COMPANY`           | Action requires company membership                              |
+| `RECRUITER_ALREADY_IN_COMPANY`   | Recruiter attempted to create a second company membership       |
+| `RECRUITER_OWNER_MUST_TRANSFER`  | Owner cannot leave while other active recruiters remain         |
 
 ### Companies and jobs
 
@@ -428,8 +480,9 @@ The following are implementation gaps, not intended API semantics:
   can reach Mongoose and become `500 INTERNAL_ERROR`.
 - `z.coerce.boolean()` currently interprets any non-empty query string as
   `true`; this affects `isRemote=false` and `isRead=false`.
-- Atlas Search result pipelines filter deleted/unpublished records after
-  `$search`, while `$searchMeta` counts before those filters.
+- Candidate Atlas totals count before the deleted-profile filter, and the
+  successful Atlas pipeline ignores `skill`. Job search uses a filtered `$facet`
+  so its counts include the same filters as its results.
 - Company deletion does not cascade to jobs or recruiter memberships.
 
 See [Project Status](./PROJECT_STATUS.md) for ownership and remediation order.

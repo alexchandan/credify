@@ -3,6 +3,8 @@
 This guide configures the Next.js client and Express API for local development.
 Use [Deployment](./DEPLOYMENT.md) for production configuration.
 
+**Last reviewed:** 2026-10-03 · **Workspace version:** 1.6.1
+
 ## Prerequisites
 
 - Node.js 22.13 or newer
@@ -10,7 +12,7 @@ Use [Deployment](./DEPLOYMENT.md) for production configuration.
 - Git
 - A MongoDB Atlas cluster or another MongoDB deployment that supports
   transactions
-- Cloudinary credentials for resume and company-logo uploads
+- Cloudinary credentials for avatar, resume, and company-logo uploads
 - A Resend API key and verified sender for application email
 
 MongoDB's standalone local mode does not support the transactions used by the
@@ -98,6 +100,10 @@ API_PROXY_TARGET=http://localhost:5000/api/v1
 The browser uses the relative `/api/v1` path and Next.js proxies it to the
 absolute `API_PROXY_TARGET`. This keeps the refresh cookie same-origin and is
 the recommended production topology. Keep the `/api/v1` suffix on both values.
+Development/test refresh cookies use `SameSite=Lax` without `Secure`; production
+uses `SameSite=None; Secure` and requires HTTPS. The client sends credentialed
+requests. For a direct cross-origin API URL, configure `CLIENT_ORIGIN` for the
+exact client origin and verify cookie acceptance in the target browser.
 
 ## 5. Start Development
 
@@ -131,8 +137,10 @@ The `/api/v1` route also exposes basic API metadata.
 
 ## 6. Configure Atlas Search
 
-Candidate and job search use MongoDB Atlas Search rather than ordinary text
-indexes. With the server environment configured, create/update the expected
+Fuzzy candidate and job queries use MongoDB Atlas Search. Candidate discovery
+without a query uses regular MongoDB; Atlas errors also trigger a MongoDB
+fallback. The public job board uses the regular `/jobs` endpoint. Fuzzy
+`/search/jobs` has no fallback. With the server environment configured, create/update the expected
 search indexes:
 
 ```bash
@@ -141,7 +149,11 @@ pnpm --dir server search:setup
 
 The script targets the index names used by the search services. Index
 provisioning can take time; search routes may fail until Atlas reports the
-indexes as ready.
+indexes as ready. Candidate fallback is not equivalent to Atlas fuzzy ranking.
+
+The API also starts an hourly permanent account-cleanup timer, with an initial
+sweep on startup. Deleted users older than seven days can be purged even in a
+development database; use disposable data when testing this lifecycle.
 
 ## 7. Verify External Services
 
@@ -184,19 +196,20 @@ The client build produces a Next.js production bundle. The server build emits
 
 ## Common Problems
 
-| Symptom                                            | Check                                                                                                                                  |
-| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| Startup reports a missing environment variable     | Compare `server/.env.local` with `server/.env.example`; Cloudinary and Resend are required too.                                        |
-| MongoDB connection times out                       | Check the Atlas IP allowlist, credentials, database name, and URL encoding.                                                            |
-| Transaction errors                                 | Use Atlas or a MongoDB replica set instead of a standalone server.                                                                     |
-| Browser reports CORS errors                        | Make `CLIENT_ORIGIN` exactly match the client scheme, host, and port.                                                                  |
-| Refresh cookie is not sent                         | Use the same-origin proxy, HTTPS, and `/api/v1` values described above; direct cross-site use conflicts with the strict cookie policy. |
-| Search routes fail or return no data               | Run `search:setup`, wait for Atlas indexes, and confirm the configured index names.                                                    |
-| Emails fail                                        | Check `RESEND_API_KEY`, `EMAIL_FROM`, sender verification, and Resend recipient restrictions.                                          |
-| Uploads fail                                       | Check all three Cloudinary variables, MIME type, and upload-size limits.                                                               |
-| Client API requests target localhost in production | Set `API_PROXY_TARGET` to the deployed API URL and rebuild/redeploy the client.                                                        |
-| Server lint cannot resolve `@eslint/js`            | Reinstall workspace dependencies with the requested pnpm version; a stale local symlink can survive package changes.                   |
-| Type-check passes but runtime fails                | Boot the applications and exercise the affected endpoint; types do not validate middleware or external services.                       |
+| Symptom                                            | Check                                                                                                                                                               |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Startup reports a missing environment variable     | Compare `server/.env.local` with `server/.env.example`; Cloudinary and Resend are required too.                                                                     |
+| MongoDB connection times out                       | Check the Atlas IP allowlist, credentials, database name, and URL encoding.                                                                                         |
+| Transaction errors                                 | Use Atlas or a MongoDB replica set instead of a standalone server.                                                                                                  |
+| Browser reports CORS errors                        | Make `CLIENT_ORIGIN` exactly match the client scheme, host, and port.                                                                                               |
+| Refresh cookie is not sent                         | Use the same-origin proxy, HTTPS, and `/api/v1` values described above; production needs `SameSite=None; Secure`, credentialed CORS, and browser cookie acceptance. |
+| Search routes fail or return no data               | Run `search:setup`, wait for Atlas indexes, and confirm the configured index names.                                                                                 |
+| Emails fail                                        | Check `RESEND_API_KEY`, `EMAIL_FROM`, sender verification, and Resend recipient restrictions.                                                                       |
+| Uploads fail                                       | Check all three Cloudinary variables, MIME type, and upload-size limits.                                                                                            |
+| Client API requests target localhost in production | Set `API_PROXY_TARGET` to the deployed API URL and rebuild/redeploy the client.                                                                                     |
+| Server lint cannot resolve `@eslint/js`            | Reinstall workspace dependencies with the requested pnpm version; a stale local symlink can survive package changes.                                                |
+| Client type-check references removed routes        | Regenerate stale `client/.next` output after switching branches or deleting routes; generated validators may still import old pages.                                |
+| Type-check passes but runtime fails                | Boot the applications and exercise the affected endpoint; types do not validate middleware or external services.                                                    |
 
 Do not commit `.env`, `.env.local`, credentials, access tokens, or production
 database URLs.

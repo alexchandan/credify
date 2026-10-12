@@ -4,6 +4,8 @@ Credify uses MongoDB through Mongoose. This document describes the schema that
 is actually defined under `server/src/models`, including embedded documents,
 indexes, lifecycle hooks, and current implementation caveats.
 
+**Last reviewed:** 2026-10-03 · **Workspace version:** 1.6.1
+
 ## Conventions
 
 - MongoDB references use `ObjectId` and Mongoose model names.
@@ -249,8 +251,9 @@ saved or its status changes. The service must set the transient
 `_statusChangedBy` value before saving; absence is treated as a programmer
 invariant failure.
 
-Applications are not soft-deleted. Candidate withdrawal is represented by the
-`withdrawn` status, preserving the application audit trail.
+Applications are not soft-deleted. Candidate withdrawal uses `withdrawn`,
+preserving history during normal use. Permanent candidate/company account
+cleanup can physically remove applications; see the lifecycle below.
 
 ## `savedCandidates`
 
@@ -390,3 +393,30 @@ provider, or frontend workflow uses it yet.
 Soft-delete scoping is explicit in service queries rather than automatic query
 middleware. Any new query must deliberately decide whether deleted records are
 included.
+
+## Account Recovery and Permanent Cleanup
+
+`User.deletedAt` starts a seven-day self-service recovery window. The same field
+also currently represents admin suspension, with no separate suspension or
+purge-eligibility flag. The cleanup scheduler scans it on startup and hourly;
+there is no MongoDB TTL index or persisted cleanup-job model.
+
+Deletion marks the matching profile, increments `tokenVersion`, and may also
+soft-delete a recruiter's company when no other active members remain. Recovery
+restores user/profile records transactionally and can restore a company created
+by that recruiter. Registration reserves a deleted account's email during the
+window even though the unique email index applies only to active users.
+
+After the window, `purgeSingleUser` removes the following in a transaction:
+
+| Account                 | Records removed                                                                                             |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Candidate               | Candidate applications, AI reports, candidate profile, user notifications, and user                         |
+| Recruiter               | Recruiter's saved candidates, recruiter profile, user notifications, and user                               |
+| Recruiter-owned company | A soft-deleted company with no other recruiter profiles, its jobs, related applications, and job AI reports |
+
+Candidate avatar/resume assets are deleted best-effort after commit. Current
+cleanup leaves saved-candidate references to a purged candidate, does not
+reconcile application counters, and does not delete company logos. Retained
+jobs can reference a purged recruiter author. Activity logs are retained.
+See [Project Status](./PROJECT_STATUS.md) for lifecycle and integrity risks.

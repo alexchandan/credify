@@ -368,4 +368,29 @@ client/src/
 │       └── TopProgressBar.tsx # Transition feedback bar
 ```
 
-This design specification serves as the single source of truth for all UI refactoring and component implementations across the `refactor/ui-design` branch.
+This design specification is the visual reference for UI work across branches.
+For implemented capabilities and current limitations, use
+[Project Status](./docs/PROJECT_STATUS.md).
+
+### Current UI Implementation (2026-10-03, v1.6.1)
+
+- Guest home composes the hero, hiring companies, metrics, featured jobs,
+  candidate/recruiter pathways, and engineering skill clusters from the public
+  dashboard summary. Signed-in users see `LoggedInMemberHub` with role-specific
+  data and actions.
+- Public jobs and recruiter candidate discovery default to list view and offer
+  grid view. Candidate inspection uses a shared drawer; shortlist actions use
+  the save/note modal.
+- Public routes include company profiles and published company jobs. Candidate
+  routes include application history/withdrawal; recruiter routes include job
+  forms, lifecycle actions, pipelines, and saved candidates.
+- Public, candidate, and recruiter layouts use shared site chrome; auth pages
+  use the focused account shell. Route-specific `loading.tsx` files share
+  skeleton components with the role guards.
+- The root layout initializes the theme before hydration, reads the identity
+  snapshot, and installs `TopProgressBar` and `AuthProvider`. Theme preferences
+  persist in `credify-theme` local storage; the snapshot cookie supports initial
+  identity rendering and route redirects.
+
+This specification also contains aspirational visual/accessibility guidelines;
+this documentation refresh does not constitute a browser accessibility audit.

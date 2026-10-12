@@ -9,6 +9,8 @@ The repository is deployable on any Node.js host that supports separate client
 and API services. It does not currently include a provider-specific manifest or
 container image.
 
+**Last reviewed:** 2026-10-03 · **Workspace version:** 1.6.1
+
 ## Runtime Requirements
 
 - Node.js 22.13 or newer
@@ -39,8 +41,7 @@ Browser -> https://app.example.com/api/v1/*
         -> https://api.example.com/api/v1/*
 ```
 
-This topology preserves the strict, secure refresh cookie without requiring a
-cross-site cookie. Configure the client service with:
+This is the default client topology. Configure the client service with:
 
 ```dotenv
 NEXT_PUBLIC_API_BASE_URL=/api/v1
@@ -49,8 +50,13 @@ API_PROXY_TARGET=https://api.example.com/api/v1
 
 `API_PROXY_TARGET` is server-only. `NEXT_PUBLIC_API_BASE_URL` is embedded in the
 client bundle and must remain `/api/v1` for the recommended proxy topology.
-Direct browser calls to an API on a different site are not compatible with the
-current `SameSite=Strict` refresh cookie.
+The API refresh cookie uses `SameSite=None; Secure` in production (as of 1.6.1),
+`SameSite=Lax` otherwise, and path `/api/v1/auth` in both cases. Production
+requires HTTPS. Direct cross-origin requests can use the production cookie, but
+need the client origin in `CLIENT_ORIGIN`, credentialed requests, and browser
+acceptance of third-party cookies. Prefer the proxy to reduce that dependency.
+The separate `credify-auth-user` snapshot cookie is written by the client on the
+app origin for initial rendering and routing; it is not an API credential.
 
 ## API Environment
 
@@ -96,6 +102,21 @@ The API process connects to MongoDB before opening its HTTP listener. Configure
 the platform health check as `GET /health`; a healthy response returns HTTP 200
 with `data.status` equal to `ok`.
 
+## Background Cleanup and Realtime
+
+The API starts an account-purge sweep after connecting to MongoDB and repeats
+it every hour. This is an in-process timer, with no distributed lock; multiple
+API instances can run concurrent sweeps. Every user with `deletedAt` older than
+seven days is eligible, including administratively suspended users under the
+current schema. Review the recovery/moderation risks in
+[Project Status](./PROJECT_STATUS.md) before relying on this lifecycle.
+
+`GET /api/v1/notification/stream` holds an SSE connection open and sends
+heartbeat comments every 25 seconds. Configure proxy buffering and idle timeouts
+for streaming. Event delivery is process-local; connections to one instance do
+not receive events emitted by another without a shared delivery mechanism.
+Stream URLs contain an access token, so URL logging must account for it.
+
 ## Release Gate
 
 Run these checks in a network-enabled CI or release environment:
@@ -114,12 +135,18 @@ Then verify against production credentials and domains:
 4. Job search works after both Atlas Search indexes become ready.
 5. Allowed origins receive credentialed CORS headers; untrusted origins do not.
 6. Logs redact credentials, tokens, cookies, password fields, and `Set-Cookie`.
-7. A database backup and rollback procedure has been tested.
+7. Candidate application history/withdrawal and recruiter create/edit/publish,
+   review/status changes, candidate discovery, and saved notes work.
+8. SSE connects after sign-in and reload, delivers events, and reconnects after
+   token expiry under the intended proxy and instance topology.
+9. Account deletion/recovery and cleanup preserve intended moderation and
+   retention behavior on a disposable dataset.
+10. A database backup and rollback procedure has been tested.
 
 ## Current Release Decision
 
-The build and startup contract is implemented, but public production release
-remains conditional. Resolve or explicitly accept the P1 authorization and data
-integrity risks in [Project Status](./PROJECT_STATUS.md), add a network-enabled
+The build and startup contract is implemented, but this documentation review
+does not certify the deployed environment. Resolve or explicitly accept the
+P1 authorization and data integrity risks in [Project Status](./PROJECT_STATUS.md), add a network-enabled
 dependency advisory check, and verify Atlas, Resend, Cloudinary, DNS, HTTPS, and
 cookie behavior in the target environment before approving launch.

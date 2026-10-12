@@ -5,33 +5,33 @@ development. It brings candidate profiles, recruiter workflows, companies,
 jobs, applications, search, saved candidates, notifications, dashboards, and
 administration into one product.
 
-The backend already implements most of the core recruitment API. The frontend
-currently covers the public landing page, authentication flows, public job
-browsing and details, candidate application submission, candidate profile
-management, and a role-protected candidate dashboard. Recruiter,
-administrator, and application-history interfaces are still being built. AI
-report storage has been designed, but no AI provider or user-facing AI workflow
-is connected yet.
+**Documentation snapshot:** 2026-10-03 · **Workspace version:** 1.6.1
+
+The core recruitment API and candidate/recruiter workspaces are implemented.
+Candidates can maintain profiles, browse jobs, apply, track applications, and
+withdraw. Recruiters can manage companies and jobs, review applications,
+search candidates, and maintain private shortlists. Signed-in users see a
+personalized home overview. Administration has API support and a home summary,
+but dedicated moderation screens are still pending. AI reports remain schema-only.
 
 ## Current Implementation
 
-| Area               | Status                                          | What exists today                                                                                                                                                                              |
-| ------------------ | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| API foundation     | Implemented                                     | Versioned REST API, consistent response contract, request IDs, structured logging, CORS, Helmet, rate limiting, input sanitization, and centralized error handling                             |
-| Authentication     | Implemented                                     | Candidate/recruiter registration, email verification, login, access/refresh tokens, token refresh, logout, logout everywhere, password reset/change, session restoration, and account deletion |
-| Candidate profiles | Implemented                                     | Responsive profile editor, avatar and resume upload/removal, education, experience, projects, certifications, skills, links, availability, and recruiter/admin lookup                          |
-| Recruiter profiles | Backend and frontend implemented                | Responsive identity/basic profile editor, company membership management, and leave-company workflow                                                                                            |
-| Companies          | Backend implemented                             | Create, read, update, logo upload, ownership assignment, and authorization policies                                                                                                            |
-| Jobs               | Backend and public frontend                     | Public search/filtering and job details in the client; draft creation, update, publish, close, soft delete, and company listings in the API                                                    |
-| Applications       | Backend and candidate submission frontend       | Candidates can apply from job details; history, recruiter review, withdrawal, and status management remain API-only                                                                            |
-| Search             | Backend implemented, Atlas verification pending | Fuzzy Atlas Search for jobs and candidates plus one-time index setup script                                                                                                                    |
-| Saved candidates   | Backend implemented                             | Recruiter-specific saved lists and notes                                                                                                                                                       |
-| Notifications      | Backend and candidate dashboard                 | Paginated notification feed, unread counts, and mark-one/all APIs; the candidate dashboard shows recent updates and supports marking all read                                                  |
-| Dashboards         | Candidate/recruiter frontend and backend        | Responsive candidate and recruiter overviews with application pipeline, company/job stats, notifications, and recent work; administrator summary remains API-only                              |
-| Administration     | Backend implemented                             | User moderation, company/job listings, company/job deletion, and partial activity logging                                                                                                      |
-| Frontend           | In progress                                     | Responsive light/dark interface, landing/header, authentication, public job board/details, candidate application submission, profile, and dashboard                                            |
-| AI features        | Schema only                                     | `AIReport` model and lifecycle; no queue, provider, service, route, or UI yet                                                                                                                  |
-| Automated tests    | Minimal                                         | Query middleware, candidate profile payloads, and dashboard aggregation helpers have focused regression tests; broader integration and end-to-end coverage is still needed                     |
+| Area                             | Status                                         | What exists today                                                                                                                                 |
+| -------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| API foundation                   | Implemented                                    | 60 domain endpoints, versioned REST responses, request IDs, structured logging, CORS, Helmet, rate limiting, sanitization, and centralized errors |
+| Authentication                   | Implemented                                    | Registration, verification, sign-in, access/refresh tokens, password flows, logout, seven-day account recovery, and scheduled permanent cleanup   |
+| Candidate profiles               | Backend and frontend                           | Profile editing, avatar/resume upload and removal, education, experience, projects, certifications, skills, links, and availability               |
+| Recruiter profiles and companies | Backend and frontend                           | Recruiter identity, company creation/editing, logo upload, leave-company workflow, and public company pages                                       |
+| Jobs                             | Backend and frontend                           | Public list/grid browsing, filters, pagination, details, and recruiter draft/create/edit/publish/close/delete workflows                           |
+| Applications                     | Backend and frontend                           | Submission, candidate history and withdrawal, recruiter review pipeline, resume/cover-letter inspection, and status changes                       |
+| Search                           | Backend and frontend; Atlas validation pending | Recruiter candidate discovery with filters, pagination, list/grid views, profile drawer, and MongoDB fallback; separate fuzzy job-search API      |
+| Saved candidates                 | Backend and frontend                           | Recruiter private shortlist, notes, note editing, and removal                                                                                     |
+| Notifications                    | Backend and shared header                      | Paginated dropdown, unread counts, mark-all-read, and SSE application events; no dedicated full-feed page                                         |
+| Dashboards                       | Candidate/recruiter UI and backend             | Role-specific workspace dashboards and personalized home summaries; dedicated admin workspace pending                                             |
+| Interface                        | Implemented; regression coverage pending       | Responsive light/dark UI, role-aware navigation, route skeletons, progress bar, and cookie-backed identity rendering                              |
+| Administration                   | API and home summary                           | Moderation and company/job deletion APIs; no dedicated management screens                                                                         |
+| AI features                      | Schema only                                    | `AIReport` lifecycle; no provider, queue, service, route, or UI                                                                                   |
+| Automated tests                  | Focused                                        | Seven tests across query middleware, candidate payload validation, and dashboard helpers; integration and end-to-end coverage pending             |
 
 ## Technology Stack
 
@@ -72,9 +72,9 @@ Credify/
 │   ├── public/                 # Static assets
 │   └── src/
 │       ├── app/                # App Router pages and layouts
-│       ├── components/         # Navigation, auth, job, footer, and landing UI
+│       ├── components/         # Navigation, auth, jobs, candidates, and landing UI
 │       ├── context/            # Authentication state
-│       ├── lib/                # API client and form-error helpers
+│       ├── lib/                # API client, auth snapshots, route helpers, and formatting
 │       └── types/              # Client-side domain types
 ├── server/                     # Express REST API
 │   └── src/
@@ -94,11 +94,13 @@ Credify/
 There is no shared workspace package at present. Client and server types and
 validation schemas are maintained separately.
 
-The client root layout owns shared authentication state. Route-group layouts
-then choose their chrome: `(public)` and `(candidate)` render the site header
-and footer through `SiteChrome`, while every page in `(auth)` uses a focused
-header-free and footer-free account layout. The `(candidate)` layout also
-enforces the candidate role before rendering protected pages.
+The root layout reads the `credify-auth-user` identity snapshot and initializes
+shared authentication state. Public, candidate, and recruiter route groups use
+`SiteChrome`; authentication pages use a focused account layout. Candidate and
+recruiter layouts enforce roles, and `client/src/proxy.ts` redirects protected
+and guest-only routes before rendering. The snapshot is an unsigned display and
+routing hint; the API authenticates requests using the access JWT. Access tokens
+remain in memory and are restored through the HTTP-only refresh cookie.
 
 ## Data Model
 
@@ -128,19 +130,19 @@ See [Database Schema](./docs/DATABASE_SCHEMA.md) and
 The API base path is `/api/v1`. Health information is available separately at
 `GET /health`.
 
-| Prefix            | Access                                            | Main capabilities                                                                                            |
-| ----------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| `/auth`           | Public and authenticated                          | Registration, login, refresh, verification, password recovery/change, logout, current user, account deletion |
-| `/candidates`     | Candidate, recruiter, or admin depending on route | Own-profile management, avatar/resume upload and removal, candidate detail lookup                            |
-| `/recruiters`     | Recruiter                                         | Own-profile management and leaving a company                                                                 |
-| `/companies`      | Public reads; recruiter writes                    | Company creation, details, updates, and logo upload                                                          |
-| `/jobs`           | Public reads; recruiter writes                    | Job feed, filters, details, company jobs, lifecycle management                                               |
-| `/applications`   | Candidate or recruiter                            | Apply, list, inspect, withdraw, and update application status                                                |
-| `/search`         | Public jobs; recruiter/admin candidates           | Atlas Search-backed fuzzy search                                                                             |
-| `/savedCandidate` | Recruiter                                         | Personal candidate shortlist and notes                                                                       |
-| `/notification`   | Authenticated                                     | Notification feed and read state                                                                             |
-| `/dashboard`      | Authenticated and role-scoped                     | Candidate, recruiter, and admin summaries                                                                    |
-| `/admin`          | Admin                                             | User moderation and company/job management                                                                   |
+| Prefix            | Access                                            | Main capabilities                                                                                                     |
+| ----------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `/auth`           | Public and authenticated                          | Registration, login, refresh, verification, password recovery/change, logout, current user, account deletion/recovery |
+| `/candidates`     | Candidate, recruiter, or admin depending on route | Own-profile management, avatar/resume upload and removal, candidate detail lookup                                     |
+| `/recruiters`     | Recruiter                                         | Own-profile management and leaving a company                                                                          |
+| `/companies`      | Public reads; recruiter writes                    | Company creation, details, updates, and logo upload                                                                   |
+| `/jobs`           | Public reads; recruiter writes                    | Job feed, filters, details, company jobs, lifecycle management                                                        |
+| `/applications`   | Candidate or recruiter                            | Apply, list, inspect, withdraw, and update application status                                                         |
+| `/search`         | Public jobs; recruiter/admin candidates           | Atlas Search-backed fuzzy search                                                                                      |
+| `/savedCandidate` | Recruiter                                         | Personal candidate shortlist and notes                                                                                |
+| `/notification`   | Authenticated                                     | Notification feed, read state, and SSE events                                                                         |
+| `/dashboard`      | Authenticated and role-scoped                     | Candidate, recruiter, and admin summaries                                                                             |
+| `/admin`          | Admin                                             | User moderation and company/job management                                                                            |
 
 Every successful endpoint follows this shape:
 
@@ -173,26 +175,35 @@ complete current route and error-code reference.
 
 The following pages currently exist:
 
-| Route                  | Purpose                                                                                   |
-| ---------------------- | ----------------------------------------------------------------------------------------- |
-| `/`                    | Public landing page with job and skill previews                                           |
-| `/login`               | Email/password login                                                                      |
-| `/register`            | Candidate or recruiter registration                                                       |
-| `/check-email`         | Verification-email confirmation and resend action                                         |
-| `/verify-email`        | Email verification link handler                                                           |
-| `/forgot-password`     | Password-reset request                                                                    |
-| `/reset-password`      | Password-reset link handler                                                               |
-| `/unauthorized`        | Access-denied state                                                                       |
-| `/jobs`                | Public job search, filters, and pagination                                                |
-| `/jobs/:id`            | Public job details and candidate application submission                                   |
-| `/candidate/dashboard` | Candidate search overview, profile readiness, applications, resume, updates, and new jobs |
-| `/candidate/profile`   | Candidate profile, resume, password, and account settings                                 |
-| `/recruiter/dashboard` | Recruiter company/job/application overview and recent jobs                                |
-| `/recruiter/profile`   | Recruiter identity, company management, logo upload, password, and account settings       |
+| Route                              | Purpose                                                            |
+| ---------------------------------- | ------------------------------------------------------------------ |
+| `/`                                | Public landing or personalized candidate/recruiter/admin overview  |
+| `/login`                           | Sign-in and recovery of a deleted account within seven days        |
+| `/register`                        | Candidate or recruiter registration                                |
+| `/check-email`                     | Verification-email confirmation and resend                         |
+| `/verify-email`                    | Email verification link handler                                    |
+| `/forgot-password`                 | Password-reset request                                             |
+| `/reset-password`                  | Password-reset link handler, including eligible account recovery   |
+| `/unauthorized`                    | Access-denied state                                                |
+| `/jobs`                            | Public job search, filters, pagination, and list/grid views        |
+| `/jobs/:id`                        | Public job details and candidate application submission            |
+| `/companies/:id`                   | Public company profile and published jobs                          |
+| `/candidate/dashboard`             | Profile readiness, application summary, resume, updates, and jobs  |
+| `/candidate/profile`               | Profile, uploads, password, and account settings                   |
+| `/candidate/applications`          | Application history, status filters, and withdrawal                |
+| `/recruiter/dashboard`             | Company, jobs, application pipeline, and recent work               |
+| `/recruiter/profile`               | Recruiter identity, company management, logo, and account settings |
+| `/recruiter/jobs`                  | Company jobs with publish, close, edit, and delete actions         |
+| `/recruiter/jobs/new`              | Create a draft or create and publish a job                         |
+| `/recruiter/jobs/:id/edit`         | Edit a job                                                         |
+| `/recruiter/jobs/:id/applications` | Review applicants and update their status                          |
+| `/recruiter/candidates`            | Candidate discovery, profile inspection, and saving                |
+| `/recruiter/saved-candidates`      | Private shortlist and note management                              |
 
-Recruiter management, candidate application history, full notification feeds,
-recruiter/admin dashboards, and administrator pages do not have frontend
-implementations yet.
+Application history, recruiter jobs, application pipelines, saved candidates,
+and public company job lists currently load at most 50 records without a
+next-page control. Dedicated admin management and full notification-feed pages
+remain pending.
 
 ## Prerequisites
 
@@ -202,8 +213,9 @@ implementations yet.
 - Cloudinary credentials for avatar, resume, and company-logo uploads
 - A Resend API key and verified sender for email flows
 
-Atlas Search is required only for the `/search` endpoints. The rest of the API
-uses normal MongoDB queries and indexes.
+Atlas Search is required for fuzzy `/search/jobs` queries. Candidate discovery
+uses normal MongoDB queries when `q` is absent or Atlas search throws; the public
+job board uses `/jobs`, which also uses normal MongoDB queries.
 
 ## Local Setup
 
@@ -304,17 +316,21 @@ become ready.
 
 Run these from the repository root:
 
-| Command             | Purpose                                       |
-| ------------------- | --------------------------------------------- |
-| `pnpm dev`          | Start client and server development processes |
-| `pnpm build`        | Build the Next.js client and compiled API     |
-| `pnpm test`         | Run the server test suite                     |
-| `pnpm type-check`   | Type-check both workspaces                    |
-| `pnpm lint`         | Lint both workspaces                          |
-| `pnpm lint:fix`     | Apply ESLint fixes                            |
-| `pnpm format`       | Format the repository with Prettier           |
-| `pnpm format:check` | Check formatting without modifying files      |
-| `pnpm verify`       | Run the complete local release gate           |
+| Command                  | Purpose                                               |
+| ------------------------ | ----------------------------------------------------- |
+| `pnpm dev`               | Start client and server development processes         |
+| `pnpm build`             | Build the Next.js client and compiled API             |
+| `pnpm test`              | Run the server test suite                             |
+| `pnpm type-check`        | Type-check both workspaces                            |
+| `pnpm lint`              | Lint both workspaces                                  |
+| `pnpm lint:fix`          | Apply ESLint fixes                                    |
+| `pnpm format`            | Format the repository with Prettier                   |
+| `pnpm format:check`      | Check formatting without modifying files              |
+| `pnpm verify`            | Run the complete local release gate                   |
+| `pnpm version:check`     | Validate package versions                             |
+| `pnpm version:increment` | Increment all three package versions (default: patch) |
+
+Pass `major`, `minor`, or `patch` to `pnpm version:increment` to choose the bump.
 
 The server build emits `server/dist/server.js`; start it with
 `pnpm --dir server start`. See [Deployment](./docs/DEPLOYMENT.md) for the
@@ -347,11 +363,15 @@ expires.
 
 ## Known Gaps
 
-- Most backend modules do not yet have corresponding frontend screens.
+- Dedicated admin management and full notification-feed screens remain pending.
+- Several management/history screens stop at the first 50 records.
+- SSE delivery is process-local and its connection/token lifecycle needs coverage.
+- Account recovery and scheduled purge share the admin-suspension deletion field;
+  moderation and cleanup semantics need separation.
 - Company deletion does not cascade or close the company's published jobs.
 - Job permission rules need reconciliation with the documented member role.
 - Candidate Atlas Search still needs production-like validation and filtered
-  count review; the public job-search filter pipeline has been live-checked.
+  count review; job search counts now use a filtered pipeline.
 - Activity logging covers selected admin moderation/deletion actions, not every
   action represented by the activity model.
 - Automated coverage remains focused on middleware, candidate profile payloads,
@@ -378,10 +398,15 @@ repository does not yet satisfy the documented integration-test requirement.
 
 - Use Conventional Commits such as `feat(jobs): add saved filters` or
   `fix(jobs): enforce member ownership`.
-- Husky runs lint-staged and workspace type-checking before commits.
+- Husky checks the version, runs lint-staged, and type-checks before commits.
+- Commit hooks synchronize package versions: `feat` bumps minor,
+  `fix`/`perf`/`revert` bump patch, and breaking changes bump major. Other commit
+  types do not automatically bump the version. `[skip version]` or `[no bump]`
+  in the message, or `SKIP_AUTO_VERSION=1`, disables automatic versioning.
 - The pre-push hook validates branch names, linting, type-checking, tests, and
   production builds.
-- Supported branch patterns include `main`, `dev-V1`, and prefixes such as
-  `feature/`, `fix/`, `hotfix/`, `docs/`, `experiment/`, and `improve/`.
+- Supported branch patterns include `main`, `development`, `codex`,
+  `dev-V<number>`, and prefixes such as
+  `feature/`, `refactor/`, `fix/`, `hotfix/`, `docs/`, `experiment/`, and `improve/`.
 - Keep environment files local. `.env`, `.env.local`, and build output are
   ignored by Git.

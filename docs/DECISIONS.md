@@ -6,6 +6,8 @@ bugs, incomplete screens, and remediation work belong in
 
 Each record uses: decision, rationale, consequences, and status.
 
+**Last reviewed:** 2026-10-03 · **Workspace version:** 1.6.1
+
 ## ADR-001: Use a standalone Express API
 
 **Decision:** The backend is a standalone Express/TypeScript application. The
@@ -73,7 +75,8 @@ but incomplete. Applications use lifecycle status, and saved-candidate
 relationships are hard-deleted.
 
 **Rationale:** Historical applications, authorship, audit data, and references
-should survive account/company/job removal.
+should survive routine domain removal. Account deletion has a separate seven-day
+recovery period followed by permanent cleanup (ADR-023).
 
 **Consequences:** Active-record filtering is explicit in every service query.
 There is no global Mongoose query middleware. Each new query must make a
@@ -250,8 +253,10 @@ boot and request tests, not only compilation.
 an email or slug, and duplicate inline plus explicit indexes caused Mongoose
 warnings.
 
-**Consequences:** Services query active records before creation for a friendly
-error, but the partial unique index remains the concurrency-safe guarantee.
+**Consequences:** Company creation queries active records for a friendly error. Registration
+checks deleted accounts too, reserves the email during recovery, and purges an
+expired account before reuse. The partial unique index remains the
+concurrency-safe guarantee for active records.
 
 **Status:** Adopted and implemented.
 
@@ -265,11 +270,15 @@ token is not persisted in local/session storage. A silent refresh plus
 `GET /auth/me` restores identity after reload.
 
 **Consequences:** Protected requests must go through the shared API client.
-The client coalesces concurrent refresh attempts. Route components must wait
-for initial session restoration before issuing protected requests.
+The client coalesces concurrent refresh attempts, obtains a token before
+protected requests when necessary, and retries an authentication failure once.
+An identity snapshot supports initial rendering and route redirects (ADR-022),
+but cannot establish API authorization. The current provider initializes
+`isLoading` to false even while restoration is pending; consumers must not
+interpret it as proof of a restored access token.
 
-**Status:** Adopted; route guarding and a few account-state integrations remain
-incomplete.
+**Status:** Implemented with role/guest guards and account integrations;
+restoration and navigation regression coverage remains pending.
 
 ## ADR-019: Stream uploads from memory to Cloudinary
 
@@ -294,8 +303,83 @@ explicitly named `job_search` and `candidate_search` indexes.
 text indexes provide while keeping data in the existing Atlas deployment.
 
 **Consequences:** Search index creation is a separate infrastructure step via
-`pnpm --dir server search:setup`. Search does not work on a plain MongoDB
-deployment without Atlas Search support.
+`pnpm --dir server search:setup`. Fuzzy job queries require Atlas. Candidate
+discovery uses normal MongoDB
+regex queries when `q` is omitted or Atlas throws; this fallback honors `skill`
+and returns newest updates first, rather than fuzzy relevance.
 
-**Status:** Implemented by inspection; live Atlas verification and filtered
-count correction are pending.
+**Status:** Implemented; production-like Atlas verification remains pending.
+Job counts use a filtered `$facet`. Candidate Atlas counts and the `skill`
+filter still need correction.
+
+## ADR-021: Support production refresh cookies across sites
+
+**Decision:** Refresh cookies are HTTP-only, live for 30 days, and use path
+`/api/v1/auth`. Production uses `SameSite=None; Secure`; development/test use
+`SameSite=Lax` without `Secure`. The Next.js rewrite remains the default
+browser-to-API topology.
+
+**Rationale:** The 1.6.1 production fix allows the refresh credential to accompany
+cross-site requests, while local HTTP development uses a compatible cookie.
+
+**Consequences:** Direct cross-origin use requires credentialed CORS and browser
+cookie acceptance. Production must use HTTPS. The same-origin proxy avoids a
+third-party-cookie dependency. Login, refresh, logout, and recovery share the
+same cookie-options helper.
+
+**Status:** Implemented in `be15fca`; target-environment regression checks remain
+part of the release gate.
+
+## ADR-022: Render identity from a cookie snapshot
+
+**Decision:** `credify-auth-user` contains a JSON identity snapshot on the app
+origin, with `Path=/`, `SameSite=Lax`, a 30-day maximum age, and `Secure` on
+HTTPS. The root layout and home page read it for initial rendering. The Next.js
+proxy uses it for guest/candidate/recruiter redirects; client guards enforce
+matching roles during navigation.
+
+**Rationale:** Initial rendering can display the member identity and personalized
+home without waiting for a silent refresh request.
+
+**Consequences:** The cookie is unsigned and JavaScript-readable. It is a display
+and routing hint only. Protected API calls still need a signed access JWT, and
+`/auth/me` refreshes the snapshot after restoration. Snapshot expiry, tampering,
+logout, and stale server props need regression coverage.
+
+**Status:** Implemented; browser regression coverage remains pending.
+
+## ADR-023: Recover deleted accounts before permanent cleanup
+
+**Decision:** Self-service deletion marks the user/profile deleted and increments
+`tokenVersion`. Recovery with credentials, or password reset, can restore the
+account for seven days. An API startup sweep and hourly timer permanently purge
+expired accounts; auth flows also perform lazy cleanup.
+
+**Rationale:** A grace period permits reversal of an accidental account deletion
+before associated records are removed permanently.
+
+**Consequences:** Cleanup runs in each API process without a distributed lock.
+The current implementation also uses `User.deletedAt` for admin suspension;
+recovery and purge therefore act on suspended users. Cleanup does not preserve
+all counters/references/assets. These are implementation gaps tracked in
+[Project Status](./PROJECT_STATUS.md), not intended moderation policy.
+
+**Status:** Implemented; suspension separation and cleanup integrity remain open.
+
+## ADR-024: Push application events through SSE
+
+**Decision:** The API exposes `/notification/stream`, stores connections per user
+in memory, and emits named events after application writes. The shared header
+uses `EventSource` and forwards application events to browser consumers.
+
+**Rationale:** One-way server events let candidate history and recruiter pipelines
+respond to hiring changes without periodic polling.
+
+**Consequences:** Delivery is limited to the emitting API process, with no replay
+or durable event bus. Native `EventSource` sends the access token through the
+query string; authentication currently accepts that fallback beyond this route.
+Token expiry, URL redaction, reload connection setup, proxy timeouts, and
+multi-instance delivery require explicit follow-up.
+
+**Status:** Implemented for the current process-local architecture; lifecycle and
+production-topology verification remain pending.

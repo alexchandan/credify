@@ -80,6 +80,9 @@ mutating one getter result does not guarantee later middleware will see it.
   verification tokens, or full authorization headers.
 - A state-changing account operation must also update the client session state
   when applicable.
+- Treat the `credify-auth-user` snapshot as untrusted display/routing data;
+  authenticate API access with the signed JWT.
+- Separate moderation from self-service deletion/recovery eligibility.
 
 ## Validation and Data Integrity
 
@@ -99,9 +102,10 @@ mutating one getter result does not guarantee later middleware will see it.
 
 ## Deletion and Files
 
-- Respect each model's documented deletion behavior. Most user-facing domain
-  records use `isDeleted`; activity records are immutable and some auxiliary
-  records are physically deleted.
+- Respect each model's documented deletion behavior. Users, profiles, and
+  companies use `deletedAt`; jobs use `isDeleted`.
+  Activity records are immutable, and account cleanup physically deletes
+  selected related records after the seven-day recovery period.
 - Every normal read for a soft-deleted model must exclude deleted documents.
 - When replacing or deleting a Cloudinary asset, coordinate database and remote
   asset cleanup so the stored reference never points at a removed file.
@@ -129,6 +133,8 @@ mutating one getter result does not guarantee later middleware will see it.
 - Configure redaction in every environment, especially production.
 - Log useful identifiers and outcomes, not whole request bodies or sensitive
   profile data.
+- Avoid putting credentials in URLs; the current SSE query-token fallback
+  needs URL redaction and a reviewed connection lifecycle.
 - Use structured logger calls rather than `console.log` in application code.
 
 ## Testing and Verification
@@ -142,8 +148,8 @@ Test scope should match the change:
   job application, and recruiter review.
 
 The repository currently has focused middleware, candidate-payload, and
-dashboard-aggregation tests, so broader test infrastructure remains an open
-project task. A clean type-check alone is not enough: boot affected applications
+dashboard-aggregation tests (seven tests in total), so broader test
+infrastructure remains an open project task. A clean type-check alone is not enough: boot affected applications
 and exercise the changed route or screen with a real request.
 
 Run the available checks from the repository root:
@@ -169,6 +175,8 @@ Update documentation in the same change when behavior changes:
 | Model field, enum, index, hook, or relationship | `DATABASE_SCHEMA.md`   |
 | Non-obvious architectural or security choice    | `DECISIONS.md`         |
 | Environment variable or local workflow          | `ENVIRONMENT_SETUP.md` |
+| Production cookies, background jobs, or hosting | `DEPLOYMENT.md`        |
+| Shared visual/navigation conventions            | `design.md`            |
 | Feature readiness, limitation, or known defect  | `PROJECT_STATUS.md`    |
 | Product overview or common command              | Root `README.md`       |
 
